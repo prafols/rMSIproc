@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // runMSIProcessingCpp
 void runMSIProcessingCpp(int numberOfThreads, int numberOfCubes, Rcpp::Function rLoadCube, Rcpp::Function rSaveCube);
-RcppExport SEXP rMSI_runMSIProcessingCpp(SEXP numberOfThreadsSEXP, SEXP numberOfCubesSEXP, SEXP rLoadCubeSEXP, SEXP rSaveCubeSEXP) {
+RcppExport SEXP rMSIproc_runMSIProcessingCpp(SEXP numberOfThreadsSEXP, SEXP numberOfCubesSEXP, SEXP rLoadCubeSEXP, SEXP rSaveCubeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< int >::type numberOfThreads(numberOfThreadsSEXP);

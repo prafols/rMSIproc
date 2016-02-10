@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 runMSIProcessingCpp <- function(numberOfThreads, numberOfCubes, rLoadCube, rSaveCube) {
-    invisible(.Call('rMSI_runMSIProcessingCpp', PACKAGE = 'rMSI', numberOfThreads, numberOfCubes, rLoadCube, rSaveCube))
+    invisible(.Call('rMSIproc_runMSIProcessingCpp', PACKAGE = 'rMSIproc', numberOfThreads, numberOfCubes, rLoadCube, rSaveCube))
 }
 

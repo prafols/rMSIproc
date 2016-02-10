@@ -1,4 +1,4 @@
-Package: rMSI-proc
+Package: rMSIproc
 Type: Package
 Title: MSI Processing in C++
 Version: 0.1
