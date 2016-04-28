@@ -6,17 +6,19 @@
 #TOP-METHOD: Align a whole dataset using multi-core capabilities and mean spectra as reference
 # data -  a matrix of spectra to align
 # iterations - number of iterations over aligned data
-# returns - the aligned dataset
+# returns - the aligned dataset in a list containing data and the applied shifts
 MatrixAligment<-function(data, ...)
 {
   ref <- LabelFreeCreateRef( apply(data, 2, mean) , smoothing = F)
   data<-LabelFreeAlignDataSet(ref, data, ...)
-  return(data)
+  lags <- data[, 1:2] #Get lags for monitoring alignment
+  data<- data[, -(1:2)] #Get aligned spectra
+  return( list( data = data, shifts = lags))
 }
 
 #TOP-METHOD: Align a whole image using multi-core capabilities and mean spectra as reference
 # raw - image data in ff custom data format
-# returns - Nothing! The data is stored in ff object
+# returns - A list of two vectors containg the shifts performed to each spectrum. The data is stored directly in ff object.
 FullDataSetAligment<-function(raw, ...)
 {
   cat("Aligning Image...\n")
@@ -25,9 +27,14 @@ FullDataSetAligment<-function(raw, ...)
   ref <- LabelFreeCreateRef( raw$mean@intensity , smoothing = F )
   CurrCube <- 1
   setTxtProgressBar(pb, CurrCube - 1)
+  ShiftsLow <- c()
+  ShiftsHigh <- c()
   while( CurrCube <=  length(raw$data))
   {
-    CurrCube <- AlignDataChunk(raw, ref, startingCube = CurrCube, ...)
+    AlngRet <- AlignDataChunk(raw, ref, startingCube = CurrCube, ...)
+    CurrCube <- AlngRet$CubeID
+    ShiftsLow <- c(ShiftsLow, AlngRet$shifts[, 1])
+    ShiftsHigh <- c(ShiftsHigh, AlngRet$shifts[, 2])
     setTxtProgressBar(pb, CurrCube - 1)
   }
   gc()
@@ -39,16 +46,14 @@ FullDataSetAligment<-function(raw, ...)
   #Recompute mean spectrum
   cat("Calculating average spectrum...\n")
   pt<-proc.time()
-
   avgI<-apply(matrix(unlist(lapply(raw$data, function(x){ ff::ffrowapply(colSums(x[i1:i2,,drop=FALSE]), X=x, RETURN = TRUE, CFUN = "csum", FF_RETURN = FALSE) })), nrow = length(raw$data), byrow = T), 2, sum)
   avgI<-avgI/( sum(unlist(lapply(raw$data, nrow))) )
-
-  meanSpc<-createMassSpectrum(mass =  raw$mass, intensity = avgI)
-  meanSpc<-smoothIntensity(meanSpc, halfWindowSize=2)
-  raw$mean<-meanSpc
+  raw$mean<-avgI
   pt<-proc.time() - pt
   cat(paste("Average spectrun time:",round(pt["elapsed"], digits = 1),"seconds\n"))
   gc()
+  
+  return( list( shiftLow = ShiftsLow ,shiftHigh = ShiftsHigh ))
 }
 
 #Create Ref data structure to avoid unnecessary computation in ref spectrum
@@ -61,11 +66,11 @@ LabelFreeCreateRef<-function(ref, smoothing = F)
   {
     ref<- SmoothUpper(ref)
   }
-  #refBottom <- Conj(FFT( TimeWindowLow(  ZeroPadding( ref, rev = F  ) )  ))
-  #refTop    <- Conj(FFT( TimeWindowHigh( ZeroPadding( ref, rev = T  ) )  ))
+  #refBottom <- Conj(fftw::FFT( TimeWindowLow(  ZeroPadding( ref, rev = F  ) )  ))
+  #refTop    <- Conj(fftw::FFT( TimeWindowHigh( ZeroPadding( ref, rev = T  ) )  ))
 
-  refBottom <- Conj(FFT( ZeroPadding( TimeWindowLow(ref) , rev = F )  ))
-  refTop    <- Conj(FFT( ZeroPadding( TimeWindowHigh(ref), rev = T )  ))
+  refBottom <- Conj(fftw::FFT( ZeroPadding( TimeWindowLow(ref) , rev = F )  ))
+  refTop    <- Conj(fftw::FFT( ZeroPadding( TimeWindowHigh(ref), rev = T )  ))
 
   return(list( ref_fft_bot = refBottom, ref_fft_top = refTop, smooth =  smoothing))
 }
@@ -76,7 +81,7 @@ LabelFreeCreateRef<-function(ref, smoothing = F)
 # refSpectrum - The reference to align (return value of LabelFreeCreateRef())
 # startingCube - The starting ID of data cube to process
 # subDataMemPercent - The maximum RAM mem usage in % units relative to machine installed memory
-# returns - The next data cube ID to be processed
+# returns - The next data cube ID to be processed and the used shifts in a list
 AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPercent = 10, maxcubes = 5, ... )
 {
 
@@ -113,6 +118,8 @@ AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPerce
 
   #Align the matrix
   m <- LabelFreeAlignDataSet(refSpectrum, m, ...) #TODO improve memory management inside this function
+  lags <- m[, 1:2] #Get lags for monitoring alignment
+  m<- m[, -(1:2)] #Get aligned spectra
   gc()
 
   #Store the aligned data to rawImg
@@ -125,8 +132,8 @@ AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPerce
   rm(m)
   gc()
 
-  #Return the next Cube to process
-  return( CubesId[length(CubesId)] + 1)
+  #Return the next Cube to process and the used shifts in this iteration
+  return( list( CubeID = CubesId[length(CubesId)] + 1, shifts = lags))
 }
 
 
@@ -142,29 +149,32 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = T, .
   {
     ###TODO: working here! makeForkCluster is better in ram usage
     ##clus <- makeCluster(parallel::detectCores())
-    clus <- makeForkCluster(nnodes = parallel::detectCores())
+    clus <- parallel::makeForkCluster(nnodes = parallel::detectCores())
 
-    clusterExport(clus, "ref", envir = environment()) #Export aligned ref spectra to make it visible to all clusters
+    parallel::clusterExport(clus, "ref", envir = environment()) #Export aligned ref spectra to make it visible to all clusters
 
     #Export aligning functions to all custers
-    clusterExport(clus, "LabelFreeAlign")
-    clusterExport(clus, "TimeWindowLow")
-    clusterExport(clus, "TimeWindowHigh")
-    clusterExport(clus, "ZeroPadding")
-    clusterExport(clus, "FourierBestCor")
-    clusterExport(clus, "LinearScale")
-    clusterExport(clus, "FourierLinearShift")
-    clusterExport(clus, "FFT")
-    clusterExport(clus, "IFFT")
+    parallel::clusterExport(clus, "LabelFreeAlign", envir = environment())
+    parallel::clusterExport(clus, "TimeWindowLow", envir = environment())
+    parallel::clusterExport(clus, "TimeWindowHigh", envir = environment())
+    parallel::clusterExport(clus, "ZeroPadding", envir = environment())
+    parallel::clusterExport(clus, "FourierBestCor", envir = environment())
+    parallel::clusterExport(clus, "LinearScale", envir = environment())
+    parallel::clusterExport(clus, "FourierLinearShift", envir = environment())
+    ##parallel::clusterExport(clus, "fftw::FFT")
+    ##parallel::clusterExport(clus, "fftw::IFFT")
+
 
     #Run cluster
     for(i in 1:iterations)
     {
       cat(paste("Align is running iteration ", i, " of ", iterations, "\n", sep = ""))
-      data<-t(parApply(clus, data, 1, function(x) LabelFreeAlign(x, ref, ... )))
+      data<-t(parallel::parApply(clus, data, 1, function(x) LabelFreeAlign(x, ref, ... )))
       gc()
     }
-    stopCluster(clus)
+    
+    parallel::stopCluster(clus)
+    
   }
   else
   {
@@ -182,7 +192,7 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = T, .
 # x - a spectrum to be aligned
 # ref - a data structre created with LabelFreeCreateRef() function
 # limit - shift limiting in ppm of spectra num of points
-# returns -  the aligned spectra to ref
+# returns -  a vector containing: the lag_low, the lag_high and the aligned spectra to ref (spc) (all in the same vector)
 LabelFreeAlign<- function(x, ref, limit = 100)
 {
   #0- Smoothing
@@ -240,7 +250,7 @@ LabelFreeAlign<- function(x, ref, limit = 100)
     x_ <- approx(x_, n = length(x_)/2)$y
   }
 
-  return (x_)
+return ( c(lag_Low = lagLow, lag_High = lagHigh, x_))
 }
 
 #Time shift on a data vector using FFT
@@ -248,7 +258,7 @@ LabelFreeAlign<- function(x, ref, limit = 100)
 # shift - The shift offset
 FourierLinearShift<-function(x, shift)
 {
-  x_<-Mod(IFFT( FFT(x) * exp(-2i*pi*(1/length(x))*(1:length(x)) * shift) ))
+  x_<-Mod(fftw::IFFT( fftw::FFT(x) * exp(-2i*pi*(1/length(x))*(1:length(x)) * shift) ))
   return(x_)
 }
 
@@ -335,11 +345,11 @@ TimeWindowHigh<-function(x, spectraSplit = 0.6)
 # returns - the lag to shift x to fit ref with best correlation
 FourierBestCor<-function(x, ref)
 {
-  X<-FFT(x)
+  X<-fftw::FFT(x)
   #Y<-FFT(ref)
   #comb <- X * Conj(Y)
   comb <- X * ref
-  cor <- IFFT(comb)
+  cor <- fftw::IFFT(comb)
 
   lag<-which.max(Mod(cor))
   if(lag > (length(cor)/2))
@@ -354,13 +364,19 @@ FourierBestCor<-function(x, ref)
   return(lag)
 }
 
+#Get the total number of points after padding
+GetPaddedLength<-function( N )
+{
+  n <- ceiling( log2(N) )
+  return(2^n)
+}
+
 #Zero-padding to fit 2^n length to speed-up fft
 # x - vector to be padded with zeros
 # rev - if is FALSE padd zeros at right side, else to left side
 ZeroPadding<-function(x, rev = F)
 {
-  n <- ceiling( log2(length(x)) )
-  padding <- (2^n) - length(x)
+  padding <- GetPaddedLength(length(x)) - length(x)
   if(rev)
   {
     x <- c(rep(0, padding), x)

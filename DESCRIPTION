@@ -8,12 +8,10 @@ Maintainer: Pere Rafols Soler<pere.rafols@urv.cat>
 Description: Processing methods for MSI using rMSI data format and C++ methods with boost::threads
 License: What license is it under?
 LazyData: TRUE
-Depends:
+Imports:
     rMSI,
     Rcpp (>= 0.12.2),
-    MALDIquant (>= 1.13)
-Imports:
-    Rcpp (>= 0.12.2),
+    fftw,
     MALDIquant (>= 1.13)
 LinkingTo:
     Rcpp

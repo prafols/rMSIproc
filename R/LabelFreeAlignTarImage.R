@@ -1,7 +1,6 @@
 #Easy Label-Free aligment tool
-#Just source this file and select the *.tar image to align
-
-LabelFreeAlign_Wizard<-function()
+#Just run this function and a wizard will lead you trought the alignment process.
+LabelFreeAlign_Wizard<-function( storeShifts = F)
 {
   startWD <- getwd()
 
@@ -16,25 +15,38 @@ LabelFreeAlign_Wizard<-function()
 
   path_out_img <- paste(tools::file_path_sans_ext(path_in_img),"_Aligned",".tar",sep = "" )
 
-
+  if(storeShifts)
+  {
+    Shifts <- list()
+  }
+  
   for( i in 1:length(path_in_img))
   {
     cat( paste("Starting aligning image:", path_in_img[i], "  ", i ,"of", length(path_in_img), "\n"))
 
     #Load the input image
-    raw<-LoadImageWithProgressBar(path_in_img[i])
-
+    raw<-rMSI::LoadMsiData(path_in_img[i])
+    
     #Algin the image
-    FullDataSetAligment(raw, subDataMemPercent = 1)
+    mShifts <- FullDataSetAligment(raw, subDataMemPercent = 1)
+    if(storeShifts)
+    {
+      Shifts[[length(Shifts) + 1]] <- mShifts
+    }
 
     #Saving Data to compressed format
-    SaveMsiData(data_file = path_out_img[i], imgData = raw, meanSpcData = raw$mean)
-
+    rMSI::SaveMsiData(data_file = path_out_img[i], imgData = raw)
+    
     #Remove the ramdisk
-    RemoveImageRamdisk(raw)
+    rMSI::DeleteRamdisk(raw)
 
     cat( paste("Image:", path_in_img[i], "Aligned to:", path_out_img[i], "\n\n\n"))
   }
 
   setwd(startWD)
+  
+  if(storeShifts)
+  {
+    return (Shifts)
+  }
 }
