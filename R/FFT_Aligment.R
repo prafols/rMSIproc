@@ -24,7 +24,16 @@ FullDataSetAligment<-function(raw, ...)
   cat("Aligning Image...\n")
   pt<-proc.time()
   pb<-txtProgressBar(min = 0, max = length(raw$data), style = 3 )
-  ref <- LabelFreeCreateRef( raw$mean@intensity , smoothing = F )
+  if( class(raw$mean) == "MassSpectrum" )
+  {
+    #Old images using MALDIquant obj
+    ref <- LabelFreeCreateRef( raw$mean@intensity , smoothing = F )
+  }
+  else
+  {
+    #New images without MALDIquant dep
+    ref <- LabelFreeCreateRef( raw$mean , smoothing = F )
+  }
   CurrCube <- 1
   setTxtProgressBar(pb, CurrCube - 1)
   ShiftsLow <- c()
@@ -151,16 +160,18 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = T, .
     ##clus <- makeCluster(parallel::detectCores())
     clus <- parallel::makeForkCluster(nnodes = parallel::detectCores())
 
+
     parallel::clusterExport(clus, "ref", envir = environment()) #Export aligned ref spectra to make it visible to all clusters
 
+
     #Export aligning functions to all custers
-    parallel::clusterExport(clus, "LabelFreeAlign", envir = environment())
-    parallel::clusterExport(clus, "TimeWindowLow", envir = environment())
-    parallel::clusterExport(clus, "TimeWindowHigh", envir = environment())
-    parallel::clusterExport(clus, "ZeroPadding", envir = environment())
-    parallel::clusterExport(clus, "FourierBestCor", envir = environment())
-    parallel::clusterExport(clus, "LinearScale", envir = environment())
-    parallel::clusterExport(clus, "FourierLinearShift", envir = environment())
+    #parallel::clusterExport(clus, "LabelFreeAlign", envir = environment())
+    # parallel::clusterExport(clus, "TimeWindowLow", envir = environment())
+    # parallel::clusterExport(clus, "TimeWindowHigh", envir = environment())
+    # parallel::clusterExport(clus, "ZeroPadding", envir = environment())
+    # parallel::clusterExport(clus, "FourierBestCor", envir = environment())
+    # parallel::clusterExport(clus, "LinearScale", envir = environment())
+    # parallel::clusterExport(clus, "FourierLinearShift", envir = environment())
     ##parallel::clusterExport(clus, "fftw::FFT")
     ##parallel::clusterExport(clus, "fftw::IFFT")
 

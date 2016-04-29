@@ -6,7 +6,7 @@ LabelFreeAlign_Wizard<-function( storeShifts = F)
 
   #Ask for the data path
   cat("Select a tar image to align...\n\n")
-  path_in_img <- gfile(text = "Select a tar image to align", type = "open", filter = c("tar" = "tar"), multi = T)
+  path_in_img <- gWidgets2::gfile(text = "Select a tar image to align", type = "open", filter = c("tar" = "tar"), multi = T)
   if(length(path_in_img) == 0){
     setwd(startWD)
     stop("Data importation aborted by user, please source this file again to restart it!\n", call. = F)
