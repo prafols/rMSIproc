@@ -152,7 +152,7 @@ AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPerce
 # ref - a data structre created with LabelFreeCreateRef() function
 # data - a matrix of spectra to align
 # returns -  the aligned spectra to ref
-LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = T, ...)
+LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = F, ...)
 {
   if( multithreading )
   {
@@ -165,13 +165,13 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = T, .
 
 
     #Export aligning functions to all custers
-    #parallel::clusterExport(clus, "LabelFreeAlign", envir = environment())
-    # parallel::clusterExport(clus, "TimeWindowLow", envir = environment())
-    # parallel::clusterExport(clus, "TimeWindowHigh", envir = environment())
-    # parallel::clusterExport(clus, "ZeroPadding", envir = environment())
-    # parallel::clusterExport(clus, "FourierBestCor", envir = environment())
-    # parallel::clusterExport(clus, "LinearScale", envir = environment())
-    # parallel::clusterExport(clus, "FourierLinearShift", envir = environment())
+    parallel::clusterExport(clus, "LabelFreeAlign", envir = environment())
+    parallel::clusterExport(clus, "TimeWindowLow", envir = environment())
+    parallel::clusterExport(clus, "TimeWindowHigh", envir = environment())
+    parallel::clusterExport(clus, "ZeroPadding", envir = environment())
+    parallel::clusterExport(clus, "FourierBestCor", envir = environment())
+    parallel::clusterExport(clus, "LinearScale", envir = environment())
+    parallel::clusterExport(clus, "FourierLinearShift", envir = environment())
     ##parallel::clusterExport(clus, "fftw::FFT")
     ##parallel::clusterExport(clus, "fftw::IFFT")
 
