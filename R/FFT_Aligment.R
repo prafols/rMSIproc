@@ -204,7 +204,7 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = F, .
 # ref - a data structre created with LabelFreeCreateRef() function
 # limit - shift limiting in ppm of spectra num of points
 # returns -  a vector containing: the lag_low, the lag_high and the aligned spectra to ref (spc) (all in the same vector)
-LabelFreeAlign<- function(x, ref, limit = 100)
+LabelFreeAlign<- function(x, ref, limit = 200)
 {
   #0- Smoothing
   if(ref$smooth)
