@@ -1,5 +1,13 @@
-#Easy Label-Free aligment tool
-#Just run this function and a wizard will lead you trought the alignment process.
+#' LabelFreeAlign_Wizard.
+#' 
+#' Easy to use Label-Free aligment tool.
+#' Just run this function and a wizard will guide you trought the alignment process. 
+#'
+#' @param storeShifts TRUE if applied shifts must be recorded.
+#'
+#' @return if storeShifts == TRUE then a list of applied shifts is returned.
+#' @export
+#'
 LabelFreeAlign_Wizard<-function( storeShifts = F)
 {
   startWD <- getwd()

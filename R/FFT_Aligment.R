@@ -1,12 +1,17 @@
 # Label Free FFT based alignment
-
-
 ####TODO: Improve the average spectra computation to reduce RAM usage in huge datasets
+####TODO: All of this must be translated to C++
 
-#TOP-METHOD: Align a whole dataset using multi-core capabilities and mean spectra as reference
-# data -  a matrix of spectra to align
-# iterations - number of iterations over aligned data
-# returns - the aligned dataset in a list containing data and the applied shifts
+#' MatrixAligment.
+#' 
+#' TOP-METHOD: Align a whole dataset using multi-core capabilities and mean spectra as reference.
+#'
+#' @param data a matrix of spectra to align.
+#' @param ...  iterations can be passed to specify the number of iterations over aligned data
+#'
+#' @return the aligned dataset in a list containing data and the applied shifts
+#' @export
+#'
 MatrixAligment<-function(data, ...)
 {
   ref <- LabelFreeCreateRef( apply(data, 2, mean) , smoothing = F)
@@ -16,9 +21,16 @@ MatrixAligment<-function(data, ...)
   return( list( data = data, shifts = lags))
 }
 
-#TOP-METHOD: Align a whole image using multi-core capabilities and mean spectra as reference
-# raw - image data in ff custom data format
-# returns - A list of two vectors containg the shifts performed to each spectrum. The data is stored directly in ff object.
+#' FullDataSetAligment.
+#' 
+#' TOP-METHOD: Align a whole image using multi-core capabilities and mean spectra as reference
+#' 
+#' @param raw image data in ff custom data format
+#' @param ... 
+#'
+#' @return A list of two vectors containg the shifts performed to each spectrum. The data is stored directly in ff object.
+#' @export
+#'
 FullDataSetAligment<-function(raw, ...)
 {
   cat("Aligning Image...\n")
@@ -65,10 +77,15 @@ FullDataSetAligment<-function(raw, ...)
   return( list( shiftLow = ShiftsLow ,shiftHigh = ShiftsHigh ))
 }
 
-#Create Ref data structure to avoid unnecessary computation in ref spectrum
-# ref - ref spectrum (for example the average spectrum)
-# smoothing - if TRUE, oversamples the data to achive a better alignment but a 3 times slower computations
-# returns - a list containing top and bottom windowed fft
+#' LabelFreeCreateRef.
+#' 
+#' Create Ref data structure to avoid unnecessary computation in ref spectrum.
+#'
+#' @param ref reference spectrum (for example the average spectrum).
+#' @param smoothing if TRUE, oversamples the data to achive a better alignment but a 3 times slower computations.
+#'
+#' @return a list containing top and bottom windowed fft.
+#'
 LabelFreeCreateRef<-function(ref, smoothing = F)
 {
   if(smoothing)
@@ -84,13 +101,19 @@ LabelFreeCreateRef<-function(ref, smoothing = F)
   return(list( ref_fft_bot = refBottom, ref_fft_top = refTop, smooth =  smoothing))
 }
 
-
-#Aligns a Chunk of a dataset to fit the RAM machine limit. The Chunk consists in an intergar number of Cubes
-# rawImg - The image file in custom ff data format
-# refSpectrum - The reference to align (return value of LabelFreeCreateRef())
-# startingCube - The starting ID of data cube to process
-# subDataMemPercent - The maximum RAM mem usage in % units relative to machine installed memory
-# returns - The next data cube ID to be processed and the used shifts in a list
+#' AlignDataChunk.
+#' 
+#' Aligns a Chunk of a dataset to fit the RAM machine limit. The Chunk consists in an intergar number of Cubes.
+#'
+#' @param rawImg The image file in custom ff data format.
+#' @param refSpectrum The reference to align (return value of LabelFreeCreateRef()).
+#' @param startingCube The starting ID of data cube to process
+#' @param subDataMemPercent The maximum RAM mem usage in \% units relative to machine installed memory.
+#' @param maxcubes limit the number of data cubes to load.
+#' @param ... 
+#'
+#' @return The next data cube ID to be processed and the used shifts in a list
+#'
 AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPercent = 10, maxcubes = 5, ... )
 {
 
@@ -145,13 +168,17 @@ AlignDataChunk<-function( rawImg, refSpectrum, startingCube = 1, subDataMemPerce
   return( list( CubeID = CubesId[length(CubesId)] + 1, shifts = lags))
 }
 
-
-
-#Top-Level Multi Spectra aligment (threaded implemented)
-# x - a spectrum to be aligned
-# ref - a data structre created with LabelFreeCreateRef() function
-# data - a matrix of spectra to align
-# returns -  the aligned spectra to ref
+#' LabelFreeAlignDataSet.
+#' 
+#' Top-Level (but not exported method) Multi Spectra aligment (threaded implemented).
+#' 
+#' @param ref a data structre created with LabelFreeCreateRef() function.
+#' @param data a matrix of spectra to align.  
+#' @param iterations the number of times that alignment method must be executed.
+#' @param multithreading TRUE if multihtreading capavilities must  be used.
+#' @param ... 
+#'
+#' @return a matrix of spectra to align.
 LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = F, ...)
 {
   if( multithreading )
@@ -200,10 +227,16 @@ LabelFreeAlignDataSet<-function(ref, data, iterations = 1, multithreading = F, .
   return(data)
 }
 
-# x - a spectrum to be aligned
-# ref - a data structre created with LabelFreeCreateRef() function
-# limit - shift limiting in ppm of spectra num of points
-# returns -  a vector containing: the lag_low, the lag_high and the aligned spectra to ref (spc) (all in the same vector)
+#' LabelFreeAlign.
+#' 
+#' Calculates the low and high mass shifts to perform on each side of spectrum to align it to reference.
+#'
+#' @param x a spectrum to be aligned.
+#' @param ref a data structre created with LabelFreeCreateRef() function.
+#' @param limit shift limiting in ppm of spectra num of points.
+#'
+#' @return a vector containing: the lag_low, the lag_high and the aligned spectra to ref (spc) (all in the same vector).
+#' 
 LabelFreeAlign<- function(x, ref, limit = 200)
 {
   #0- Smoothing
@@ -264,18 +297,30 @@ LabelFreeAlign<- function(x, ref, limit = 200)
 return ( c(lag_Low = lagLow, lag_High = lagHigh, x_))
 }
 
-#Time shift on a data vector using FFT
-# X - FFT of Data vector to be shifted in X axis direction
-# shift - The shift offset
+#' FourierLinearShift.
+#' 
+#' Time shift on a data vector using FFT.
+#'
+#' @param x FFT of Data vector to be shifted in X axis direction.
+#' @param shift The shift offset.
+#'
+#' @return The shifted data.
+#' 
 FourierLinearShift<-function(x, shift)
 {
   x_<-Mod(fftw::IFFT( fftw::FFT(x) * exp(-2i*pi*(1/length(x))*(1:length(x)) * shift) ))
   return(x_)
 }
 
-#Time compression/expansion
-# x - Data vector to be scaled in X axis direction
-# scaling - The scaling factor ( <1 compression / >1 expansion)
+#' LinearScale.
+#' 
+#' Time compression/expansion using R built-in approx function (computationally sub-optimal).
+#'
+#' @param x Data vector to be scaled in X axis direction.
+#' @param scaling The scaling factor ( <1 compression / >1 expansion).
+#'
+#' @return the time scaled data.
+#' 
 LinearScale<-function(x , scaling)
 {
   x_ <- approx(x, n = length(x)*scaling)$y
@@ -289,10 +334,16 @@ LinearScale<-function(x , scaling)
   return(x_)
 }
 
-#Time scale and shift on a data vector using FFT
-# X - FFT of Data vector to be shifted in X axis direction
-# scaling - The scaling factor ( <1 compression / >1 expansion)
-# shift - The shift offset
+#' FourierLinerScaleShift.
+#' 
+#' Time scale and shift on a data vector using FFT (computationally efficient).
+#'
+#' @param x the data vector to be shifted in x axis direction.
+#' @param scaling The scaling factor ( <1 compression / >1 expansion).
+#' @param shift The shift offset.
+#'
+#' @return the scaled and shifted data vector.
+#'
 FourierLinerScaleShift<-function(x , scaling, shift)
 {
   X <- fftw::FFT(x)
@@ -328,10 +379,15 @@ FourierLinerScaleShift<-function(x , scaling, shift)
   return(x_)
 }
 
-#Low-Windowing Hanning based
-# x - Mass Spectra to apply window
-# spectraSplit - the low part of spectra to keep (the resting points to unit will be removed)
-# returns - The windowed data
+#' TimeWindowLow.
+#' 
+#' Low-Windowing Hanning based.
+#'
+#' @param x Mass Spectra to apply window.
+#' @param spectraSplit the low part of spectra to keep (the resting points to unit will be removed).
+#'
+#' @return The windowed data.
+#'
 TimeWindowLow<-function(x, spectraSplit = 0.6)
 {
   x<-x[1:(spectraSplit*length(x))]
@@ -339,10 +395,15 @@ TimeWindowLow<-function(x, spectraSplit = 0.6)
   return(x*hann)
 }
 
-#High-Windowing Hanning based
-# x - Mass Spectra to apply window
-# spectraSplit - the high part of spectra to keep (the resting points to unit will be removed)
-# returns - The windowed data
+#' TimeWindowHigh.
+#' 
+#' High-Windowing Hanning based.
+#'
+#' @param x Mass Spectra to apply window.
+#' @param spectraSplit the high part of spectra to keep (the resting points to unit will be removed).
+#'
+#' @return The windowed data.
+#'
 TimeWindowHigh<-function(x, spectraSplit = 0.6)
 {
   x<-x[((1 - spectraSplit ) *length(x) + 1) : length(x)]
@@ -350,10 +411,15 @@ TimeWindowHigh<-function(x, spectraSplit = 0.6)
   return(x*hann)
 }
 
-#FFT Correlation
-# x - vector to correlate with ref
-# ref - Conj(FFT(ref))
-# returns - the lag to shift x to fit ref with best correlation
+#' FourierBestCor.
+#' 
+#' FFT Correlation
+#'
+#' @param x vector to correlate with ref.
+#' @param ref Conj(FFT(ref)).
+#'
+#' @return the lag to shift x to fit ref with best correlation.
+#'
 FourierBestCor<-function(x, ref)
 {
   X<-fftw::FFT(x)
@@ -375,16 +441,28 @@ FourierBestCor<-function(x, ref)
   return(lag)
 }
 
-#Get the total number of points after padding
+#' GetPaddedLength.
+#' 
+#' Get the total number of points after padding.
+#'
+#' @param N Original number of samples of data.
+#'
+#' @return The required number of samples to fit 2^n length for efficient FFT.
 GetPaddedLength<-function( N )
 {
   n <- ceiling( log2(N) )
   return(2^n)
 }
 
-#Zero-padding to fit 2^n length to speed-up fft
-# x - vector to be padded with zeros
-# rev - if is FALSE padd zeros at right side, else to left side
+#' ZeroPadding.
+#' 
+#' Zero-padding to fit 2^n length to speed-up fft.
+#'
+#' @param x vector to be padded with zeros.
+#' @param rev if is FALSE padd zeros at right side, else to left side.
+#'
+#' @return the zero padded data.
+#'
 ZeroPadding<-function(x, rev = F)
 {
   padding <- GetPaddedLength(length(x)) - length(x)
@@ -399,9 +477,14 @@ ZeroPadding<-function(x, rev = F)
   return(x)
 }
 
-#Smooth a curve and interpolate it to double length
-# x - spectrum to smooth
-# returns - smoothed data with doubled length
+#' SmoothUpper.
+#' 
+#' Smooth a curve and interpolate it to double length using R built-in approx function (sub-optimal).
+#'
+#' @param x spectrum to smooth.
+#'
+#' @return smoothed data with doubled length.
+#' 
 SmoothUpper <- function(x)
 {
   x_ <- approx(x, n = 2*length(x))$y

@@ -74,6 +74,20 @@ void waitForSomeThreadEnd(pdata_t *data)
  *  - rSaveCube: The R function used to save a cube from the ff object
  */
 
+/*** TODO Woking here... ***
+ * Els parametres Rcpp::Function rLoadCube, Rcpp::Function rSaveCube seran eliminats
+ * Posare tot aixo dins d'una classe per gestionar el mutlithreading que es dira ThreadingMsiProc o txorrada similar
+ * El header de ThreadingMsiProc incloura el rmsicdataio.h per proveir directament de les funcions de lectura/escriptura del ramdisk
+ * La classe ThreadingMsiProc sera purament virtual i per tant haura de ser derivada per poder-la usar
+ * Les classes filles de ThreadingMsiProc seran les responsables d'implementar la funcio de processat
+ * Les classes filles de ThreadingMsiProc inclouran per exemple el peakpicking.h i referencies a objectes per pillar peaks
+ * Els threads seran membres privats de la classe ThreadingMsiProc d forma que no necessitare la estructura pdata_t, estara tot direcament a la classe
+ * Alguns processats no requereixen escriure en el ramdisk, pero retornen dades.
+ * Cal indicar amb algun parametre si la implementacio de la classe de processat retorna dades i/o guarda en ramdisk.
+ * Els index k tinc ara de iCube i tal van d 1 a N pq invoques funcions d R, al passar a C asseguret k van de 0 a N-1
+ * 
+ */
+
 // [[Rcpp::export]]
 void runMSIProcessingCpp( int numberOfThreads, int numberOfCubes, Rcpp::Function rLoadCube, Rcpp::Function rSaveCube )
 {
