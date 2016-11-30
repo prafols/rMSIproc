@@ -5,19 +5,6 @@
 
 using namespace Rcpp;
 
-// runMSIProcessingCpp
-void runMSIProcessingCpp(int numberOfThreads, int numberOfCubes, Rcpp::Function rLoadCube, Rcpp::Function rSaveCube);
-RcppExport SEXP rMSIproc_runMSIProcessingCpp(SEXP numberOfThreadsSEXP, SEXP numberOfCubesSEXP, SEXP rLoadCubeSEXP, SEXP rSaveCubeSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type numberOfThreads(numberOfThreadsSEXP);
-    Rcpp::traits::input_parameter< int >::type numberOfCubes(numberOfCubesSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Function >::type rLoadCube(rLoadCubeSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Function >::type rSaveCube(rSaveCubeSEXP);
-    runMSIProcessingCpp(numberOfThreads, numberOfCubes, rLoadCube, rSaveCube);
-    return R_NilValue;
-END_RCPP
-}
 // NoiseEstimationFFTCosWin
 NumericVector NoiseEstimationFFTCosWin(NumericVector x, int filWinSize);
 RcppExport SEXP rMSIproc_NoiseEstimationFFTCosWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
@@ -67,14 +54,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // FullImageProcess
-List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, bool runAlignment, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP runAlignmentSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool runAlignment, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, double binningTolerance, double binningFilter);
+RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP runAlignmentSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
     Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type refSpectrum(refSpectrumSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
     Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
     Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
@@ -85,7 +73,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type SmoothingKernelSize(SmoothingKernelSizeSEXP);
     Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImageProcess(basePath, fileNames, mass, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, binningTolerance, binningFilter));
+    rcpp_result_gen = Rcpp::wrap(FullImageProcess(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, binningTolerance, binningFilter));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -66,15 +66,9 @@ CrMSIDataIO::DataCube *CrMSIDataIO::loadDataCube( int iCube)
   }
   
   //Data reading
-  //TODO revisar pq els path pugin ser compatibles amb Windows
-  String fname = ffFiles[iCube]; 
-  std::stringstream mPath;
-  mPath << dataPath.get_cstring() << "/" << fname.get_cstring();
-  std::ifstream file(mPath.str().c_str(), std::ios::in|std::ios::binary|std::ios::ate);
+  std::ifstream file(getFullPath(iCube).get_cstring(), std::ios::in|std::ios::binary);
   if (file.is_open())
   {
-    file.seekg (0, std::ios::beg);
-    char buffer[ sizeof(double)* rowCounts[iCube]];
     typedef int dformat; //Initially supose it is integer
     if(ffDataType == "double")
     {
@@ -86,7 +80,8 @@ CrMSIDataIO::DataCube *CrMSIDataIO::loadDataCube( int iCube)
       stop("C Reading error: Invalid data format.");
       return 0;
     }
-
+    char buffer[ sizeof(dformat)* rowCounts[iCube]];
+    
     //Binary data reading, ff read in columns
     for( int ic = 0; ic < dataLength; ic++)
     {
@@ -120,15 +115,65 @@ void CrMSIDataIO::freeDataCube(DataCube *data_ptr)
   delete data_ptr;
 }
 
-void CrMSIDataIO::storeDataCube(int iCube, DataCube *dc)
+void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
 {
-  //TODO this function must be implemented to be able to perform alignment in C++
-  Rcout<<"ERROR: Sorry the CrMSIDataIO::storeDataCube(int iCube, DataCube *dc) function is not implemented yet\n";
+  std::ofstream file(getFullPath(iCube).get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
+  if (file.is_open())
+  {
+    typedef int dformat; //Initially supose it is integer
+    if(ffDataType == "double")
+    {
+      typedef double dformat;
+    }
+    if( ffDataType != "integer" && ffDataType != "double")
+    {
+      file.close();
+      stop("C Writing error: Invalid data format.");
+      return;
+    }
+    dformat buffer[rowCounts[iCube]];
+    
+    //Binary data reading, ff read in columns
+    for( int ic = 0; ic < dataLength; ic++)
+    {
+      //copy data to write buffer
+      for(int ir = 0; ir < rowCounts[iCube]; ir++)
+      {
+        buffer[ir] = data_ptr->data[ir][ic];
+      }
+      
+      //Write ic column to a char buffer
+      file.write((char*)buffer, sizeof(dformat)* rowCounts[iCube]);
+    }
+    file.close();
+  }
+  else
+  {
+    //File read error
+    stop("C Writing error: File can not be opened.");
+    return;
+  }
+}
+
+String CrMSIDataIO::getFullPath(int cube_id)
+{
+  //TODO revisar pq els path pugin ser compatibles amb Windows
+  String fname = ffFiles[cube_id]; 
+  std::stringstream mPath;
+  mPath << dataPath.get_cstring() << "/" << fname.get_cstring();
+  fname = mPath.str();
+  return fname;
 }
 
 int CrMSIDataIO::getNumberOfCubes()
 {
   return ffFiles.length();
+}
+
+int CrMSIDataIO::getFirstSpectrumIdInCube(int cube_id)
+{
+  //This assumes that the number of rows are constant for all cubes exept the last one
+  return cube_id*rowCounts[0];
 }
 
 ////// Rcpp Exported methods //////////////////////////////////////////////////////////

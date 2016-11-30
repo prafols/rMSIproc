@@ -10,11 +10,16 @@
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.
 #' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction.
 #' @param SmoothingKernelSize size of smoothing kernel.
+#' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
+#' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+#' @param NumOfThreads the number number of threads used to process the data.
+#' 
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
 #' @export
 #'
-ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, peakUpSampling = 10, SmoothingKernelSize = 5, BinTolerance = 0.05, BinFilter = 0.1)
+ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
+                         SmoothingKernelSize = 5, BinTolerance = 0.05, BinFilter = 0.1, NumOfThreads = parallel::detectCores())
 {
   pt <- Sys.time()
   
@@ -23,8 +28,17 @@ ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, pe
   
   #TODO add normalization and calibration here!
   
-  pkMatrix <- FullImageProcess(dataInf$basepath, dataInf$filenames, img$mass, dataInf$nrows, dataInf$datatype,
-                               parallel::detectCores(), performAlignment, SNR, peakWindow, peakUpSampling, SmoothingKernelSize, BinTolerance, BinFilter)
+  if(class(img$mean) == "MassSpectrum")
+  {
+    refSpc <- img$mean@intensity
+  }
+  else
+  {
+    refSpc <- img$mean
+  }
+  
+  pkMatrix <- FullImageProcess(dataInf$basepath, dataInf$filenames, img$mass, refSpc, dataInf$nrows, dataInf$datatype,
+                               NumOfThreads, performAlignment, SNR, peakWindow, peakUpSampling, SmoothingKernelSize, BinTolerance, BinFilter)
   
   elap <- Sys.time() - pt
   cat("Total used processing time:\n")

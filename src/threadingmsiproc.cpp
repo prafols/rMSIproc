@@ -24,6 +24,7 @@ ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, 
 {
   numOfThreads = numberOfThreads;
   ioObj = new CrMSIDataIO( basePath, fileNames, massChannels, numRows, dataType );
+  CubeNumRows = numRows[0];
   cubes = new CrMSIDataIO::DataCube*[numOfThreads];
   iCube = new int[numOfThreads];
   bDataReady = new bool[numOfThreads];
@@ -52,20 +53,27 @@ void ThreadingMsiProc::runMSIProcessingCpp()
   }
   
   int nextCube = 0; //Point to the next datacube to load
+  
+  //Load first cubes
+  
+  
   bool end_of_program = false;
   while( !end_of_program ) 
   {
     //Load data and start working threads
     for(int iThread = 0; iThread < numOfThreads; iThread++)
     {
-      if(iCube[iThread] == 0 && nextCube < numOfThreads) //No cube assigned then no thread running in this slot
+      if(iCube[iThread] == -1 && nextCube < ioObj->getNumberOfCubes()) //No cube assigned then no thread running in this slot
       {
+        Rcpp::Rcout<<"Processing cube "<<(nextCube + 1)<<" of "<<ioObj->getNumberOfCubes()<<"\n";
         iCube[iThread] = nextCube;
         nextCube++;
         cubes[iThread] = ioObj->loadDataCube(iCube[iThread]); 
-        tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread));
+        tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
       }
     }
+    
+    //TODO res de wait, aprofita per carregar next cubes!
     
     //Wait for thread ends
     WaitForSomeThreadEnd();
@@ -81,7 +89,6 @@ void ThreadingMsiProc::runMSIProcessingCpp()
           ioObj->storeDataCube(iCube[iThread], cubes[iThread]); //Overwrite datacube on HDD
         }
         ioObj->freeDataCube(cubes[iThread]); //Free datacube memory
-        
         iCube[iThread] = -1; //Mark thread as stopped
         bDataReady[iThread] = false; //Reset data ready state;
         tworkers[iThread].join();
@@ -99,6 +106,7 @@ void ThreadingMsiProc::runMSIProcessingCpp()
     }
     mtx.unlock();
   }
+  Rcpp::Rcout<<"Multi thread processing complete\n";
 }
 
 void ThreadingMsiProc::ProcessingThread( int threadSlot )

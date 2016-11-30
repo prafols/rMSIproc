@@ -35,7 +35,11 @@ class ThreadingMsiProc
     //Function to control threaded execution
     void runMSIProcessingCpp();
     
+    int *iCube; //This vector will porvide which cube ID is processing each thread
     CrMSIDataIO::DataCube **cubes; //Array of data cubes pointer, the length of this array will be the number of processing threads.
+    CrMSIDataIO *ioObj; //Data access object
+    int CubeNumRows;
+    int numOfThreads;
     
   private:  
     //The function to be executed for each thread. 
@@ -46,15 +50,12 @@ class ThreadingMsiProc
     void WaitForSomeThreadEnd();
     
     boost::mutex mtx; //Lock mechanism for signalling bDataReady vector
-    int *iCube; //This vector will porvide which cube ID is processing each thread
     bool *bDataReady; //This vector will contain true when a worker thread completes a datacube processing
     
     //Condition variable to notify thread ends
     boost::condition_variable  life_end_cond;
     boost::mutex               life_end_mutex;
     bool                       life_end;
-    int numOfThreads;
-    CrMSIDataIO *ioObj; //Data access object
     boost::thread *tworkers; //Thread objects
     bool bDataOverWrite;
 };

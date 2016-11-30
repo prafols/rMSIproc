@@ -18,8 +18,11 @@
 #ifndef PEAKPICK_AND_ALIGN_H
   #define PEAKPICK_AND_ALIGN_H
 #include <Rcpp.h>
+#include <boost/thread.hpp>
 #include "peakpicking.h"
+#include "labelfreealign.h"
 #include "threadingmsiproc.h"
+
 
 class PeakPickAlign : public ThreadingMsiProc 
 {
@@ -29,6 +32,7 @@ class PeakPickAlign : public ThreadingMsiProc
     {
       int peakWinSize; //Windows size used for peak-picking
       double *massAxis; //Array containing the mass axis
+      double *ref_spectrum; //Reference spectrum used for alignment
       int massChannels; //Number of points in the mass axis array
       int peakInterpolationUpSampling; //Upsampling value for peak interpolation
       int peakSmoothingKernelSize; //SavitzkyGolay kernel size for smoothing
@@ -49,13 +53,16 @@ class PeakPickAlign : public ThreadingMsiProc
     Rcpp::List Run(); 
         
   private:
-    PeakPicking *peakObj;
+    PeakPicking **peakObj;
+    LabelFreeAlign **alngObj;
     int numberOfCubes;
     bool useAlignment;
     int numOfPixels;
     double minSNR;
     double binSize;
     double binFilter;
+    PeakPicking::Peaks **mPeaks; //A place to store peaks objects outside threaded space
+    LabelFreeAlign::TLags *mLags; //A place to store alignment lags
     
     typedef struct
     {
@@ -63,10 +70,12 @@ class PeakPickAlign : public ThreadingMsiProc
       double SNR;
     }TBin;
     
-    Rcpp::List BinPeaks(PeakPicking::Peaks **peaks);
+    Rcpp::List BinPeaks();
     
     //Thread Processing function definition
     void ProcessingFunction(int threadSlot);
+    
+    boost::mutex fftSharedMutex;
 };
   
   

@@ -48,10 +48,13 @@ class CrMSIDataIO
     void freeDataCube(DataCube *data_ptr);
     
     //Stores a datacube to the path assosiated with its ID
-    void storeDataCube(int iCube, DataCube *dc);
+    void storeDataCube(int iCube, DataCube *data_ptr);
     
     //Retunrs the total number of cubes in the ramdisk
     int getNumberOfCubes();
+    
+    //Returns the id of the first spectrum in the given cube
+    int getFirstSpectrumIdInCube(int cube_id);
 
   private:
     Rcpp::String dataPath;
@@ -59,6 +62,9 @@ class CrMSIDataIO
     int dataLength;
     int *rowCounts;
     Rcpp::String ffDataType;
+    
+    //Returns the full path to a ramdisk
+    Rcpp::String getFullPath(int cube_id);
 };
   
 #endif
