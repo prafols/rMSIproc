@@ -248,9 +248,9 @@ List FullImageProcess( String basePath, StringVector fileNames,
   double massC[mass.length()];
   double refC[refSpectrum.length()];
   int numRowsC[fileNames.length()];
-  std::memcpy(massC, mass.begin(), sizeof(double)*mass.length());
-  std::memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
-  std::memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
+  memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
+  memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   PeakPickAlign::ImgProcDef myProcParams;
   myProcParams.basePath = basePath;

@@ -29,7 +29,7 @@ PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int
   
   dataLength = numOfDataPoints;
   mass = new double[dataLength];
-  std::memcpy(mass, massAxis, sizeof(double) * dataLength);
+  memcpy(mass, massAxis, sizeof(double) * dataLength);
   
   //Compute Hanning window
   HanningWin = new double[FFT_Size];
@@ -71,12 +71,12 @@ PeakPicking::Peaks *PeakPicking::peakPicking(double *spectrum, double SNR )
 {
   //Calculate noise
   double noise[dataLength];
-  std::memcpy(noise, spectrum, sizeof(double)*dataLength);
+  memcpy(noise, spectrum, sizeof(double)*dataLength);
   neObj->NoiseEstimationFFTExpWin(noise, dataLength, FFT_Size*2);
   
   //Smooth spectrum
   double spcSmooth[dataLength];
-  std::memcpy(spcSmooth, spectrum, sizeof(double)*dataLength);
+  memcpy(spcSmooth, spectrum, sizeof(double)*dataLength);
   smObj->smoothSavitzkyGolay(spcSmooth, dataLength);
   
   //Detect peaks
@@ -198,7 +198,7 @@ double PeakPicking::predictPeakMassFFT( double *spectrum, int iPeakMass )
 NumericVector PeakPicking::getHannWin()
 {
   NumericVector hannR(FFT_Size);
-  std::memcpy(hannR.begin(), HanningWin, sizeof(double)*FFT_Size);
+  memcpy(hannR.begin(), HanningWin, sizeof(double)*FFT_Size);
   return hannR;
 }
 
@@ -245,8 +245,8 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   double spectrum[mass.length()];
   
   //Copy R data to C arrays
-  std::memcpy(massC, mass.begin(), sizeof(double)*mass.length());
-  std::memcpy(spectrum, intensity.begin(), sizeof(double)*intensity.length());
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
+  memcpy(spectrum, intensity.begin(), sizeof(double)*intensity.length());
   
   PeakPicking ppObj(WinSize, massC, mass.length());
   PeakPicking::Peaks *peaks = ppObj.peakPicking(spectrum, SNR);

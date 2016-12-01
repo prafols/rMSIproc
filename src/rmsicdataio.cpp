@@ -30,7 +30,7 @@ dataLength(massChannels),
 ffDataType(dataType)
 {
   rowCounts = new int[ffFiles.length()];
-  std::memcpy(rowCounts, numRows, sizeof(int)*ffFiles.length());
+  memcpy(rowCounts, numRows, sizeof(int)*ffFiles.length());
 }
 
 CrMSIDataIO::~CrMSIDataIO()

@@ -31,7 +31,7 @@ NoiseEstimation::NoiseEstimation(int dataLength)
   fft_pdirect = fftw_plan_r2r_1d(FFT_Size, fft_in, fft_out, FFTW_R2HC, FFTW_ESTIMATE);
   fft_pinvers = fftw_plan_r2r_1d(FFT_Size, fft_out, fft_in, FFTW_HC2R, FFTW_ESTIMATE);
   filWin = new double[1+FFT_Size/2];
-  filWinMode = FilWinType::none;
+  filWinMode = none;
   filWinSize = 0;
 }
 
@@ -46,7 +46,7 @@ NoiseEstimation::~NoiseEstimation()
 
 void NoiseEstimation::NoiseEstimationFFTCosWin( double *data, int dataLength, int WinSize)
 {
-  if( filWinSize != WinSize ||  filWinMode != FilWinType::cos )
+  if( filWinSize != WinSize ||  filWinMode != cos )
   {
     ComputeCosWin(WinSize);
   }
@@ -56,7 +56,7 @@ void NoiseEstimation::NoiseEstimationFFTCosWin( double *data, int dataLength, in
 
 void NoiseEstimation::NoiseEstimationFFTExpWin( double *data, int dataLength, int WinSize)
 {
-  if( filWinSize != WinSize ||  filWinMode != FilWinType::exp )
+  if( filWinSize != WinSize ||  filWinMode != exp )
   {
     ComputeExpWin(WinSize);
   }
@@ -74,14 +74,14 @@ void NoiseEstimation::NoiseEstimationFFT(double *data, int dataLength)
     xc_data[i] = i < dataLength? data[i] : 0.0;
   }
 
-  if( filWinSize == 0 || filWinMode == FilWinType::none )
+  if( filWinSize == 0 || filWinMode == none )
   {
     stop("Error: Filtering Windows has not been calculated yet");
     return; 
   }
   
   //Copy data to a FFT objects
-  std::memcpy(fft_in, xc_data, sizeof(double)*FFT_Size);
+  memcpy(fft_in, xc_data, sizeof(double)*FFT_Size);
 
   //FFT data
   fftw_execute(fft_pdirect);
@@ -109,20 +109,20 @@ void NoiseEstimation::NoiseEstimationFFT(double *data, int dataLength)
 NumericVector NoiseEstimation::NoiseEstimationFFTCosWin( NumericVector data, int WinSize )
 {
   double xc_data[data.length()];
-  std::memcpy(xc_data, data.begin(), sizeof(double)*data.length());
+  memcpy(xc_data, data.begin(), sizeof(double)*data.length());
   NoiseEstimationFFTCosWin(xc_data, data.length(), WinSize);
   NumericVector y(data.length());
-  std::memcpy(y.begin(), xc_data, sizeof(double)*data.length());
+  memcpy(y.begin(), xc_data, sizeof(double)*data.length());
   return y;
 }
 
 NumericVector NoiseEstimation::NoiseEstimationFFTExpWin( NumericVector data, int WinSize )
 {
   double xc_data[data.length()];
-  std::memcpy(xc_data, data.begin(), sizeof(double)*data.length());
+  memcpy(xc_data, data.begin(), sizeof(double)*data.length());
   NoiseEstimationFFTExpWin(xc_data, data.length(), WinSize);
   NumericVector y(data.length());
-  std::memcpy(y.begin(), xc_data, sizeof(double)*data.length());
+  memcpy(y.begin(), xc_data, sizeof(double)*data.length());
   return y;
 }
 
@@ -133,7 +133,7 @@ void NoiseEstimation::ComputeCosWin(int WinSize)
   {
     filWin[i] = i < filWinSize ? (0.5 + 0.5*std::cos((2.0*M_PI*((double)i + 1.0))/(2.0 * (double)filWinSize))) : 0.0;
   }
-  filWinMode = FilWinType::cos;
+  filWinMode = cos;
 }
 
 void NoiseEstimation::ComputeExpWin(int WinSize)
@@ -143,7 +143,7 @@ void NoiseEstimation::ComputeExpWin(int WinSize)
   {
     filWin[i] = std::exp(-5.0*i/(filWinSize));
   }
-  filWinMode = FilWinType::exp;
+  filWinMode = exp;
 }
 
 int NoiseEstimation::getFFTSize()

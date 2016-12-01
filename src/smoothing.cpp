@@ -78,10 +78,10 @@ Smoothing::~Smoothing()
 NumericVector Smoothing::smoothSavitzkyGolay(NumericVector x)
 {
   double xC[x.length()];
-  std::memcpy(xC, x.begin(), sizeof(double)*x.length());
+  memcpy(xC, x.begin(), sizeof(double)*x.length());
   smoothSavitzkyGolay(xC, x.length());
   NumericVector y(x.length());
-  std::memcpy(y.begin(), xC, sizeof(double)*y.length());
+  memcpy(y.begin(), xC, sizeof(double)*y.length());
   return y;
 }
 
@@ -103,7 +103,7 @@ void Smoothing::smoothSavitzkyGolay(double *x, int length)
   }
   
   //Overwrite input pointer
-  std::memcpy(x, y, sizeof(double)*length);
+  memcpy(x, y, sizeof(double)*length);
 }
 
 

@@ -79,11 +79,11 @@ void LabelFreeAlign::ComputeRef(double *data_ref, bool bHigh)
 {
   if(bHigh)
   {
-    std::memcpy( (fft_direct_in + (FFT_Size - WinLength)), data_ref + (dataLength - WinLength), sizeof(double)*WinLength);
+    memcpy( (fft_direct_in + (FFT_Size - WinLength)), data_ref + (dataLength - WinLength), sizeof(double)*WinLength);
   }
   else
   {
-    std::memcpy(fft_direct_in, data_ref, sizeof(double)*WinLength);
+    memcpy(fft_direct_in, data_ref, sizeof(double)*WinLength);
   }
   TimeWindow(fft_direct_in,  bHigh);
   ZeroPadding(fft_direct_in, bHigh, FFT_Size, WinLength);
@@ -97,7 +97,7 @@ void LabelFreeAlign::ComputeRef(double *data_ref, bool bHigh)
   {
     data_ptr = fft_ref_low;
   }
-  std::memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size);
+  memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size);
   
   //Compute Conj
   for( int i = ((FFT_Size + 1)/2 - 1) ; i < FFT_Size; i++)
@@ -149,8 +149,8 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
   //Hanning Windowing
   double topWin_data[FFT_Size];
   double botWin_data[FFT_Size];
-  std::memcpy( (topWin_data + (FFT_Size - WinLength)), data + (dataLength - WinLength), sizeof(double)*WinLength);
-  std::memcpy(botWin_data, data, sizeof(double)*WinLength);
+  memcpy( (topWin_data + (FFT_Size - WinLength)), data + (dataLength - WinLength), sizeof(double)*WinLength);
+  memcpy(botWin_data, data, sizeof(double)*WinLength);
   TimeWindow(topWin_data, true);
   TimeWindow(botWin_data, false);
   
@@ -269,7 +269,7 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
 
 int LabelFreeAlign::FourierBestCor(double *data, double *ref)
 {
-  std::memcpy(fft_direct_in, data, sizeof(double)*FFT_Size);
+  memcpy(fft_direct_in, data, sizeof(double)*FFT_Size);
   fftw_execute(fft_pdirect);
   
   //Mult fft complex values, the ref is assumed already Conj (this is automatically done by ComputeRef method)
@@ -315,21 +315,21 @@ int LabelFreeAlign::FourierBestCor(double *data, double *ref)
 NumericVector LabelFreeAlign::getHannWindow()
 {
   NumericVector hannWin(WinLength);
-  std::memcpy(hannWin.begin(), HannWindow, sizeof(double)*WinLength);
+  memcpy(hannWin.begin(), HannWindow, sizeof(double)*WinLength);
   return hannWin;
 }
 
 NumericVector LabelFreeAlign::getRefLowFFT()
 {
   NumericVector refFft(FFT_Size);
-  std::memcpy(refFft.begin(), fft_ref_low, sizeof(double)*FFT_Size);
+  memcpy(refFft.begin(), fft_ref_low, sizeof(double)*FFT_Size);
   return refFft;
 }
 
 NumericVector LabelFreeAlign::getRefHighFFT()
 {
   NumericVector refFft(FFT_Size);
-  std::memcpy(refFft.begin(), fft_ref_high, sizeof(double)*FFT_Size);
+  memcpy(refFft.begin(), fft_ref_high, sizeof(double)*FFT_Size);
   return refFft;
 }
 
@@ -339,7 +339,7 @@ NumericVector LabelFreeAlign::getRefHighFFT()
 List TestComputeRefAndHannWin(NumericVector refSpectrum)
 {
   double refC[refSpectrum.length()];
-  std::memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
+  memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
   LabelFreeAlign alngObj(refC, refSpectrum.length());
   return List::create( Named("HannWin") = alngObj.getHannWindow(), Named("RefLow") = alngObj.getRefLowFFT(), Named("RefHigh") = alngObj.getRefHighFFT());
 }
@@ -350,13 +350,13 @@ NumericVector TestZeroPadding(NumericVector x, bool rev)
 {
   const int NewLength = (int)pow(2.0, std::ceil(log2((double)x.length())));
   double refC[NewLength];
-  std::memcpy(refC, x.begin(), sizeof(double)*x.length());
+  memcpy(refC, x.begin(), sizeof(double)*x.length());
   LabelFreeAlign alngObj(refC, x.length());
   
   alngObj.ZeroPadding(refC, rev,  NewLength, x.length());
     
   NumericVector y(NewLength);
-  std::memcpy(y.begin(), refC, sizeof(double)*x.length());
+  memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y;
 }
 
@@ -365,13 +365,13 @@ NumericVector TestZeroPadding(NumericVector x, bool rev)
 NumericVector TestTimeWindow(NumericVector x, bool bHigh)
 {
   double refC[x.length()];
-  std::memcpy(refC, x.begin(), sizeof(double)*x.length());
+  memcpy(refC, x.begin(), sizeof(double)*x.length());
   LabelFreeAlign alngObj(refC, x.length());
   
   alngObj.TimeWindow(refC, bHigh);
   
   NumericVector y(x.length());
-  std::memcpy(y.begin(), refC, sizeof(double)*x.length());
+  memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y; 
 }
 
@@ -380,13 +380,13 @@ NumericVector TestTimeWindow(NumericVector x, bool bHigh)
 NumericVector TestFourierLinerScaleShift(NumericVector x, double scaling,  double shift)
 {
   double refC[x.length()];
-  std::memcpy(refC, x.begin(), sizeof(double)*x.length());
+  memcpy(refC, x.begin(), sizeof(double)*x.length());
   LabelFreeAlign alngObj(refC, x.length());
   
   alngObj.FourierLinerScaleShift(refC, scaling, shift);
   
   NumericVector y(x.length());
-  std::memcpy(y.begin(), refC, sizeof(double)*x.length());
+  memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y;
 }
 
@@ -396,8 +396,8 @@ double TestFourierBestCor(NumericVector ref, NumericVector x, bool bRefLow)
 {
   double refC[ref.length()];
   double xC[x.length()];
-  std::memcpy(refC, ref.begin(), sizeof(double)*ref.length());
-  std::memcpy(xC, x.begin(), sizeof(double)*x.length());
+  memcpy(refC, ref.begin(), sizeof(double)*ref.length());
+  memcpy(xC, x.begin(), sizeof(double)*x.length());
   LabelFreeAlign alngObj(refC, ref.length());
   
   NumericVector ref_ptr;
@@ -419,13 +419,13 @@ NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x)
 {
   double refC[ref.length()];
   double xC[x.length()];
-  std::memcpy(refC, ref.begin(), sizeof(double)*ref.length());
-  std::memcpy(xC, x.begin(), sizeof(double)*x.length());
+  memcpy(refC, ref.begin(), sizeof(double)*ref.length());
+  memcpy(xC, x.begin(), sizeof(double)*x.length());
   LabelFreeAlign alngObj(refC, ref.length());
   LabelFreeAlign::TLags lags = alngObj.AlignSpectrum(xC);
   Rcout<<"Lag low = "<<lags.lagLow<<" Lag high = "<<lags.lagHigh<<"\n";
   NumericVector y(x.length());
-  std::memcpy(y.begin(), refC, sizeof(double)*x.length());
+  memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y;
 }
 */
