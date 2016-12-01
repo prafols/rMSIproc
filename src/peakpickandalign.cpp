@@ -24,9 +24,9 @@ using namespace Rcpp;
 PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) : 
   ThreadingMsiProc( imgRunInfo.numOfThreads, imgRunInfo.runAlignment, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
-  peakObj = new PeakPicking*[numOfThreads];
-  alngObj = new LabelFreeAlign*[numOfThreads];
-  for(int i = 0; i < numOfThreads; i++)
+  peakObj = new PeakPicking*[numOfThreadsDouble];
+  alngObj = new LabelFreeAlign*[numOfThreadsDouble];
+  for(int i = 0; i < numOfThreadsDouble; i++)
   {
     peakObj[i] = new PeakPicking(imgRunInfo.peakWinSize, imgRunInfo.massAxis, imgRunInfo.massChannels, imgRunInfo.peakInterpolationUpSampling, imgRunInfo.peakSmoothingKernelSize);  
     alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex);
@@ -47,7 +47,7 @@ PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) :
 
 PeakPickAlign::~PeakPickAlign()
 {
-  for(int i = 0; i < numOfThreads; i++)
+  for(int i = 0; i < numOfThreadsDouble; i++)
   {
     delete peakObj[i];
     delete alngObj[i];
@@ -188,7 +188,7 @@ List PeakPickAlign::BinPeaks()
   Rcout<<"Bining complete with a total number of "<<binMass.size()<<" bins\n";
   
   //Copy data to R matrices
-  Rcout<<"Coping data to R object...";
+  Rcout<<"Coping data to R object...\n";
   NumericMatrix binMatIntensity(numOfPixels, binMass.size());
   NumericMatrix binMatSNR(numOfPixels, binMass.size());
   for( int ir = 0;  ir < numOfPixels; ir++)

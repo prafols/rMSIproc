@@ -39,7 +39,7 @@ class ThreadingMsiProc
     CrMSIDataIO::DataCube **cubes; //Array of data cubes pointer, the length of this array will be the number of processing threads.
     CrMSIDataIO *ioObj; //Data access object
     int CubeNumRows;
-    int numOfThreads;
+    int numOfThreadsDouble; //The double of used number of threads
     
   private:  
     //The function to be executed for each thread. 
@@ -51,6 +51,7 @@ class ThreadingMsiProc
     
     boost::mutex mtx; //Lock mechanism for signalling bDataReady vector
     bool *bDataReady; //This vector will contain true when a worker thread completes a datacube processing
+    bool *bRunningThread; //Keep track if a thread is runnning for a data slot
     
     //Condition variable to notify thread ends
     boost::condition_variable  life_end_cond;

@@ -22,13 +22,14 @@
 
 ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, Rcpp::String basePath, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType )
 {
-  numOfThreads = numberOfThreads;
+  numOfThreadsDouble = 2*numberOfThreads;
   ioObj = new CrMSIDataIO( basePath, fileNames, massChannels, numRows, dataType );
   CubeNumRows = numRows[0];
-  cubes = new CrMSIDataIO::DataCube*[numOfThreads];
-  iCube = new int[numOfThreads];
-  bDataReady = new bool[numOfThreads];
-  tworkers = new boost::thread[numOfThreads];
+  cubes = new CrMSIDataIO::DataCube*[numOfThreadsDouble];
+  iCube = new int[numOfThreadsDouble];
+  bDataReady = new bool[numOfThreadsDouble];
+  bRunningThread = new bool[numOfThreadsDouble];
+  tworkers = new boost::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
   bDataOverWrite = overWriteRamdisk;
   
 }
@@ -38,6 +39,7 @@ ThreadingMsiProc::~ThreadingMsiProc()
   delete[] cubes;
   delete[] iCube;
   delete[] bDataReady;
+  delete[] bRunningThread;
   delete[] tworkers; 
   delete ioObj;
 }
@@ -46,41 +48,64 @@ void ThreadingMsiProc::runMSIProcessingCpp()
 {
   //Initialize processing data cube
   life_end = false;
-  for( int i = 0; i < numOfThreads; i++)
+  for( int i = 0; i < numOfThreadsDouble; i++)
   {
     iCube[i] = -1; //-1 is not cube assigned to worker thread
     bDataReady[i] = false;
+    bRunningThread[i] = false;
   }
   
   int nextCube = 0; //Point to the next datacube to load
-  
-  //Load first cubes
-  
-  
+  int runningThreads = 0; //Total number of running threads
   bool end_of_program = false;
   while( !end_of_program ) 
   {
-    //Load data and start working threads
-    for(int iThread = 0; iThread < numOfThreads; iThread++)
+    //Load data for future threads and start working threads
+    for(int iThread = 0; iThread < numOfThreadsDouble; iThread++)
     {
       if(iCube[iThread] == -1 && nextCube < ioObj->getNumberOfCubes()) //No cube assigned then no thread running in this slot
       {
         Rcpp::Rcout<<"Processing cube "<<(nextCube + 1)<<" of "<<ioObj->getNumberOfCubes()<<"\n";
         iCube[iThread] = nextCube;
         nextCube++;
-        cubes[iThread] = ioObj->loadDataCube(iCube[iThread]); 
-        tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
+        cubes[iThread] = ioObj->loadDataCube(iCube[iThread]);
+        if(2*runningThreads < numOfThreadsDouble)
+        {
+          bRunningThread[iThread] = true;
+          tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
+          runningThreads++;
+        }
       }
     }
-    
-    //TODO res de wait, aprofita per carregar next cubes!
     
     //Wait for thread ends
     WaitForSomeThreadEnd();
     
-    //Save data to RSession and free thread slots
     mtx.lock(); //Any thread locked to this mutex is actually waiting to save data
-    for(int iThread = 0; iThread < numOfThreads; iThread++)
+    
+    //Update number of running threads
+    for(int iThread = 0; iThread < numOfThreadsDouble; iThread++)
+    {
+      runningThreads = 0;
+      if(bRunningThread[iThread])
+      {
+        runningThreads++;
+      }
+    }
+    
+    //Start thread that have data loaded ready to be processed
+    for(int iThread = 0; iThread < numOfThreadsDouble; iThread++)
+    {
+      if(iCube[iThread] != -1 && !bRunningThread[iThread] && !bDataReady[iThread] && 2*runningThreads < numOfThreadsDouble)
+      {
+        bRunningThread[iThread] = true;
+        tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
+        runningThreads++;
+      }      
+    }
+    
+    //Save data to RSession and free thread slots
+    for(int iThread = 0; iThread < numOfThreadsDouble; iThread++)
     {
       if( bDataReady[iThread] )
       {
@@ -99,7 +124,7 @@ void ThreadingMsiProc::runMSIProcessingCpp()
     if( nextCube >= ioObj->getNumberOfCubes() )
     {
       end_of_program = true;
-      for(int iThread = 0; iThread < numOfThreads; iThread++)
+      for(int iThread = 0; iThread < numOfThreadsDouble; iThread++)
       {
         end_of_program &= (iCube[iThread] == -1);
       }
@@ -117,6 +142,7 @@ void ThreadingMsiProc::ProcessingThread( int threadSlot )
   //Save data to R Session and Store the new state of total processed cubes
   mtx.lock();
   bDataReady[threadSlot] = true;
+  bRunningThread[threadSlot] = false;
   mtx.unlock();
   
   //Notify Main thread
