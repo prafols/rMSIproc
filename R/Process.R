@@ -36,7 +36,7 @@
 #' @export
 #'
 ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         SmoothingKernelSize = 5, BinTolerance = 0.05, BinFilter = 0.1, NumOfThreads = parallel::detectCores())
+                         SmoothingKernelSize = 5, BinTolerance = 0.05, BinFilter = 0.05, NumOfThreads = parallel::detectCores())
 {
   pt <- Sys.time()
   

@@ -53,8 +53,8 @@ LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mu
   ComputeRef(ref_spectrum, true);
   ComputeRef(ref_spectrum, false);
   
-  //Lag limits relative to number of points and FFT siexe
-  lagMax = (lagLimitppm/1.0e6)*(double)FFT_Size;
+  //Lag limits relative to number of points
+  lagMax = (lagLimitppm/1.0e6)*(double)dataLength;
   
   //The mutext shared for all threads
   fftwMtx = sharedMutex;
