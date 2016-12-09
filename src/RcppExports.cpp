@@ -53,6 +53,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// LoadPeakMatrixC
+List LoadPeakMatrixC(String path);
+RcppExport SEXP rMSIproc_LoadPeakMatrixC(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type path(pathSEXP);
+    rcpp_result_gen = Rcpp::wrap(LoadPeakMatrixC(path));
+    return rcpp_result_gen;
+END_RCPP
+}
+// StorePeakMatrixC
+void StorePeakMatrixC(String path, List mat);
+RcppExport SEXP rMSIproc_StorePeakMatrixC(SEXP pathSEXP, SEXP matSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type path(pathSEXP);
+    Rcpp::traits::input_parameter< List >::type mat(matSEXP);
+    StorePeakMatrixC(path, mat);
+    return R_NilValue;
+END_RCPP
+}
 // FullImageProcess
 List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool runAlignment, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, double binningTolerance, double binningFilter);
 RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP runAlignmentSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {

@@ -156,7 +156,11 @@ List PeakPickAlign::BinPeaks()
           {
             binMat[binMat.size() - 1][j].intensity = mPeaks[j]->intensity[iPos];
             binMat[binMat.size() - 1][j].SNR = mPeaks[j]->SNR[iPos];
-            countPeaks++;
+            if(mPeaks[j]->SNR[iPos] >= minSNR)
+            {
+              //Count peak only if its SNR fits the min SNR value
+              countPeaks++;
+            }
             
             //Recompute mass centroid using a continuous average
             binMass[binMass.size() - 1] *= numMasses; 
@@ -192,12 +196,14 @@ List PeakPickAlign::BinPeaks()
   Rcout<<"Coping data to R object...\n";
   NumericMatrix binMatIntensity(numOfPixels, binMass.size());
   NumericMatrix binMatSNR(numOfPixels, binMass.size());
+  NumericMatrix binMatArea(numOfPixels, binMass.size());
   for( int ir = 0;  ir < numOfPixels; ir++)
   {
     for(int ic = 0; ic < binMass.size(); ic++)
     {
       binMatIntensity(ir, ic) = binMat[ic][ir].intensity;
       binMatSNR(ir, ic) = binMat[ic][ir].SNR;
+      binMatArea(ir, ic) = binMatIntensity(ir, ic); //TODO currently I'm using area equal intensity for developing but i must calculate area some day, but not here, in peak picking class
     }
   }
   
@@ -218,7 +224,7 @@ List PeakPickAlign::BinPeaks()
     }
   }
   
-  return List::create( Named("mass") = binMass, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("LagLow") = LagsLow, Named("LagHigh") = LagsHigh);
+  return List::create( Named("mass") = binMass, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea, Named("LagLow") = LagsLow, Named("LagHigh") = LagsHigh);
 }
 
 void PeakPickAlign::ProcessingFunction(int threadSlot)
@@ -231,7 +237,7 @@ void PeakPickAlign::ProcessingFunction(int threadSlot)
     {
       mLags[is] = alngObj[threadSlot]->AlignSpectrum( cubes[threadSlot]->data[j] );
     }
-    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], minSNR );
+    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], 0.5*minSNR ); //Using the half of SNR to reatain near-to-min peaks
     is++;
   }
 }

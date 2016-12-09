@@ -61,6 +61,9 @@ ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, pe
   cat("Total used processing time:\n")
   print(elap)
   
+  #Add a copy of img$pos to pkMatrix
+  pkMatrix$pos <- img$pos
+  
   return (pkMatrix )
   
 }

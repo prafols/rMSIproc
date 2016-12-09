@@ -44,7 +44,7 @@ class LabelFreeAlign
     //Algin a given spectrum to the reference specified in the constructor. 
     //The used High and Low lags are returned as a TLags structure.
     TLags AlignSpectrum(double *data );
-    
+
  private:
     void ComputeRef(double *data_ref, bool bHigh);
     void ZeroPadding(double *data,bool reverse, int targetSize, int dataSize);

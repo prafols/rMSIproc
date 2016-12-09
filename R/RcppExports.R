@@ -52,6 +52,28 @@ NoiseEstimationFFTExpWinMat <- function(x, filWinSize = 40L) {
     .Call('rMSIproc_NoiseEstimationFFTExpWinMat', PACKAGE = 'rMSIproc', x, filWinSize)
 }
 
+#'LoadPeakMatrix.
+#'
+#'Loads a binned peaks matrix from HDD.
+#'
+#'@param path full path to directory from where data must be loaded.
+#'@return  an R List containing intensity, SNR and area matrices and mass axis vector.
+#'
+LoadPeakMatrixC <- function(path) {
+    .Call('rMSIproc_LoadPeakMatrixC', PACKAGE = 'rMSIproc', path)
+}
+
+#'StorePeakMatrix.
+#'
+#'Stores a binned peaks matrix to HDD.
+#'
+#'@param path full path to directory where data must be stored.
+#'@param mat an R List containing intensity, SNR and area matrices and mass axis vector.
+#'
+StorePeakMatrixC <- function(path, mat) {
+    invisible(.Call('rMSIproc_StorePeakMatrixC', PACKAGE = 'rMSIproc', path, mat))
+}
+
 FullImageProcess <- function(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment = FALSE, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, SmoothingKernelSize = 5L, binningTolerance = 0.05, binningFilter = 0.9) {
     .Call('rMSIproc_FullImageProcess', PACKAGE = 'rMSIproc', basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, binningTolerance, binningFilter)
 }

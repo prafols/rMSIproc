@@ -28,7 +28,7 @@ LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mu
   dataLength = numOfPoints;
   WinLength = (int)round(spectraSplit * (double)dataLength);
   FFT_Size_SH = (int)pow(2.0, std::ceil(log2(dataLength)));
-  
+
   //Pre-compute the Hanning Windows
   HannWindow = new double[WinLength];
   for(int i = 0; i < WinLength; i++)
@@ -170,7 +170,7 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
 
   //Aligment constansts mz'(n) = K*mz(n) + Sh
   const double Rl = 0.0; //Currently I only use zero as the first reference
-  const double Rh =  0.9 * (double)FFT_Size; //Currently I only use N as the first reference
+  const double Rh =  0.9 * (double)FFT_Size_SH; //Currently I only use N as the first reference
   const double K = (Rh + lags.lagHigh - Rl - lags.lagLow)/(Rh - Rl); //New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
   const double Sh = (Rh* lags.lagLow - Rl*lags.lagHigh)/(Rh - Rl); //If scaling is performed before shift. New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
   
@@ -344,7 +344,9 @@ List TestComputeRefAndHannWin(NumericVector refSpectrum)
   LabelFreeAlign alngObj(refC, refSpectrum.length());
   return List::create( Named("HannWin") = alngObj.getHannWindow(), Named("RefLow") = alngObj.getRefLowFFT(), Named("RefHigh") = alngObj.getRefHighFFT());
 }
+*/
 
+/*
 //To run this debug function the ZeroPadding method must be set as public
 // [[Rcpp::export]]
 NumericVector TestZeroPadding(NumericVector x, bool rev)
@@ -360,7 +362,9 @@ NumericVector TestZeroPadding(NumericVector x, bool rev)
   memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y;
 }
+*/
 
+/*
 //To run this debug function the TestTimeWindow method must be set as public
 // [[Rcpp::export]]
 NumericVector TestTimeWindow(NumericVector x, bool bHigh)
@@ -375,14 +379,17 @@ NumericVector TestTimeWindow(NumericVector x, bool bHigh)
   memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y; 
 }
+*/
 
+/*
 //To run this debug function the FourierLinerScaleShift method must be set as public
 // [[Rcpp::export]]
 NumericVector TestFourierLinerScaleShift(NumericVector x, double scaling,  double shift)
 {
   double refC[x.length()];
+  boost::mutex mtx;
   memcpy(refC, x.begin(), sizeof(double)*x.length());
-  LabelFreeAlign alngObj(refC, x.length());
+  LabelFreeAlign alngObj(refC, x.length(), &mtx);
   
   alngObj.FourierLinerScaleShift(refC, scaling, shift);
   
@@ -390,7 +397,9 @@ NumericVector TestFourierLinerScaleShift(NumericVector x, double scaling,  doubl
   memcpy(y.begin(), refC, sizeof(double)*x.length());
   return y;
 }
+*/
 
+/*
 //To run this debug function the ##### method must be set as public
 // [[Rcpp::export]]
 double TestFourierBestCor(NumericVector ref, NumericVector x, bool bRefLow)
@@ -413,16 +422,19 @@ double TestFourierBestCor(NumericVector ref, NumericVector x, bool bRefLow)
   
   return (double)alngObj.FourierBestCor(xC, ref_ptr.begin());
 }
+*/
 
+/*
 //To run this debug function the ##### method must be set as public
 // [[Rcpp::export]]
 NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x)
 {
   double refC[ref.length()];
   double xC[x.length()];
+  boost::mutex mtx;
   memcpy(refC, ref.begin(), sizeof(double)*ref.length());
   memcpy(xC, x.begin(), sizeof(double)*x.length());
-  LabelFreeAlign alngObj(refC, ref.length());
+  LabelFreeAlign alngObj(refC, ref.length(), &mtx);
   LabelFreeAlign::TLags lags = alngObj.AlignSpectrum(xC);
   Rcout<<"Lag low = "<<lags.lagLow<<" Lag high = "<<lags.lagHigh<<"\n";
   NumericVector y(x.length());

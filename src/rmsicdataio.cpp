@@ -19,7 +19,6 @@
 #include <Rcpp.h>
 #include <iostream>
 #include <fstream>
-//#include <boost/filesystem.hpp> //to form safe file paths
 #include <sstream>
 #include "rmsicdataio.h"
 using namespace Rcpp;
@@ -100,7 +99,7 @@ CrMSIDataIO::DataCube *CrMSIDataIO::loadDataCube( int iCube)
   else
   {
     //File read error
-    stop("C Reading error: File can not be opened.");
+    stop("C Reading error: File can not be open.\n");
     return 0;
   }
   return data_ptr;
@@ -151,7 +150,7 @@ void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
   else
   {
     //File read error
-    stop("C Writing error: File can not be opened.");
+    stop("C Writing error: File can not be opened.\n");
     return;
   }
 }
