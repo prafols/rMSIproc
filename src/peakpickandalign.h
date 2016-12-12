@@ -46,6 +46,7 @@ class PeakPickAlign : public ThreadingMsiProc
       int numOfThreads;
       double tolerance;
       double filter;
+      bool performBinning;
     }ImgProcDef;  
     
     PeakPickAlign(ImgProcDef imgRunInfo);
@@ -64,6 +65,7 @@ class PeakPickAlign : public ThreadingMsiProc
     double binFilter;
     PeakPicking::Peaks **mPeaks; //A place to store peaks objects outside threaded space
     LabelFreeAlign::TLags *mLags; //A place to store alignment lags
+    bool bDoBinning;
     
     typedef struct
     {

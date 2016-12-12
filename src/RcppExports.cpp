@@ -76,8 +76,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FullImageProcess
-List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool runAlignment, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP runAlignmentSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool runAlignment, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, bool doBinning, double binningTolerance, double binningFilter);
+RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP runAlignmentSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -93,9 +93,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
     Rcpp::traits::input_parameter< int >::type InterpolationUpSampling(InterpolationUpSamplingSEXP);
     Rcpp::traits::input_parameter< int >::type SmoothingKernelSize(SmoothingKernelSizeSEXP);
+    Rcpp::traits::input_parameter< bool >::type doBinning(doBinningSEXP);
     Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImageProcess(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, binningTolerance, binningFilter));
+    rcpp_result_gen = Rcpp::wrap(FullImageProcess(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, doBinning, binningTolerance, binningFilter));
     return rcpp_result_gen;
 END_RCPP
 }

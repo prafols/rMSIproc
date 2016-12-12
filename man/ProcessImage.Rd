@@ -5,8 +5,9 @@
 \title{ProcessImage.}
 \usage{
 ProcessImage(img, performAlignment = F, SNR = 5, peakWindow = 10,
-  peakUpSampling = 10, SmoothingKernelSize = 5, BinTolerance = 0.05,
-  BinFilter = 0.05, NumOfThreads = parallel::detectCores())
+  peakUpSampling = 10, SmoothingKernelSize = 5, UseBinning = T,
+  BinTolerance = 0.05, BinFilter = 0.05,
+  NumOfThreads = parallel::detectCores())
 }
 \arguments{
 \item{img}{an rMSI data object to process.}

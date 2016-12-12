@@ -44,6 +44,7 @@ PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) :
   }
   mPeaks =  new PeakPicking::Peaks*[numOfPixels];
   mLags  =  new LabelFreeAlign::TLags[numOfPixels]; 
+  bDoBinning = imgRunInfo.performBinning;
 }
 
 PeakPickAlign::~PeakPickAlign()
@@ -70,7 +71,29 @@ List PeakPickAlign::Run()
   runMSIProcessingCpp();
 
   //Binning
-  return BinPeaks();
+  if(bDoBinning)
+  {
+    return BinPeaks();
+  }
+  else
+  {
+    List pkLst(numOfPixels);
+    List pkElem;
+    NumericVector pkMass, pkIntensity, pkSNR;
+    for(int i = 0; i < numOfPixels; i++)
+    {
+      Rcout<<"Copying peaks "<< (i+1) <<" of "<< numOfPixels <<"\n";
+      pkMass = NumericVector(mPeaks[i]->mass.size());
+      pkIntensity = NumericVector(mPeaks[i]->intensity.size());
+      pkSNR = NumericVector(mPeaks[i]->SNR.size());
+      memcpy(pkMass.begin(), mPeaks[i]->mass.data(), sizeof(double)*mPeaks[i]->mass.size());
+      memcpy(pkIntensity.begin(), mPeaks[i]->intensity.data(), sizeof(double)*mPeaks[i]->intensity.size());
+      memcpy(pkSNR.begin(), mPeaks[i]->SNR.data(), sizeof(double)*mPeaks[i]->SNR.size());
+      pkElem = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR);
+      pkLst[i] = pkElem;
+    }
+    return pkLst;
+  }
 }
 
 List PeakPickAlign::BinPeaks()
@@ -229,6 +252,13 @@ List PeakPickAlign::BinPeaks()
 
 void PeakPickAlign::ProcessingFunction(int threadSlot)
 {
+  double snrThreshold = minSNR;
+  if(bDoBinning)
+  {
+    //Using the half of SNR to reatain near-to-min peaks
+    snrThreshold *= 0.5;
+  }
+  
   //Perform alignment and peak-picking of each spectrum in the current loaded cube
   int is = CubeNumRows*iCube[threadSlot];
   for( int j = 0; j < cubes[threadSlot]->nrows; j++)
@@ -237,7 +267,7 @@ void PeakPickAlign::ProcessingFunction(int threadSlot)
     {
       mLags[is] = alngObj[threadSlot]->AlignSpectrum( cubes[threadSlot]->data[j] );
     }
-    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], 0.5*minSNR ); //Using the half of SNR to reatain near-to-min peaks
+    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], snrThreshold ); 
     is++;
   }
 }
@@ -248,7 +278,7 @@ List FullImageProcess( String basePath, StringVector fileNames,
                                 String dataType, int numOfThreads, 
                                 bool runAlignment = false, double SNR = 5, int WinSize = 10,
                                 int InterpolationUpSampling = 10, int SmoothingKernelSize = 5, 
-                                double binningTolerance = 0.05, double binningFilter = 0.9)
+                                bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
 {
   
   //Copy R data to C arrays
@@ -275,6 +305,7 @@ List FullImageProcess( String basePath, StringVector fileNames,
   myProcParams.tolerance = binningTolerance;
   myProcParams.filter = binningFilter;
   myProcParams.ref_spectrum = refC;
+  myProcParams.performBinning = doBinning;
   
   PeakPickAlign myPeakPicking(myProcParams);
   return myPeakPicking.Run();

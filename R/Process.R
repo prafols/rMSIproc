@@ -36,7 +36,9 @@
 #' @export
 #'
 ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         SmoothingKernelSize = 5, BinTolerance = 0.05, BinFilter = 0.05, NumOfThreads = parallel::detectCores())
+                         SmoothingKernelSize = 5, 
+                         UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05, 
+                         NumOfThreads = parallel::detectCores())
 {
   pt <- Sys.time()
   
@@ -55,14 +57,17 @@ ProcessImage <- function(img, performAlignment = F, SNR = 5, peakWindow = 10, pe
   }
   
   pkMatrix <- FullImageProcess(dataInf$basepath, dataInf$filenames, img$mass, refSpc, dataInf$nrows, dataInf$datatype,
-                               NumOfThreads, performAlignment, SNR, peakWindow, peakUpSampling, SmoothingKernelSize, BinTolerance, BinFilter)
+                               NumOfThreads, performAlignment, SNR, peakWindow, peakUpSampling, SmoothingKernelSize, UseBinning, BinTolerance, BinFilter)
   
   elap <- Sys.time() - pt
   cat("Total used processing time:\n")
   print(elap)
   
   #Add a copy of img$pos to pkMatrix
-  pkMatrix$pos <- img$pos
+  if(UseBinning)
+  {
+    pkMatrix$pos <- img$pos
+  }
   
   return (pkMatrix )
   
