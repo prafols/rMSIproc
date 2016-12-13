@@ -23,17 +23,17 @@
 using namespace Rcpp;
 
 PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) : 
-  ThreadingMsiProc( imgRunInfo.numOfThreads, imgRunInfo.runAlignment, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+  ThreadingMsiProc( imgRunInfo.numOfThreads, imgRunInfo.AlignmentIterations > 0, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   peakObj = new PeakPicking*[numOfThreadsDouble];
   alngObj = new LabelFreeAlign*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
     peakObj[i] = new PeakPicking(imgRunInfo.peakWinSize, imgRunInfo.massAxis, imgRunInfo.massChannels, imgRunInfo.peakInterpolationUpSampling, imgRunInfo.peakSmoothingKernelSize);  
-    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex);
+    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex, imgRunInfo.AlignmentIterations);
   }
   numberOfCubes =  imgRunInfo.fileNames.length();
-  useAlignment = imgRunInfo.runAlignment;
+  useAlignment = imgRunInfo.AlignmentIterations > 0;
   minSNR = imgRunInfo.SNR;
   numOfPixels = 0;
   binSize = imgRunInfo.tolerance;
@@ -276,7 +276,7 @@ void PeakPickAlign::ProcessingFunction(int threadSlot)
 List FullImageProcess( String basePath, StringVector fileNames, 
                                 NumericVector mass, NumericVector refSpectrum, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
-                                bool runAlignment = false, double SNR = 5, int WinSize = 10,
+                                int AlignmentIterations = 0, double SNR = 5, int WinSize = 10,
                                 int InterpolationUpSampling = 10, int SmoothingKernelSize = 5, 
                                 bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
 {
@@ -300,7 +300,7 @@ List FullImageProcess( String basePath, StringVector fileNames,
   myProcParams.peakInterpolationUpSampling  = InterpolationUpSampling;
   myProcParams.peakSmoothingKernelSize = SmoothingKernelSize;
   myProcParams.peakWinSize = WinSize;
-  myProcParams.runAlignment = runAlignment;
+  myProcParams.AlignmentIterations = AlignmentIterations;
   myProcParams.SNR = SNR;
   myProcParams.tolerance = binningTolerance;
   myProcParams.filter = binningFilter;

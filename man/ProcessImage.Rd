@@ -4,7 +4,7 @@
 \alias{ProcessImage}
 \title{ProcessImage.}
 \usage{
-ProcessImage(img, performAlignment = F, SNR = 5, peakWindow = 10,
+ProcessImage(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
   peakUpSampling = 10, SmoothingKernelSize = 5, UseBinning = T,
   BinTolerance = 0.05, BinFilter = 0.05,
   NumOfThreads = parallel::detectCores())
@@ -12,7 +12,7 @@ ProcessImage(img, performAlignment = F, SNR = 5, peakWindow = 10,
 \arguments{
 \item{img}{an rMSI data object to process.}
 
-\item{performAlignment}{if is true FFT based aligment will be used and the ramdisk overwritted with alignment data.}
+\item{AlignmentIterations}{if grather than zero FFT based aligment will be used and the ramdisk overwritted with alignment data.}
 
 \item{SNR}{minimal singal to noise ratio of peaks to retain.}
 
@@ -21,6 +21,8 @@ ProcessImage(img, performAlignment = F, SNR = 5, peakWindow = 10,
 \item{peakUpSampling}{upsampling factor used in peak interpolation fo exact mass prediction.}
 
 \item{SmoothingKernelSize}{size of smoothing kernel.}
+
+\item{UseBinning}{if true binned matrices are returned instead of peak lists.}
 
 \item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.}
 
@@ -34,5 +36,6 @@ a intensity matrix where each row corresponds to an spectrum.
 \description{
 Perform all image pre-processing using a multi-threading implementation.
 If aligment is used then the hdd files are overwirted with aligned data.
+A recomeneded value of aligment ietarations is 3.
 }
 

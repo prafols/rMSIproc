@@ -27,7 +27,7 @@ class LabelFreeAlign
 {
   public:
     //spectraSplit the low/high part of spectra to keep (the resting points to unit will be removed).
-    LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, double spectraSplit = 0.6, double lagLimitppm = 200);
+    LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, int iterations = 3, double spectraSplit = 0.6, double lagLimitppm = 200);
     ~LabelFreeAlign();
     
     //Data accessors to internal vars to test this class
@@ -73,6 +73,7 @@ class LabelFreeAlign
     double *fft_ref_high;
     double *HannWindow;
     double lagMax;
+    int AlignIterations;
     
     boost::mutex *fftwMtx; //Lock mechanism for signalling the FourierLinerScaleShift fftw non-thread-safe calls
 };

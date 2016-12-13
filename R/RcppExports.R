@@ -74,8 +74,8 @@ StorePeakMatrixC <- function(path, mat) {
     invisible(.Call('rMSIproc_StorePeakMatrixC', PACKAGE = 'rMSIproc', path, mat))
 }
 
-FullImageProcess <- function(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment = FALSE, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, SmoothingKernelSize = 5L, doBinning = TRUE, binningTolerance = 0.05, binningFilter = 0.9) {
-    .Call('rMSIproc_FullImageProcess', PACKAGE = 'rMSIproc', basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, runAlignment, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, doBinning, binningTolerance, binningFilter)
+FullImageProcess <- function(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations = 0L, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, SmoothingKernelSize = 5L, doBinning = TRUE, binningTolerance = 0.05, binningFilter = 0.9) {
+    .Call('rMSIproc_FullImageProcess', PACKAGE = 'rMSIproc', basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, doBinning, binningTolerance, binningFilter)
 }
 
 #' DetectPeaks_C.

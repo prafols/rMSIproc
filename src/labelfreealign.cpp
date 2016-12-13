@@ -23,7 +23,8 @@
 
 using namespace Rcpp;
 
-LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, double spectraSplit,double lagLimitppm)
+LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, int iterations, double spectraSplit,double lagLimitppm):
+AlignIterations(iterations)  
 {
   dataLength = numOfPoints;
   WinLength = (int)round(spectraSplit * (double)dataLength);
@@ -150,34 +151,43 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
   //Hanning Windowing
   double topWin_data[FFT_Size];
   double botWin_data[FFT_Size];
-  memcpy( (topWin_data + (FFT_Size - WinLength)), data + (dataLength - WinLength), sizeof(double)*WinLength);
-  memcpy(botWin_data, data, sizeof(double)*WinLength);
-  TimeWindow(topWin_data, true);
-  TimeWindow(botWin_data, false);
+  TLags firstLag;
   
-  //Zero-padding 2 improve fft performance
-  ZeroPadding(topWin_data, true, FFT_Size, WinLength);
-  ZeroPadding(botWin_data, false, FFT_Size, WinLength);
-  
-  //Get lags
-  TLags lags;
-  lags.lagLow = (double)FourierBestCor(botWin_data, fft_ref_low);
-  lags.lagHigh = (double)FourierBestCor(topWin_data, fft_ref_high);
-  
-  //Limit lags
-  lags.lagLow = abs(lags.lagLow) > lagMax ? 0.0 : lags.lagLow;
-  lags.lagHigh = abs(lags.lagHigh) > lagMax ? 0.0 : lags.lagHigh; 
-
-  //Aligment constansts mz'(n) = K*mz(n) + Sh
-  const double Rl = 0.0; //Currently I only use zero as the first reference
-  const double Rh =  0.9 * (double)FFT_Size_SH; //Currently I only use N as the first reference
-  const double K = (Rh + lags.lagHigh - Rl - lags.lagLow)/(Rh - Rl); //New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
-  const double Sh = (Rh* lags.lagLow - Rl*lags.lagHigh)/(Rh - Rl); //If scaling is performed before shift. New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
-  
-  //Apply the scaling and shift to original data, after that the pointer to data contains the aligned sptectrum
-  FourierLinerScaleShift(data, K, Sh);
+  for(int i = 0; i < AlignIterations; i++)
+  {
+    memcpy( (topWin_data + (FFT_Size - WinLength)), data + (dataLength - WinLength), sizeof(double)*WinLength);
+    memcpy(botWin_data, data, sizeof(double)*WinLength);
+    TimeWindow(topWin_data, true);
+    TimeWindow(botWin_data, false);
     
-  return lags;
+    //Zero-padding 2 improve fft performance
+    ZeroPadding(topWin_data, true, FFT_Size, WinLength);
+    ZeroPadding(botWin_data, false, FFT_Size, WinLength);
+    
+    //Get lags
+    TLags lags;
+    lags.lagLow = (double)FourierBestCor(botWin_data, fft_ref_low);
+    lags.lagHigh = (double)FourierBestCor(topWin_data, fft_ref_high);
+    
+    //Limit lags
+    lags.lagLow = abs(lags.lagLow) > lagMax ? 0.0 : lags.lagLow;
+    lags.lagHigh = abs(lags.lagHigh) > lagMax ? 0.0 : lags.lagHigh; 
+    if(i == 0)
+    {
+      firstLag = lags;
+    }
+  
+    //Aligment constansts mz'(n) = K*mz(n) + Sh
+    const double Rl = 0.0; //Currently I only use zero as the first reference
+    const double Rh =  0.9 * (double)FFT_Size_SH; //Currently I only use N as the first reference
+    const double K = (Rh + lags.lagHigh - Rl - lags.lagLow)/(Rh - Rl); //New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
+    const double Sh = (Rh* lags.lagLow - Rl*lags.lagHigh)/(Rh - Rl); //If scaling is performed before shift. New implementation supporting Other refs diferents than 0 and N. Extremes are Rl and Rh
+    
+    //Apply the scaling and shift to original data, after that the pointer to data contains the aligned sptectrum
+    FourierLinerScaleShift(data, K, Sh);
+  }
+    
+  return firstLag;
 }
 
 void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double shift)
