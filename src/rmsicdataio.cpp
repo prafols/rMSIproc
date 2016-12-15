@@ -22,6 +22,10 @@
 #include <sstream>
 #include "rmsicdataio.h"
 using namespace Rcpp;
+CrMSIDataIO::CrMSIDataIO()
+{
+  rowCounts = new int;
+}
 
 CrMSIDataIO::CrMSIDataIO( String basePath, StringVector fileNames, int massChannels, int *numRows, String dataType )
 :dataPath(basePath),

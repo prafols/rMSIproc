@@ -19,8 +19,21 @@
 #include <Rcpp.h>
 #include <cmath>
 #include <vector>
+#include <limits>
 #include "peakpickandalign.h"
 using namespace Rcpp;
+
+PeakPickAlign::PeakPickAlign():
+  ThreadingMsiProc()
+{
+  //Just init dummy objects to allow the desctructor to work properly
+  numOfThreadsDouble = 0;
+  numOfPixels = 0;
+  peakObj = new PeakPicking*[1];
+  alngObj = new LabelFreeAlign*[1];
+  mLags  =  new LabelFreeAlign::TLags[1];
+  mPeaks =  new PeakPicking::Peaks*[1];
+}
 
 PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) : 
   ThreadingMsiProc( imgRunInfo.numOfThreads, imgRunInfo.AlignmentIterations > 0, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
@@ -96,6 +109,41 @@ List PeakPickAlign::Run()
   }
 }
 
+
+void PeakPickAlign::AppendPeaksAsMatrix(List peaksLst)
+{
+  //Create a local Peaks to handle all peaks
+  int localNumPixels = numOfPixels + (as<NumericMatrix>(peaksLst["intensity"])).rows();
+  PeakPicking::Peaks **localPeaks =  new PeakPicking::Peaks*[localNumPixels];
+  
+  //Copy the current Peaks to the local Peaks object 
+  for( int i = 0; i < numOfPixels; i++)
+  {
+    localPeaks[i] = mPeaks[i];
+  }
+  delete[] mPeaks; //Delete the old references array, but keeps data pointers in localPeaks
+  mPeaks = localPeaks; //Move to localPeaks pointer and set it as current peaks pointer
+  
+  //Append new peaks 
+  for( int i = 0; i < (localNumPixels - numOfPixels); i++)
+  {
+    mPeaks[ i + numOfPixels] = new PeakPicking::Peaks();
+    
+    for(int j = 0; j < (as<NumericVector>(peaksLst["mass"])).length(); j++)
+    {
+      if( (as<NumericMatrix>(peaksLst["intensity"]))(i, j) > 0  )
+      {
+        mPeaks[ i + numOfPixels]->mass.push_back( (as<NumericVector>(peaksLst["mass"]))(j) ); 
+        mPeaks[ i + numOfPixels]->intensity.push_back( (as<NumericMatrix>(peaksLst["intensity"]))(i, j) );
+        mPeaks[ i + numOfPixels]->SNR.push_back( (as<NumericMatrix>(peaksLst["SNR"]))(i, j)  );   
+        mPeaks[ i + numOfPixels]->area.push_back( (as<NumericMatrix>(peaksLst["area"]))(i, j)  );
+      }
+    }
+  }
+  numOfPixels = localNumPixels;
+}
+  
+  
 List PeakPickAlign::BinPeaks()
 {
   
@@ -220,13 +268,41 @@ List PeakPickAlign::BinPeaks()
   NumericMatrix binMatIntensity(numOfPixels, binMass.size());
   NumericMatrix binMatSNR(numOfPixels, binMass.size());
   NumericMatrix binMatArea(numOfPixels, binMass.size());
+  
+  //Sort columns by mass
+  Rcout<<"Srting columng by mass...\n";
+  NumericVector massSorting(binMass.size());
+  memcpy(massSorting.begin(), binMass.begin(), sizeof(double)*binMass.size());
+  int sortedInds[binMass.size()];
+  double minVal;
+  for(int i = 0; i < binMass.size(); i++)
+  {
+    minVal = std::numeric_limits<double>::max();
+    for( int j = 0; j < binMass.size(); j++ )
+    {
+      if( massSorting[j] < minVal && massSorting[j] > 0 )
+      {
+        minVal = massSorting[j];
+        sortedInds[i] = j;
+      }  
+    }
+    massSorting[ sortedInds[i]  ] = -1; //Mark as sorted
+  }
+  
+  //Copy the mass axis sorting it
+  for(int i = 0; i < binMass.size(); i++)
+  {
+    massSorting[i] = binMass[sortedInds[i]];
+  }
+  
+  //Copy the matrix sorting it
   for( int ir = 0;  ir < numOfPixels; ir++)
   {
     for(int ic = 0; ic < binMass.size(); ic++)
     {
-      binMatIntensity(ir, ic) = binMat[ic][ir].intensity;
-      binMatSNR(ir, ic) = binMat[ic][ir].SNR;
-      binMatArea(ir, ic) = binMatIntensity(ir, ic); //TODO currently I'm using area equal intensity for developing but i must calculate area some day, but not here, in peak picking class
+      binMatIntensity(ir, ic ) = binMat[sortedInds[ic]][ir].intensity;
+      binMatSNR      (ir, ic ) = binMat[sortedInds[ic]][ir].SNR;
+      binMatArea     (ir, ic ) = binMat[sortedInds[ic]][ir].intensity; //TODO currently I'm using area equal intensity for developing but i must calculate area some day, but not here, in peak picking class
     }
   }
   
@@ -247,7 +323,17 @@ List PeakPickAlign::BinPeaks()
     }
   }
   
-  return List::create( Named("mass") = binMass, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea, Named("LagLow") = LagsLow, Named("LagHigh") = LagsHigh);
+  return List::create( Named("mass") = massSorting, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea, Named("LagLow") = LagsLow, Named("LagHigh") = LagsHigh);
+}
+
+void PeakPickAlign::SetBinSize(double value)
+{
+  binSize = value;
+}
+
+void PeakPickAlign::SetBinFilter(double value)
+{
+  binFilter = value;
 }
 
 void PeakPickAlign::ProcessingFunction(int threadSlot)
@@ -309,4 +395,18 @@ List FullImageProcess( String basePath, StringVector fileNames,
   
   PeakPickAlign myPeakPicking(myProcParams);
   return myPeakPicking.Run();
+}
+
+// [[Rcpp::export]]
+List MergePeakMatricesC( List PeakMatrices, double binningTolerance = 0.05, double binningFilter = 0.01 )
+{
+  PeakPickAlign myPeakPicking;
+  for( int i = 0; i < PeakMatrices.length(); i++)
+  {
+    Rcout<<"Merging peak matrix "<<(i+1)<<" of "<<PeakMatrices.length()<<"\n";
+    myPeakPicking.AppendPeaksAsMatrix(PeakMatrices[i]);  
+  }
+  myPeakPicking.SetBinFilter(binningFilter);
+  myPeakPicking.SetBinSize(binningTolerance);
+  return myPeakPicking.BinPeaks();
 }

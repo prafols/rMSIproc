@@ -35,7 +35,6 @@ LoadPeakMatrix <- function( data_path)
 #' @param data_path full path including filename where data must be stored.
 #' @param data a List containing intensity, SNR and area matrices and mass axis vector.
 #'
-#' @return
 #' @export
 #'
 StorePeakMatrix <- function( data_path, data )

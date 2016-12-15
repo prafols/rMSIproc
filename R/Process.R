@@ -62,16 +62,69 @@ ProcessImage <- function(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
                                NumOfThreads, AlignmentIterations, SNR, peakWindow, peakUpSampling,
                                SmoothingKernelSize, UseBinning, BinTolerance, BinFilter)
   
-  elap <- Sys.time() - pt
-  cat("Total used processing time:\n")
-  print(elap)
-  
   #Add a copy of img$pos to pkMatrix
   if(UseBinning)
   {
     pkMatrix$pos <- img$pos
+    pkMatrix$numPixels <- nrow(img$pos)
   }
   
-  return (pkMatrix )
+  elap <- Sys.time() - pt
+  cat("Total used processing time:\n")
+  print(elap)
   
+  return (pkMatrix )
+}
+
+#' MergePeakMatrices.
+#' 
+#' Merges a list containing various peak matrices in a single peak matrix.
+#' The rMSIproc binning method is used to calculate the new masses.
+#'
+#' @param PeakMatrixList A list of various peak matrix objexts produced using rMSIproc.
+#' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
+#' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+#' @param OffsetPosByX if true the pos matrices are concatenated by offseting in X direction, if false Y direction is used.
+#'
+#' @return a intensity matrix where each row corresponds to an spectrum.
+#' @export
+#'
+MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningFilter = 0.01, OffsetPosByX = F  )
+{
+  pt <- Sys.time()
+  
+  #Merge peak matrices
+  pkMatrix <- MergePeakMatricesC( PeakMatrixList, binningTolerance, binningFilter )
+  
+  #Concatenate pos arrays
+  numOfPixels <- sum(unlist(lapply(PeakMatrixList, function(x){ nrow(x$pos) })))
+  pkMatrix$pos <- matrix(nrow = numOfPixels, ncol = 2 )
+  colnames(pkMatrix$pos) <- c("x", "y")
+  iStart <- 1 #Index of matrix row
+  MaxXant <- 0
+  MaxYant <- 0
+  pkMatrix$numPixels <- c()
+  for( i in 1:length(PeakMatrixList))
+  {
+    iStop <- iStart + nrow(PeakMatrixList[[i]]$pos) - 1
+    pkMatrix$pos[ (iStart:iStop ), ] <- PeakMatrixList[[i]]$pos
+    pkMatrix$numPixels <- c(pkMatrix$numPixels, nrow(PeakMatrixList[[i]]$pos))
+    if(OffsetPosByX)
+    {
+      pkMatrix$pos[ (iStart:iStop ), "x"] <- pkMatrix$pos[ (iStart:iStop ), "x"] + MaxXant
+    }
+    else
+    {
+      pkMatrix$pos[ (iStart:iStop ), "y"] <- pkMatrix$pos[ (iStart:iStop ), "y"] + MaxYant
+    }
+    MaxXant <- max( pkMatrix$pos[ (iStart:iStop ), "x"]  )
+    MaxYant <- max( pkMatrix$pos[ (iStart:iStop ), "y"]  )
+    iStart <- iStop + 1
+  }
+  
+  elap <- Sys.time() - pt
+  cat("Total used processing time:\n")
+  print(elap)
+  
+  return( pkMatrix)
 }

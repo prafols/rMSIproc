@@ -49,11 +49,22 @@ class PeakPickAlign : public ThreadingMsiProc
       bool performBinning;
     }ImgProcDef;  
     
+    PeakPickAlign();
     PeakPickAlign(ImgProcDef imgRunInfo);
     ~PeakPickAlign();
     
+    //Exectur a full imatge processing using threaded methods
     Rcpp::List Run(); 
-        
+    
+    //Appends a list of peaks to the current list of peaks (mPeaks)
+    //Peaks are input as a binned matrix
+    void AppendPeaksAsMatrix(Rcpp::List peaksLst);
+    
+    //Perfomr peak binning over mPeaks, this is mono-thread implemented.
+    Rcpp::List BinPeaks();
+    void SetBinSize(double value);
+    void SetBinFilter(double value);
+    
   private:
     PeakPicking **peakObj;
     LabelFreeAlign **alngObj;
@@ -72,8 +83,6 @@ class PeakPickAlign : public ThreadingMsiProc
       double intensity;
       double SNR;
     }TBin;
-    
-    Rcpp::List BinPeaks();
     
     //Thread Processing function definition
     void ProcessingFunction(int threadSlot);

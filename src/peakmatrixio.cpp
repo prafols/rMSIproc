@@ -24,19 +24,28 @@ using namespace Rcpp;
 PeakMatrixIO::PeakMatrixIO(String dir_path):
 path(dir_path)
 {
-  int nrow, ncol;
+  int nimg, ncol, nrow;
+  int totalRows = 0;
   String defFile = path;
   defFile += "/data.def";
   std::ifstream file(defFile.get_cstring(), std::ios::in|std::ios::binary);
   if (file.is_open())
   {
-    file.read ( (char*)(&nrow), sizeof(int));
     file.read ( (char*)(&ncol), sizeof(int));
-    intMat = new NumericMatrix(nrow, ncol);
-    snrMat = new NumericMatrix(nrow, ncol);
-    areaMat = new NumericMatrix(nrow, ncol);
+    file.read ( (char*)(&nimg), sizeof(int));
+    nRows = new IntegerVector(nimg);
+    for(int i = 0; i < nimg; i++)
+    {
+      file.read ( (char*)(&nrow), sizeof(int));
+      (*nRows)[i] = nrow;
+      totalRows += nrow;
+    }
+    
+    intMat = new NumericMatrix(totalRows, ncol);
+    snrMat = new NumericMatrix(totalRows, ncol);
+    areaMat = new NumericMatrix(totalRows, ncol);
     massVec = new NumericVector(ncol);
-    posMat = new IntegerMatrix(nrow, 2);
+    posMat = new IntegerMatrix(totalRows, 2);
   }
 }
 
@@ -47,6 +56,7 @@ PeakMatrixIO::~PeakMatrixIO()
   delete areaMat;
   delete massVec;
   delete posMat;
+  delete nRows;
 }
 
 List PeakMatrixIO::LoadPeakMatrix()
@@ -61,25 +71,29 @@ List PeakMatrixIO::LoadPeakMatrix()
   LoadMass();
   Rcout << "Loading pixel positions\n";
   LoadPos();
-  return List::create( Named("mass") = *massVec, Named("pos") = *posMat, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat );
+  return List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
+                             Named("pos") = *posMat, Named("numPixels") = *nRows);
 }
 
 void PeakMatrixIO::StorePeakMatrix(List lpeak)
 {
   int nrow = as<NumericMatrix>(lpeak["intensity"]).rows();
   int ncol = as<NumericMatrix>(lpeak["intensity"]).cols();
+  int nImg = as<IntegerVector>(lpeak["numPixels"]).length();
   
   intMat = new NumericMatrix(nrow, ncol);
   snrMat = new NumericMatrix(nrow, ncol);
   areaMat = new NumericMatrix(nrow, ncol);
   massVec = new NumericVector(ncol);
   posMat = new IntegerMatrix(nrow, 2);
+  nRows = new IntegerVector(nImg);
   
   *intMat = as<NumericMatrix>(lpeak["intensity"]);
   *snrMat = as<NumericMatrix>(lpeak["SNR"]);
   *areaMat = as<NumericMatrix>(lpeak["area"]);
   *massVec = as<NumericVector>(lpeak["mass"]);
   *posMat = as<IntegerMatrix>(lpeak["pos"]);
+  *nRows = as<IntegerVector>(lpeak["numPixels"]);
   
   Rcout <<"Storing intensity matrix\n";
   StoreMat(intensity);
@@ -98,8 +112,14 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   std::ofstream file(defFile.get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
   if (file.is_open())
   {
-    file.write((char*)(&nrow), sizeof(int));
     file.write((char*)(&ncol), sizeof(int)); 
+    file.write((char*)(&nImg), sizeof(int));
+    for(int i = 0; i < nImg; i++)
+    {
+      nrow = (*nRows)[i];
+      file.write((char*)(&nrow), sizeof(int));
+    }
+    
     file.close();
   }
   else

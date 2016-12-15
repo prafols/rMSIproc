@@ -100,6 +100,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// MergePeakMatricesC
+List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
+RcppExport SEXP rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type PeakMatrices(PeakMatricesSEXP);
+    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
+    rcpp_result_gen = Rcpp::wrap(MergePeakMatricesC(PeakMatrices, binningTolerance, binningFilter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // DetectPeaks_C
 NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR, int WinSize);
 RcppExport SEXP rMSIproc_DetectPeaks_C(SEXP massSEXP, SEXP intensitySEXP, SEXP SNRSEXP, SEXP WinSizeSEXP) {

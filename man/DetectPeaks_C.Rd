@@ -16,7 +16,7 @@ DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L)
 \item{WinSize}{The windows used to detect peaks and caculate noise.}
 }
 \value{
-a NumerixMatrix of 3 rows corresponding to: mass, intensity of the peak and SNR.
+a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
 }
 \description{
 Detect peaks from a Rcpp::NumericVector object and returns data in a R matrix.

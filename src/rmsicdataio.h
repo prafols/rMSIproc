@@ -21,7 +21,8 @@
 
 class CrMSIDataIO
 {
-  public: 
+  public:
+    CrMSIDataIO();
     //basePath: full path to the directory containing ramdisk files in *.dat format.
     //fileNames: a vector of names of each ramdisk files in basepath.
     //massChannels: the length of mass axis so the number of columns in the datacube.

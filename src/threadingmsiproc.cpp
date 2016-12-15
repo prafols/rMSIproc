@@ -21,6 +21,19 @@
 //#include <boost/bind.hpp>
 #include "threadingmsiproc.h" 
 
+ThreadingMsiProc::ThreadingMsiProc()
+{
+  numOfThreadsDouble = 0;
+  ioObj = new CrMSIDataIO();
+  CubeNumRows = 0;
+  cubes = new CrMSIDataIO::DataCube*[numOfThreadsDouble];
+  iCube = new int[numOfThreadsDouble];
+  bDataReady = new bool[numOfThreadsDouble];
+  bRunningThread = new bool[numOfThreadsDouble];
+  tworkers = new boost::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
+  bDataOverWrite = false;
+}
+
 ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, Rcpp::String basePath, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType )
 {
   numOfThreadsDouble = 2*numberOfThreads;
@@ -32,7 +45,6 @@ ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, 
   bRunningThread = new bool[numOfThreadsDouble];
   tworkers = new boost::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
   bDataOverWrite = overWriteRamdisk;
-  
 }
 
 ThreadingMsiProc::~ThreadingMsiProc()

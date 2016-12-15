@@ -123,6 +123,7 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
         m_peaks->mass.push_back(predictPeakMassFFT(spectrum, i)); //Set mass using FFT interpolation
         m_peaks->intensity.push_back(pMax);
         m_peaks->SNR.push_back(m_SNR);
+        m_peaks->area.push_back(pMax); //TODO, implement area, currently im using a copy of intensity
       }
     }
     slope_ant = slope;
@@ -209,11 +210,13 @@ List PeakPicking::PeakObj2List(PeakPicking::Peaks *pks)
   NumericVector mass(pks->mass.size());
   NumericVector intensity(pks->intensity.size());
   NumericVector SNR(pks->SNR.size());
+  NumericVector area(pks->area.size());
   for(int i = 0; i < mass.length(); i++ )
   {
     mass(i) = pks->mass[i];
     intensity(i) = pks->intensity[i];
     SNR(i) = pks->SNR[i];
+    area(i) = pks->area[i];
   }
   
   return List::create( Named("mass") = mass, Named("intensity") = intensity, Named("SNR") = SNR);
@@ -231,7 +234,7 @@ List PeakPicking::PeakObj2List(PeakPicking::Peaks *pks)
 //' @param SNR Only peaks with an equal or higher SNR are retained.
 //' @param WinSize The windows used to detect peaks and caculate noise.
 //' 
-//' @return a NumerixMatrix of 3 rows corresponding to: mass, intensity of the peak and SNR.
+//' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
 //' 
 // [[Rcpp::export]]
 NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR = 5, int WinSize = 20)
@@ -253,16 +256,17 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   PeakPicking::Peaks *peaks = ppObj.peakPicking(spectrum, SNR);
   
   //Convert peaks to R matrix like object
-  NumericMatrix mp(3, peaks->intensity.size());
+  NumericMatrix mp(4, peaks->intensity.size());
   for(int i = 0; i < peaks->mass.size(); i++)
   {
     mp(0, i) = peaks->mass[i];
     mp(1, i) = peaks->intensity[i];
     mp(2, i) = peaks->SNR[i];
+    mp(3, i) = peaks->area[i];
   }
   
   delete peaks;
-  rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR");
+  rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR", "area");
   return mp;
 }
 

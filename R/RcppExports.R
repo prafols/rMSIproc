@@ -78,6 +78,10 @@ FullImageProcess <- function(basePath, fileNames, mass, refSpectrum, numRows, da
     .Call('rMSIproc_FullImageProcess', PACKAGE = 'rMSIproc', basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, doBinning, binningTolerance, binningFilter)
 }
 
+MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 0.05, binningFilter = 0.01) {
+    .Call('rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
+}
+
 #' DetectPeaks_C.
 #' 
 #' Detect peaks from a Rcpp::NumericVector object and returns data in a R matrix.
@@ -89,7 +93,7 @@ FullImageProcess <- function(basePath, fileNames, mass, refSpectrum, numRows, da
 #' @param SNR Only peaks with an equal or higher SNR are retained.
 #' @param WinSize The windows used to detect peaks and caculate noise.
 #' 
-#' @return a NumerixMatrix of 3 rows corresponding to: mass, intensity of the peak and SNR.
+#' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
 #' 
 DetectPeaks_C <- function(mass, intensity, SNR = 5, WinSize = 20L) {
     .Call('rMSIproc_DetectPeaks_C', PACKAGE = 'rMSIproc', mass, intensity, SNR, WinSize)

@@ -37,6 +37,7 @@ class PeakPicking
       std::vector<double> mass;
       std::vector<double> intensity;
       std::vector<double> SNR;
+      std::vector<double> area;
     } Peaks;
     
     //Detect all local maximums and Filter peaks using SNR min value in a sliding window
