@@ -43,6 +43,7 @@ class PeakPickAlign : public ThreadingMsiProc
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type
       int AlignmentIterations;
+      int AlignmentMaxShift;
       int numOfThreads;
       double tolerance;
       double filter;

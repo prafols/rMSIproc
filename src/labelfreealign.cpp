@@ -23,7 +23,7 @@
 
 using namespace Rcpp;
 
-LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, int iterations, double spectraSplit,double lagLimitppm):
+LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, int iterations, double lagLimitppm, double spectraSplit):
 AlignIterations(iterations)  
 {
   dataLength = numOfPoints;

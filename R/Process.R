@@ -24,6 +24,7 @@
 #' 
 #' @param img an rMSI data object to process.
 #' @param AlignmentIterations if grather than zero FFT based aligment will be used and the ramdisk overwritted with alignment data.
+#' @param AlignmentMaxShiftppm the maximum shift that alignment can apply in ppm.
 #' @param SNR minimal singal to noise ratio of peaks to retain.
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.
 #' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction.
@@ -37,7 +38,7 @@
 #' @return a intensity matrix where each row corresponds to an spectrum.
 #' @export
 #'
-ProcessImage <- function(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
+ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          SmoothingKernelSize = 5, 
                          UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05, 
                          NumOfThreads = parallel::detectCores())
@@ -46,9 +47,6 @@ ProcessImage <- function(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
   
   dataInf <- getrMSIdataInfo(img)
 
-  
-  #TODO add normalization and calibration here!
-  
   if(class(img$mean) == "MassSpectrum")
   {
     refSpc <- img$mean@intensity
@@ -58,9 +56,28 @@ ProcessImage <- function(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
     refSpc <- img$mean
   }
   
+  #Manual calibration (user will be promp with calibration dialog)
+  img$mass <- CalibrationWindow( img$mass, refSpc, img$name )
+  if(is.null(img$mass))
+  {
+    rMSI::DeleteRamdisk(img)
+    gc()
+    stop("Aborted by user\n")
+  }
+  
+  #Alignment and peak-picking using Cpp and mutli-threading
   pkMatrix <- FullImageProcess(dataInf$basepath, dataInf$filenames, img$mass, refSpc, dataInf$nrows, dataInf$datatype,
-                               NumOfThreads, AlignmentIterations, SNR, peakWindow, peakUpSampling,
-                               SmoothingKernelSize, UseBinning, BinTolerance, BinFilter)
+                               NumOfThreads, AlignmentIterations, AlignmentMaxShiftppm,
+                               SNR, peakWindow, peakUpSampling, SmoothingKernelSize,
+                               UseBinning, BinTolerance, BinFilter)
+  
+  #Recalculate mean spectrum
+  img$mean <- rMSI::AverageSpectrum(img)
+  
+  #Calculate some normalizations
+  img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
+  img <- rMSI::NormalizeMAX(img, remove_empty_pixels = T)
+  img <- rMSI::NormalizeByAcqDegradation(img)
   
   #Add a copy of img$pos to pkMatrix
   if(UseBinning)
@@ -73,7 +90,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
   cat("Total used processing time:\n")
   print(elap)
   
-  return (pkMatrix )
+  return ( list( procImg = img,   peakMat = pkMatrix ))
 }
 
 #' MergePeakMatrices.
@@ -127,4 +144,134 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
   print(elap)
   
   return( pkMatrix)
+}
+
+#' ProcessWizard.
+#' 
+#' Imports and process MSI data using a friendly GUI.
+#' Various images can be loaded and processed with a single execution.
+#' Data can be in XMASS, tar (rMSI) or imzML format.
+#' Processed data will be saved in a user specified directory.
+#' The applied processing consists in:
+#'   - Label-free aligment (various iterations can be performed, zero iterations means no alignment).
+#'   - Peak-picking.
+#'   - Peak-binning.
+#'   - Mass calibration with internal reference compounds.
+#' Processed data includes:
+#'   - a .tar file with the processed data.
+#'   - a rMSIproc formated matrices with binned peaks.
+#'   - a plain text file with used processing parameters.
+#' @param deleteRamdisk if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).
+#'  
+#' @export
+#'
+ProcessWizard <- function( deleteRamdisk = T )
+{
+  #Get processing params using a GUI
+  procParams <- ImportWizardGui()
+  if(is.null(procParams))
+  {
+    cat("Processing aborted\n")
+    return()
+  }
+  
+  #Get number of images
+  if( procParams$data$source$type == "xmass" )
+  {
+    NumOfImages <- length(procParams$data$source$xmlpath)
+  }
+  else
+  {
+    NumOfImages <- length(procParams$data$source$datapath)
+  }
+  
+  for( i in 1:NumOfImages)
+  {
+    cat(paste("Working on image", i, "of", NumOfImages, "\n"))
+    
+    #Load each image
+    if( procParams$data$source$type == "xmass" )
+    {
+      mImg <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, procParams$data$source$xmlpath[i], procParams$data$source$spectrumpath )
+    }
+    else
+    {
+      mImg <- rMSI::LoadMsiData( procParams$data$source$datapath[i], ff_overwrite = T )  
+    }
+    
+    #Process data
+    procData <- ProcessImage(img = mImg, 
+                 AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
+                 SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, SmoothingKernelSize = procParams$peakpicking$sgkernsize, 
+                 UseBinning = T, BinTolerance = procParams$binning$tolerance, BinFilter = procParams$binning$filter )
+    
+    rm(mImg) #Now all is stored in procData
+    gc()
+    
+    #Store MS image to a tar file
+    imgName <- sub('\\..*$', '',procData$procImg$name) #Remove extensions of image name
+    rMSI::SaveMsiData( procData$procImg, file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
+    
+    #Store peak matrix
+    StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
+    
+    #Delete data and clear memory
+    if(deleteRamdisk)
+    {
+      rMSI::DeleteRamdisk(procData$procImg)
+    }
+    gc()
+  }
+  
+  #Store processing params
+  SaveProcessingParams( procParams, file.path(procParams$data$outpath, "processing_parameters.txt"  ))
+  
+  cat("All images were successfully processed\n")
+}
+
+#' SaveProcessingParams.
+#' 
+#' Save all parameters in a list of processing params generated using ImportWizardGui() function.
+#' Parameters will be saved in a plain text file.
+#'
+#' @param procParams a list of parameters.
+#' @param filepath a full path where params will be stored
+#'
+#' @return
+#' @export
+#'
+#' @examples
+SaveProcessingParams <- function( procParams, filepath)
+{
+  fObj <- file(description = filepath, open = "w" )
+  writeLines("Processing parameters", con = fObj)
+  writeLines(paste("Data source type = ", procParams$data$source$type, sep ="" ), con = fObj)
+  if( procParams$data$source$type == "xmass" )
+  {
+    writeLines(paste("Data source directory = ", procParams$data$source$datapath, sep ="" ), con = fObj)
+    for(i in 1:length( procParams$data$source$xmlpath))
+    {
+      writeLines(paste("Data source XML file", i," = ", procParams$data$source$xmlpath[i], sep ="" ), con = fObj)
+    }
+    writeLines(paste("Data source ref spectrum = ", procParams$data$source$spectrumpath, sep ="" ), con = fObj)
+  }
+  else
+  {
+    for(i in 1:length( procParams$data$source$datapath))
+    {
+      writeLines(paste("Data source file", i," = ", procParams$data$source$datapath[i], sep ="" ), con = fObj)
+    }
+  }
+  writeLines(paste("Data output directory = ", procParams$data$outpath, sep ="" ), con = fObj)
+  writeLines(paste("Alignment iterations = ", procParams$alignment$iterations, sep ="" ), con = fObj)
+  writeLines(paste("Alignment max shift [ppm] = ", procParams$alignment$maxshift, sep ="" ), con = fObj)
+  
+  writeLines(paste("Peak-picking SNR threshold = ", procParams$peakpicking$snr, sep ="" ), con = fObj)
+  writeLines(paste("Peak-picking detector window = ", procParams$peakpicking$winsize, sep ="" ), con = fObj)
+  writeLines(paste("Peak-picking oversampling = ", procParams$peakpicking$oversample, sep ="" ), con = fObj)
+  writeLines(paste("Peak-picking SG kernel = ", procParams$peakpicking$sgkernsize, sep ="" ), con = fObj)
+  
+  writeLines(paste("Peak-binning tolerance = ", procParams$binning$tolerance, sep ="" ), con = fObj)
+  writeLines(paste("Peak-binning filter = ", procParams$binning$filter, sep ="" ), con = fObj)
+  close(fObj)
 }

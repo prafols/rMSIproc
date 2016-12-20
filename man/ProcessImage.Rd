@@ -4,15 +4,17 @@
 \alias{ProcessImage}
 \title{ProcessImage.}
 \usage{
-ProcessImage(img, AlignmentIterations = 0, SNR = 5, peakWindow = 10,
-  peakUpSampling = 10, SmoothingKernelSize = 5, UseBinning = T,
-  BinTolerance = 0.05, BinFilter = 0.05,
-  NumOfThreads = parallel::detectCores())
+ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
+  SNR = 5, peakWindow = 10, peakUpSampling = 10,
+  SmoothingKernelSize = 5, UseBinning = T, BinTolerance = 0.05,
+  BinFilter = 0.05, NumOfThreads = parallel::detectCores())
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
 
 \item{AlignmentIterations}{if grather than zero FFT based aligment will be used and the ramdisk overwritted with alignment data.}
+
+\item{AlignmentMaxShiftppm}{the maximum shift that alignment can apply in ppm.}
 
 \item{SNR}{minimal singal to noise ratio of peaks to retain.}
 

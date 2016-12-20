@@ -15,6 +15,7 @@ Imports:
     fftw,
     gWidgets2 (>= 1.0),
     RGtk2 (>= 2.20.25),
-    gWidgets2RGtk2 (>= 1.0)
+    gWidgets2RGtk2 (>= 1.0),
+    zoo (>= 1.7)
 LinkingTo: Rcpp
 RoxygenNote: 5.0.1

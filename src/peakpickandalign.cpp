@@ -43,7 +43,7 @@ PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) :
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
     peakObj[i] = new PeakPicking(imgRunInfo.peakWinSize, imgRunInfo.massAxis, imgRunInfo.massChannels, imgRunInfo.peakInterpolationUpSampling, imgRunInfo.peakSmoothingKernelSize);  
-    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex, imgRunInfo.AlignmentIterations);
+    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex, imgRunInfo.AlignmentIterations, imgRunInfo.AlignmentMaxShift);
   }
   numberOfCubes =  imgRunInfo.fileNames.length();
   useAlignment = imgRunInfo.AlignmentIterations > 0;
@@ -270,7 +270,7 @@ List PeakPickAlign::BinPeaks()
   NumericMatrix binMatArea(numOfPixels, binMass.size());
   
   //Sort columns by mass
-  Rcout<<"Srting columng by mass...\n";
+  Rcout<<"Sorting columng by mass...\n";
   NumericVector massSorting(binMass.size());
   memcpy(massSorting.begin(), binMass.begin(), sizeof(double)*binMass.size());
   int sortedInds[binMass.size()];
@@ -362,7 +362,8 @@ void PeakPickAlign::ProcessingFunction(int threadSlot)
 List FullImageProcess( String basePath, StringVector fileNames, 
                                 NumericVector mass, NumericVector refSpectrum, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
-                                int AlignmentIterations = 0, double SNR = 5, int WinSize = 10,
+                                int AlignmentIterations = 0, int AlignmentMaxShiftPpm = 200,
+                                double SNR = 5, int WinSize = 10,
                                 int InterpolationUpSampling = 10, int SmoothingKernelSize = 5, 
                                 bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
 {
@@ -387,6 +388,7 @@ List FullImageProcess( String basePath, StringVector fileNames,
   myProcParams.peakSmoothingKernelSize = SmoothingKernelSize;
   myProcParams.peakWinSize = WinSize;
   myProcParams.AlignmentIterations = AlignmentIterations;
+  myProcParams.AlignmentMaxShift = AlignmentMaxShiftPpm;
   myProcParams.SNR = SNR;
   myProcParams.tolerance = binningTolerance;
   myProcParams.filter = binningFilter;
