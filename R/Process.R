@@ -29,6 +29,7 @@
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.
 #' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction.
 #' @param SmoothingKernelSize size of smoothing kernel.
+#' @param UseManualCalibration if the manual calibration windows must be used.
 #' @param UseBinning if true binned matrices are returned instead of peak lists.
 #' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
 #' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.

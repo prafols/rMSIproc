@@ -6,8 +6,9 @@
 \usage{
 ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
   SNR = 5, peakWindow = 10, peakUpSampling = 10,
-  SmoothingKernelSize = 5, UseBinning = T, BinTolerance = 0.05,
-  BinFilter = 0.05, NumOfThreads = parallel::detectCores())
+  SmoothingKernelSize = 5, UseManualCalibration = T, UseBinning = T,
+  BinTolerance = 0.05, BinFilter = 0.05,
+  NumOfThreads = parallel::detectCores())
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
@@ -23,6 +24,8 @@ ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
 \item{peakUpSampling}{upsampling factor used in peak interpolation fo exact mass prediction.}
 
 \item{SmoothingKernelSize}{size of smoothing kernel.}
+
+\item{UseManualCalibration}{if the manual calibration windows must be used.}
 
 \item{UseBinning}{if true binned matrices are returned instead of peak lists.}
 
