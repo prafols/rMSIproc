@@ -107,7 +107,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   cat("Running Peak Picking...\n")
   pkMatrix <- FullImagePeakPicking(basePath = dataInf$basepath,
                                    fileNames = dataInf$filenames,
-                                   massChannels = length(img$mass),  
+                                   mass = img$mass,  
                                    numRows = dataInf$nrows,
                                    dataType = dataInf$datatype, 
                                    numOfThreads = NumOfThreads, 
@@ -281,10 +281,8 @@ ProcessWizard <- function( deleteRamdisk = T )
 #' @param procParams a list of parameters.
 #' @param filepath a full path where params will be stored
 #'
-#' @return
 #' @export
 #'
-#' @examples
 SaveProcessingParams <- function( procParams, filepath)
 {
   fObj <- file(description = filepath, open = "w" )
