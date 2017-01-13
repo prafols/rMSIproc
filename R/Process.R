@@ -58,7 +58,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
   FullImageSmoothing(basePath = dataInf$basepath, 
                      fileNames = dataInf$filenames, 
-                     mass = img$mass, 
+                     massChannels = length(img$mass), 
                      numRows = dataInf$nrows,
                      dataType = dataInf$datatype, 
                      numOfThreads = NumOfThreads, 
