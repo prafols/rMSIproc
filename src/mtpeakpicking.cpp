@@ -20,67 +20,58 @@
 #include <cmath>
 #include <vector>
 #include <limits>
-#include "peakpickandalign.h"
+#include "mtpeakpicking.h"
 using namespace Rcpp;
 
-PeakPickAlign::PeakPickAlign():
+MTPeakPicking::MTPeakPicking():
   ThreadingMsiProc()
 {
   //Just init dummy objects to allow the desctructor to work properly
   numOfThreadsDouble = 0;
   numOfPixels = 0;
   peakObj = new PeakPicking*[1];
-  alngObj = new LabelFreeAlign*[1];
-  mLags  =  new LabelFreeAlign::TLags[1];
   mPeaks =  new PeakPicking::Peaks*[1];
 }
 
-PeakPickAlign::PeakPickAlign(ImgProcDef imgRunInfo) : 
-  ThreadingMsiProc( imgRunInfo.numOfThreads, imgRunInfo.AlignmentIterations > 0, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+MTPeakPicking::MTPeakPicking(ImgProcDef imgRunInfo) : 
+  ThreadingMsiProc( imgRunInfo.numOfThreads, false, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   peakObj = new PeakPicking*[numOfThreadsDouble];
-  alngObj = new LabelFreeAlign*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
-    peakObj[i] = new PeakPicking(imgRunInfo.peakWinSize, imgRunInfo.massAxis, imgRunInfo.massChannels, imgRunInfo.peakInterpolationUpSampling, imgRunInfo.peakSmoothingKernelSize);  
-    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex, imgRunInfo.AlignmentIterations, imgRunInfo.AlignmentMaxShift);
+    peakObj[i] = new PeakPicking(imgRunInfo.peakWinSize, imgRunInfo.massAxis, imgRunInfo.massChannels, imgRunInfo.peakInterpolationUpSampling );  
   }
-  numberOfCubes =  imgRunInfo.fileNames.length();
-  useAlignment = imgRunInfo.AlignmentIterations > 0;
+  
   minSNR = imgRunInfo.SNR;
-  numOfPixels = 0;
   binSize = imgRunInfo.tolerance;
   binFilter = imgRunInfo.filter;
-  for( int i = 0; i < numberOfCubes; i++)
+  numOfPixels = 0;
+  for( int i = 0; i < imgRunInfo.fileNames.length(); i++)
   {
     numOfPixels +=  imgRunInfo.numRows[i];
   }
   mPeaks =  new PeakPicking::Peaks*[numOfPixels];
-  mLags  =  new LabelFreeAlign::TLags[numOfPixels]; 
   bDoBinning = imgRunInfo.performBinning;
 }
 
-PeakPickAlign::~PeakPickAlign()
+MTPeakPicking::~MTPeakPicking()
 {
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
     delete peakObj[i];
-    delete alngObj[i];
   }
   delete[] peakObj;
-  delete[] alngObj;
 
   for( int i = 0; i < numOfPixels; i++ )
   {
     delete mPeaks[i];
   }
   delete[] mPeaks;
-  delete[] mLags;
 }
 
-List PeakPickAlign::Run()
+List MTPeakPicking::Run()
 {
-  //Run peak-picking and alignemt in mutli-threading
+  //Run peak-picking in mutli-threading
   runMSIProcessingCpp();
 
   //Binning
@@ -91,26 +82,25 @@ List PeakPickAlign::Run()
   else
   {
     List pkLst(numOfPixels);
-    List pkElem;
-    NumericVector pkMass, pkIntensity, pkSNR;
+    NumericVector pkMass, pkIntensity, pkSNR, pkArea;
     for(int i = 0; i < numOfPixels; i++)
     {
       Rcout<<"Copying peaks "<< (i+1) <<" of "<< numOfPixels <<"\n";
       pkMass = NumericVector(mPeaks[i]->mass.size());
       pkIntensity = NumericVector(mPeaks[i]->intensity.size());
       pkSNR = NumericVector(mPeaks[i]->SNR.size());
+      pkArea = NumericVector(mPeaks[i]->area.size());
       memcpy(pkMass.begin(), mPeaks[i]->mass.data(), sizeof(double)*mPeaks[i]->mass.size());
       memcpy(pkIntensity.begin(), mPeaks[i]->intensity.data(), sizeof(double)*mPeaks[i]->intensity.size());
       memcpy(pkSNR.begin(), mPeaks[i]->SNR.data(), sizeof(double)*mPeaks[i]->SNR.size());
-      pkElem = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR);
-      pkLst[i] = pkElem;
+      memcpy(pkArea.begin(), mPeaks[i]->area.data(), sizeof(double)*mPeaks[i]->area.size());
+      pkLst[i] = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR, Named("area") = pkArea);
     }
     return pkLst;
   }
 }
 
-
-void PeakPickAlign::AppendPeaksAsMatrix(List peaksLst)
+void MTPeakPicking::AppendPeaksAsMatrix(List peaksLst)
 {
   //Create a local Peaks to handle all peaks
   int localNumPixels = numOfPixels + (as<NumericMatrix>(peaksLst["intensity"])).rows();
@@ -143,10 +133,8 @@ void PeakPickAlign::AppendPeaksAsMatrix(List peaksLst)
   numOfPixels = localNumPixels;
 }
   
-  
-List PeakPickAlign::BinPeaks()
+List MTPeakPicking::BinPeaks()
 {
-  
   //Compute each peak obj TIC, I'll start binning from the highest spectrum which is assumed to have a lower mass error (at least for higher peaks)
   double Tic[numOfPixels];
   for(int i = 0; i < numOfPixels; i++)
@@ -270,7 +258,7 @@ List PeakPickAlign::BinPeaks()
   NumericMatrix binMatArea(numOfPixels, binMass.size());
   
   //Sort columns by mass
-  Rcout<<"Sorting columng by mass...\n";
+  Rcout<<"Sorting columns by mass...\n";
   NumericVector massSorting(binMass.size());
   memcpy(massSorting.begin(), binMass.begin(), sizeof(double)*binMass.size());
   int sortedInds[binMass.size()];
@@ -306,37 +294,20 @@ List PeakPickAlign::BinPeaks()
     }
   }
   
-  //Append lags if alignment was used and zeros otherwise
-  NumericVector LagsLow(numOfPixels);
-  NumericVector LagsHigh(numOfPixels);
-  for( int i = 0; i < numOfPixels; i++)
-  {
-    if(useAlignment)
-    {
-      LagsLow[i] = mLags[i].lagLow;
-      LagsHigh[i] = mLags[i].lagHigh;
-    }
-    else
-    {
-      LagsLow[i] = 0.0;
-      LagsHigh[i] = 0.0;
-    }
-  }
-  
-  return List::create( Named("mass") = massSorting, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea, Named("LagLow") = LagsLow, Named("LagHigh") = LagsHigh);
+  return List::create( Named("mass") = massSorting, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea );
 }
 
-void PeakPickAlign::SetBinSize(double value)
+void MTPeakPicking::SetBinSize(double value)
 {
   binSize = value;
 }
 
-void PeakPickAlign::SetBinFilter(double value)
+void MTPeakPicking::SetBinFilter(double value)
 {
   binFilter = value;
 }
 
-void PeakPickAlign::ProcessingFunction(int threadSlot)
+void MTPeakPicking::ProcessingFunction(int threadSlot)
 {
   double snrThreshold = minSNR;
   if(bDoBinning)
@@ -345,38 +316,29 @@ void PeakPickAlign::ProcessingFunction(int threadSlot)
     snrThreshold *= 0.5;
   }
   
-  //Perform alignment and peak-picking of each spectrum in the current loaded cube
+  //Perform peak-picking of each spectrum in the current loaded cube
   int is = CubeNumRows*iCube[threadSlot];
   for( int j = 0; j < cubes[threadSlot]->nrows; j++)
   {
-    if( useAlignment )
-    {
-      mLags[is] = alngObj[threadSlot]->AlignSpectrum( cubes[threadSlot]->data[j] );
-    }
     mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], snrThreshold ); 
     is++;
   }
 }
 
 // [[Rcpp::export]]
-List FullImageProcess( String basePath, StringVector fileNames, 
-                                NumericVector mass, NumericVector refSpectrum, IntegerVector numRows,
+List FullImagePeakPicking (String basePath, StringVector fileNames, 
+                                NumericVector mass, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
-                                int AlignmentIterations = 0, int AlignmentMaxShiftPpm = 200,
-                                double SNR = 5, int WinSize = 10,
-                                int InterpolationUpSampling = 10, int SmoothingKernelSize = 5, 
+                                double SNR = 5, int WinSize = 10, int InterpolationUpSampling = 10, 
                                 bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
 {
-  
   //Copy R data to C arrays
   double massC[mass.length()];
-  double refC[refSpectrum.length()];
   int numRowsC[fileNames.length()];
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
-  memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
-  PeakPickAlign::ImgProcDef myProcParams;
+  MTPeakPicking::ImgProcDef myProcParams;
   myProcParams.basePath = basePath;
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
@@ -385,24 +347,20 @@ List FullImageProcess( String basePath, StringVector fileNames,
   myProcParams.numOfThreads = numOfThreads;
   myProcParams.numRows = numRowsC; 
   myProcParams.peakInterpolationUpSampling  = InterpolationUpSampling;
-  myProcParams.peakSmoothingKernelSize = SmoothingKernelSize;
   myProcParams.peakWinSize = WinSize;
-  myProcParams.AlignmentIterations = AlignmentIterations;
-  myProcParams.AlignmentMaxShift = AlignmentMaxShiftPpm;
   myProcParams.SNR = SNR;
   myProcParams.tolerance = binningTolerance;
   myProcParams.filter = binningFilter;
-  myProcParams.ref_spectrum = refC;
   myProcParams.performBinning = doBinning;
   
-  PeakPickAlign myPeakPicking(myProcParams);
+  MTPeakPicking myPeakPicking(myProcParams);
   return myPeakPicking.Run();
 }
 
 // [[Rcpp::export]]
 List MergePeakMatricesC( List PeakMatrices, double binningTolerance = 0.05, double binningFilter = 0.01 )
 {
-  PeakPickAlign myPeakPicking;
+  MTPeakPicking myPeakPicking;
   for( int i = 0; i < PeakMatrices.length(); i++)
   {
     Rcout<<"Merging peak matrix "<<(i+1)<<" of "<<PeakMatrices.length()<<"\n";

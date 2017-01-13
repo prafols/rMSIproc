@@ -5,6 +5,75 @@
 
 using namespace Rcpp;
 
+// FullImageAlign
+List FullImageAlign(String basePath, StringVector fileNames, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, int AlignmentIterations, int AlignmentMaxShiftPpm);
+RcppExport SEXP rMSIproc_FullImageAlign(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type refSpectrum(refSpectrumSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type AlignmentIterations(AlignmentIterationsSEXP);
+    Rcpp::traits::input_parameter< int >::type AlignmentMaxShiftPpm(AlignmentMaxShiftPpmSEXP);
+    rcpp_result_gen = Rcpp::wrap(FullImageAlign(basePath, fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations, AlignmentMaxShiftPpm));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FullImagePeakPicking
+List FullImagePeakPicking(String basePath, StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter);
+RcppExport SEXP rMSIproc_FullImagePeakPicking(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< double >::type SNR(SNRSEXP);
+    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type InterpolationUpSampling(InterpolationUpSamplingSEXP);
+    Rcpp::traits::input_parameter< bool >::type doBinning(doBinningSEXP);
+    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
+    rcpp_result_gen = Rcpp::wrap(FullImagePeakPicking(basePath, fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MergePeakMatricesC
+List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
+RcppExport SEXP rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type PeakMatrices(PeakMatricesSEXP);
+    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
+    rcpp_result_gen = Rcpp::wrap(MergePeakMatricesC(PeakMatrices, binningTolerance, binningFilter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// FullImageSmoothing
+void FullImageSmoothing(String basePath, StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads, int SmoothingKernelSize);
+RcppExport SEXP rMSIproc_FullImageSmoothing(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SmoothingKernelSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< int >::type massChannels(massChannelsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type SmoothingKernelSize(SmoothingKernelSizeSEXP);
+    FullImageSmoothing(basePath, fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize);
+    return R_NilValue;
+END_RCPP
+}
 // NoiseEstimationFFTCosWin
 NumericVector NoiseEstimationFFTCosWin(NumericVector x, int filWinSize);
 RcppExport SEXP rMSIproc_NoiseEstimationFFTCosWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
@@ -73,45 +142,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type mat(matSEXP);
     StorePeakMatrixC(path, mat);
     return R_NilValue;
-END_RCPP
-}
-// FullImageProcess
-List FullImageProcess(String basePath, StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, int AlignmentIterations, int AlignmentMaxShiftPpm, double SNR, int WinSize, int InterpolationUpSampling, int SmoothingKernelSize, bool doBinning, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_FullImageProcess(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP SmoothingKernelSizeSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
-    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type refSpectrum(refSpectrumSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
-    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
-    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
-    Rcpp::traits::input_parameter< int >::type AlignmentIterations(AlignmentIterationsSEXP);
-    Rcpp::traits::input_parameter< int >::type AlignmentMaxShiftPpm(AlignmentMaxShiftPpmSEXP);
-    Rcpp::traits::input_parameter< double >::type SNR(SNRSEXP);
-    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
-    Rcpp::traits::input_parameter< int >::type InterpolationUpSampling(InterpolationUpSamplingSEXP);
-    Rcpp::traits::input_parameter< int >::type SmoothingKernelSize(SmoothingKernelSizeSEXP);
-    Rcpp::traits::input_parameter< bool >::type doBinning(doBinningSEXP);
-    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
-    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImageProcess(basePath, fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations, AlignmentMaxShiftPpm, SNR, WinSize, InterpolationUpSampling, SmoothingKernelSize, doBinning, binningTolerance, binningFilter));
-    return rcpp_result_gen;
-END_RCPP
-}
-// MergePeakMatricesC
-List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type PeakMatrices(PeakMatricesSEXP);
-    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
-    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(MergePeakMatricesC(PeakMatrices, binningTolerance, binningFilter));
-    return rcpp_result_gen;
 END_RCPP
 }
 // DetectPeaks_C

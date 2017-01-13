@@ -47,17 +47,52 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   
   dataInf <- getrMSIdataInfo(img)
 
+  #Avoid using MALDIquant from here
   if(class(img$mean) == "MassSpectrum")
   {
-    refSpc <- img$mean@intensity
+    img$mean <- img$mean@intensity
+  }
+  
+  #Apply Savitzky-Golay smoothing to RAW data and average spectrum
+  cat("Running Savitzkt-Golay Smoothing...\n")
+  img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
+  FullImageSmoothing(basePath = dataInf$basepath, 
+                     fileNames = dataInf$filenames, 
+                     mass = img$mass, 
+                     numRows = dataInf$nrows,
+                     dataType = dataInf$datatype, 
+                     numOfThreads = NumOfThreads, 
+                     SmoothingKernelSize = SmoothingKernelSize)
+  
+  #Calculate reference spectrum for label free alignment
+  refSpc <- InternalReferenceSpectrum(img)
+  
+  #Label-free Alignment
+  if(AlignmentIterations > 0)
+  {
+    cat("Running Label-Free Alignment...\n")
+    alngLags <- FullImageAlign(basePath = dataInf$basepath,
+                               fileNames = dataInf$filenames, 
+                               refSpectrum = refSpc, 
+                               numRows = dataInf$nrows,
+                               dataType = dataInf$datatype, 
+                               numOfThreads = NumOfThreads, 
+                               AlignmentIterations = AlignmentIterations,
+                               AlignmentMaxShiftPpm = AlignmentMaxShiftppm)
   }
   else
   {
-    refSpc <- img$mean
+    alngLags <- NULL
   }
   
+  #Recalculate mean spectrum
+  img$mean <- rMSI::AverageSpectrum(img)
+  
+  #Do not count time while the user is in manual calibration window
+  elap_1st_stage <- Sys.time() - pt
+  
   #Manual calibration (user will be promp with calibration dialog)
-  img$mass <- CalibrationWindow( img$mass, refSpc, img$name )
+  img$mass <- CalibrationWindow( img$mass, img$mean, img$name )
   if(is.null(img$mass))
   {
     rMSI::DeleteRamdisk(img)
@@ -65,14 +100,23 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
     stop("Aborted by user\n")
   }
   
-  #Alignment and peak-picking using Cpp and mutli-threading
-  pkMatrix <- FullImageProcess(dataInf$basepath, dataInf$filenames, img$mass, refSpc, dataInf$nrows, dataInf$datatype,
-                               NumOfThreads, AlignmentIterations, AlignmentMaxShiftppm,
-                               SNR, peakWindow, peakUpSampling, SmoothingKernelSize,
-                               UseBinning, BinTolerance, BinFilter)
+  #Reset elapset time counter
+  pt <- Sys.time()
   
-  #Recalculate mean spectrum
-  img$mean <- rMSI::AverageSpectrum(img)
+  #Peak-Picking and binning
+  cat("Running Peak Picking...\n")
+  pkMatrix <- FullImagePeakPicking(basePath = dataInf$basepath,
+                                   fileNames = dataInf$filenames,
+                                   massChannels = length(img$mass),  
+                                   numRows = dataInf$nrows,
+                                   dataType = dataInf$datatype, 
+                                   numOfThreads = NumOfThreads, 
+                                   SNR = SNR, 
+                                   WinSize = peakWindow, 
+                                   InterpolationUpSampling = peakUpSampling, 
+                                   doBinning = UseBinning, 
+                                   binningTolerance = BinTolerance, 
+                                   binningFilter = BinFilter)
   
   #Calculate some normalizations
   img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
@@ -86,11 +130,11 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
     pkMatrix$numPixels <- nrow(img$pos)
   }
   
-  elap <- Sys.time() - pt
+  elap_2nd_stage <- Sys.time() - pt
   cat("Total used processing time:\n")
-  print(elap)
+  print(elap_1st_stage + elap_2nd_stage)
   
-  return ( list( procImg = img,   peakMat = pkMatrix ))
+  return ( list( procImg = img,   peakMat = pkMatrix, alignShifts = alngLags ))
 }
 
 #' MergePeakMatrices.

@@ -22,12 +22,11 @@
 #include <fftw3.h>
 #include <vector>
 #include "noiseestimation.h"
-#include "smoothing.h"
 
 class PeakPicking
 {
   public:
-    PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int UpSampling = 10, int SmoothingKernelSize = 5);
+    PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int UpSampling = 10 );
     ~PeakPicking();
     Rcpp::NumericVector getHannWin();
 
@@ -54,7 +53,6 @@ class PeakPicking
     int dataLength;
     
     NoiseEstimation *neObj;
-    Smoothing *smObj;
     
     //Data for FFT interpolation
     double *fft_in1; //Used for first fft input buffer with a length off FFT_Size
@@ -65,7 +63,7 @@ class PeakPicking
     fftw_plan fft_pinvers;
     
     double predictPeakMassFFT( double *spectrum, int iPeakMass );
-    Peaks *detectPeaks( double *spectrum, double *noise, double *smoothed, double SNR );
+    Peaks *detectPeaks( double *spectrum, double *noise, double SNR );
 };
   
 #endif  

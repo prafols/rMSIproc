@@ -23,7 +23,7 @@
 using namespace Rcpp;
 
 
-PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int UpSampling, int SmoothingKernelSize)
+PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int UpSampling )
 {
   FFT_Size = (int)pow(2.0, std::ceil(log2(WinSize)));
   FFTInter_Size = (int)pow(2.0, std::ceil(log2(UpSampling*FFT_Size))); //FFT interpolation buffer
@@ -49,9 +49,6 @@ PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int
   
   //Prepare NoiseEstimation oject
   neObj = new NoiseEstimation(dataLength);
-  
-  //Prepare Smoothin object
-  smObj = new Smoothing(SmoothingKernelSize);
 }
 
 PeakPicking::~PeakPicking()
@@ -65,7 +62,6 @@ PeakPicking::~PeakPicking()
   fftw_free(fft_in2); 
   fftw_free(fft_out2);
   delete neObj;
-  delete smObj;
 }
 
 PeakPicking::Peaks *PeakPicking::peakPicking(double *spectrum, double SNR )
@@ -75,17 +71,12 @@ PeakPicking::Peaks *PeakPicking::peakPicking(double *spectrum, double SNR )
   memcpy(noise, spectrum, sizeof(double)*dataLength);
   neObj->NoiseEstimationFFTExpWin(noise, dataLength, FFT_Size*2);
   
-  //Smooth spectrum
-  double spcSmooth[dataLength];
-  memcpy(spcSmooth, spectrum, sizeof(double)*dataLength);
-  smObj->smoothSavitzkyGolay(spcSmooth, dataLength);
-  
   //Detect peaks
-  return detectPeaks(spectrum, noise, spcSmooth, SNR);
+  return detectPeaks(spectrum, noise, SNR);
 }
 
 //Detect all local maximums and Filter peaks using SNR min value in a sliding window
-PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, double *smoothed, double SNR )
+PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, double SNR )
 {
   const int HalfWinSize = FFT_Size/2;
   double slope = 0.0;
@@ -96,7 +87,7 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
   PeakPicking::Peaks *m_peaks = new PeakPicking::Peaks();
   for( int i=0; i < (dataLength - 1); i++)
   {
-    slope = smoothed[i + 1] - smoothed[i]; //Compute 1st derivative
+    slope = spectrum[i + 1] - spectrum[i]; //Compute 1st derivative
     //Look for a zero crossing at first derivate (negative sign of product) and negative 2nd derivate value (local maxim)
     if(slope*slope_ant <= 0.0 && (slope - slope_ant) < 0.0)
     {
