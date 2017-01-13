@@ -39,7 +39,7 @@
 #' @export
 #'
 ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         SmoothingKernelSize = 5, 
+                         SmoothingKernelSize = 5, UseManualCalibration = T,
                          UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05, 
                          NumOfThreads = parallel::detectCores())
 {
@@ -92,12 +92,15 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   elap_1st_stage <- Sys.time() - pt
   
   #Manual calibration (user will be promp with calibration dialog)
-  img$mass <- CalibrationWindow( img$mass, img$mean, img$name )
-  if(is.null(img$mass))
+  if( UseManualCalibration )
   {
-    rMSI::DeleteRamdisk(img)
-    gc()
-    stop("Aborted by user\n")
+    img$mass <- CalibrationWindow( img$mass, img$mean, img$name )
+    if(is.null(img$mass))
+    {
+      rMSI::DeleteRamdisk(img)
+      gc()
+      stop("Aborted by user\n")
+    }
   }
   
   #Reset elapset time counter
