@@ -4,7 +4,7 @@
 \alias{DetectPeaks}
 \title{DetectPeaks'}
 \usage{
-DetectPeaks(mass, intensity, SNR = 5, WinSize = 20)
+DetectPeaks(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 }
 \arguments{
 \item{mass}{a vector containing the mass axis.}
@@ -14,9 +14,11 @@ DetectPeaks(mass, intensity, SNR = 5, WinSize = 20)
 \item{SNR}{the minimum signal to noise ratio of retained peaks}
 
 \item{WinSize}{the used windows size for peak detection}
+
+\item{OverSampling}{the used oversampling value for interpolating the peak shape and improve mass and area calculation.}
 }
 \value{
-a list containing mass, intensity and SNR fields of detected peaks.
+a list containing mass, intensity, SNR and area fields of detected peaks.
 }
 \description{
 DetectPeaks'

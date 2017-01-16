@@ -4,7 +4,7 @@
 \alias{DetectPeaks_C}
 \title{DetectPeaks_C.}
 \usage{
-DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L)
+DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 10L)
 }
 \arguments{
 \item{mass}{a NumericVector containing the mass axis of the spectrum.}
@@ -14,6 +14,8 @@ DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L)
 \item{SNR}{Only peaks with an equal or higher SNR are retained.}
 
 \item{WinSize}{The windows used to detect peaks and caculate noise.}
+
+\item{UpSampling}{the oversampling used for acurate mass detection and area integration.}
 }
 \value{
 a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.

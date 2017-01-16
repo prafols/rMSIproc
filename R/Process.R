@@ -28,7 +28,7 @@
 #' @param SNR minimal singal to noise ratio of peaks to retain.
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.
 #' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction.
-#' @param SmoothingKernelSize size of smoothing kernel.
+#' @param SmoothingKernelSize size of smoothing kernel, if zero smoothing is disabled.
 #' @param UseManualCalibration if the manual calibration windows must be used.
 #' @param UseBinning if true binned matrices are returned instead of peak lists.
 #' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
@@ -36,7 +36,13 @@
 #' @param NumOfThreads the number number of threads used to process the data.
 #' 
 #'
-#' @return a intensity matrix where each row corresponds to an spectrum.
+#' @return  a named list containing:
+#'             - The process image reference (procImg).
+#'             - The results peak-picking (peakMat). This can be returned in two forms:
+#'                 From1 (if binning is used) - a list containing three matrices (intensity, SNR and area) and a vector with a common mass axis.
+#'                 Form2 (if NO binning is applied) - a list of detected peaks for each pixel.
+#'             - The applied mass shifts in first alignment iteration (alignShifts).
+#' 
 #' @export
 #'
 ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
@@ -55,22 +61,25 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   }
   
   #Apply Savitzky-Golay smoothing to RAW data and average spectrum
-  cat("Running Savitzkt-Golay Smoothing...\n")
-  img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
-  FullImageSmoothing(basePath = dataInf$basepath, 
-                     fileNames = dataInf$filenames, 
-                     massChannels = length(img$mass), 
-                     numRows = dataInf$nrows,
-                     dataType = dataInf$datatype, 
-                     numOfThreads = NumOfThreads, 
-                     SmoothingKernelSize = SmoothingKernelSize)
-  
-  #Calculate reference spectrum for label free alignment
-  refSpc <- InternalReferenceSpectrum(img)
+  if(SmoothingKernelSize > 0)
+  {
+    cat("Running Savitzkt-Golay Smoothing...\n")
+    img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
+    FullImageSmoothing(basePath = dataInf$basepath, 
+                       fileNames = dataInf$filenames, 
+                       massChannels = length(img$mass), 
+                       numRows = dataInf$nrows,
+                       dataType = dataInf$datatype, 
+                       numOfThreads = NumOfThreads, 
+                       SmoothingKernelSize = SmoothingKernelSize)
+  }
   
   #Label-free Alignment
   if(AlignmentIterations > 0)
   {
+    #Calculate reference spectrum for label free alignment
+    refSpc <- InternalReferenceSpectrum(img)
+    
     cat("Running Label-Free Alignment...\n")
     alngLags <- FullImageAlign(basePath = dataInf$basepath,
                                fileNames = dataInf$filenames, 

@@ -22,16 +22,18 @@
 #' @param intensity a vector containinf the spectrum intensities.
 #' @param SNR the minimum signal to noise ratio of retained peaks
 #' @param WinSize the used windows size for peak detection
+#' @param OverSampling the used oversampling value for interpolating the peak shape and improve mass and area calculation.
 #'
-#' @return a list containing mass, intensity and SNR fields of detected peaks.
+#' @return a list containing mass, intensity, SNR and area fields of detected peaks.
 #' @export
 #'
-DetectPeaks <- function(mass, intensity, SNR = 5, WinSize = 20)
+DetectPeaks <- function(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 {
-  pm <- DetectPeaks_C(mass, intensity,SNR, WinSize)
+  pm <- DetectPeaks_C(mass, intensity,SNR, WinSize, OverSampling)
   peaks <- list()
   peaks$mass <- pm["mass", ]
   peaks$intensity <- pm["intensity", ]
   peaks$SNR <- pm["SNR", ]
+  peaks$area <- pm["area", ]
   return(peaks)
 }

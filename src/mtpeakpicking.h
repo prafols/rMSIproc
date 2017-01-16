@@ -72,6 +72,7 @@ class MTPeakPicking : public ThreadingMsiProc
     {
       double intensity;
       double SNR;
+      double area;
     }TBin;
     
     //Thread Processing function definition

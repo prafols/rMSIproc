@@ -184,6 +184,7 @@ List MTPeakPicking::BinPeaks()
       binMat[binMat.size() - 1].resize(numOfPixels); //Extenend all new column elements
       binMat[binMat.size() - 1][iMax].intensity = mPeaks[iMax]->intensity[ip]; 
       binMat[binMat.size() - 1][iMax].SNR = mPeaks[iMax]->SNR[ip];
+      binMat[binMat.size() - 1][iMax].area = mPeaks[iMax]->area[ip];
       double numMasses = 1.0; //number of peak masses used to compute each mass centroid
       int countPeaks = 1; //Number of peaks in current column
       
@@ -215,6 +216,7 @@ List MTPeakPicking::BinPeaks()
           {
             binMat[binMat.size() - 1][j].intensity = mPeaks[j]->intensity[iPos];
             binMat[binMat.size() - 1][j].SNR = mPeaks[j]->SNR[iPos];
+            binMat[binMat.size() - 1][j].area = mPeaks[j]->area[iPos];
             if(mPeaks[j]->SNR[iPos] >= minSNR)
             {
               //Count peak only if its SNR fits the min SNR value
@@ -236,6 +238,7 @@ List MTPeakPicking::BinPeaks()
           {
             binMat[binMat.size() - 1][j].intensity = 0.0;
             binMat[binMat.size() - 1][j].SNR = 0.0;
+            binMat[binMat.size() - 1][j].area = 0.0;
           }
         }
       }
@@ -290,7 +293,7 @@ List MTPeakPicking::BinPeaks()
     {
       binMatIntensity(ir, ic ) = binMat[sortedInds[ic]][ir].intensity;
       binMatSNR      (ir, ic ) = binMat[sortedInds[ic]][ir].SNR;
-      binMatArea     (ir, ic ) = binMat[sortedInds[ic]][ir].intensity; //TODO currently I'm using area equal intensity for developing but i must calculate area some day, but not here, in peak picking class
+      binMatArea     (ir, ic ) = binMat[sortedInds[ic]][ir].area;
     }
   }
   

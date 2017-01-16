@@ -45,6 +45,9 @@ class PeakPicking
     
     Rcpp::List PeakObj2List(PeakPicking::Peaks *pks);
     
+    //Function to test interpolations
+    Rcpp::NumericVector getInterpolatedPeak(Rcpp::NumericVector data, int iPeak, bool ApplyHanning);
+    
   private:
     int FFT_Size; //First FFT windows size
     int FFTInter_Size; //Second FFT Windows size, used for peak interpolation
@@ -62,7 +65,9 @@ class PeakPicking
     fftw_plan fft_pdirect;
     fftw_plan fft_pinvers;
     
-    double predictPeakMassFFT( double *spectrum, int iPeakMass );
+    double predictPeakMass( double *spectrum, int iPeakMass );
+    double predictPeakArea( double *spectrum, int iPeakMass );
+    int interpolateFFT(double *spectrum, int iPeakMass, bool ApplyHanning); //Interpolatea m/z peak and return its location in interpolated space (fft_out2)
     Peaks *detectPeaks( double *spectrum, double *noise, double SNR );
 };
   

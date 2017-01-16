@@ -100,11 +100,28 @@ StorePeakMatrixC <- function(path, mat) {
 #' @param intensity a NumericVector where peaks must be detected.
 #' @param SNR Only peaks with an equal or higher SNR are retained.
 #' @param WinSize The windows used to detect peaks and caculate noise.
+#' @param UpSampling the oversampling used for acurate mass detection and area integration.
 #' 
 #' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
 #' 
-DetectPeaks_C <- function(mass, intensity, SNR = 5, WinSize = 20L) {
-    .Call('rMSIproc_DetectPeaks_C', PACKAGE = 'rMSIproc', mass, intensity, SNR, WinSize)
+DetectPeaks_C <- function(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 10L) {
+    .Call('rMSIproc_DetectPeaks_C', PACKAGE = 'rMSIproc', mass, intensity, SNR, WinSize, UpSampling)
+}
+
+#' TestPeakInterpolation_C.
+#' 
+#' 
+#' @param mass a NumericVector containing the mass axis of the spectrum.
+#' @param intensity a NumericVector where peaks must be detected.
+#' @param peakIndex the location of the peak to interpolate in the spectrum.  
+#' @param WinSize The windows used to detect peaks and caculate noise.
+#' @param UpSampling the oversampling used for acurate mass detection and area integration.
+#' @param usHAnning if hanning windowing must be used befor interpolation.
+#' 
+#' @return a NumerixVector with the FFT interpolated peak shape.
+#' 
+TestPeakInterpolation_C <- function(mass, intensity, peakIndex, WinSize = 20L, UpSampling = 10L, useHanning = FALSE) {
+    .Call('rMSIproc_TestPeakInterpolation_C', PACKAGE = 'rMSIproc', mass, intensity, peakIndex, WinSize, UpSampling, useHanning)
 }
 
 PrintrMSIObjectInfo <- function(basePath, fileNames, massChannels, numRows, dataType) {

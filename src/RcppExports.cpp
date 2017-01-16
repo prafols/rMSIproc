@@ -145,8 +145,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DetectPeaks_C
-NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR, int WinSize);
-RcppExport SEXP rMSIproc_DetectPeaks_C(SEXP massSEXP, SEXP intensitySEXP, SEXP SNRSEXP, SEXP WinSizeSEXP) {
+NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR, int WinSize, int UpSampling);
+RcppExport SEXP rMSIproc_DetectPeaks_C(SEXP massSEXP, SEXP intensitySEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,7 +154,24 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type intensity(intensitySEXP);
     Rcpp::traits::input_parameter< double >::type SNR(SNRSEXP);
     Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(DetectPeaks_C(mass, intensity, SNR, WinSize));
+    Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(DetectPeaks_C(mass, intensity, SNR, WinSize, UpSampling));
+    return rcpp_result_gen;
+END_RCPP
+}
+// TestPeakInterpolation_C
+NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize, int UpSampling, bool useHanning);
+RcppExport SEXP rMSIproc_TestPeakInterpolation_C(SEXP massSEXP, SEXP intensitySEXP, SEXP peakIndexSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP, SEXP useHanningSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type intensity(intensitySEXP);
+    Rcpp::traits::input_parameter< int >::type peakIndex(peakIndexSEXP);
+    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
+    Rcpp::traits::input_parameter< bool >::type useHanning(useHanningSEXP);
+    rcpp_result_gen = Rcpp::wrap(TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize, UpSampling, useHanning));
     return rcpp_result_gen;
 END_RCPP
 }

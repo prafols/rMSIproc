@@ -33,6 +33,7 @@ PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int
   memcpy(mass, massAxis, sizeof(double) * dataLength);
   
   //Compute Hanning window
+  //TODO improve hanning with the triple-one aproach
   HanningWin = new double[FFT_Size];
   for( int i = 0; i < FFT_Size; i++)
   {
@@ -82,8 +83,6 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
   double slope = 0.0;
   double slope_ant = 0.0;
   double noise_mean = 0.0;
-  double m_SNR = 0.0;
-  double pMax;
   PeakPicking::Peaks *m_peaks = new PeakPicking::Peaks();
   for( int i=0; i < (dataLength - 1); i++)
   {
@@ -97,33 +96,20 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
         noise_mean += (j >= 0 && j < dataLength) ? noise[j] : 0.0;
       }
       noise_mean /= FFT_Size;
-      
-      //due to Savitzky-Golay smoothing, the real intensity can be in previous or next sample, so look for the max in both places
-      pMax = -1.0;
-      if( i > 0 )
+      if(spectrum[i]/noise_mean >= SNR)
       {
-        pMax = spectrum[i - 1]; 
-      }
-      pMax = spectrum[i] > pMax ? spectrum[i] : pMax;
-      pMax = spectrum[i + 1] > pMax ? spectrum[i + 1] : pMax;
-      
-      m_SNR = spectrum[i]/noise_mean;
-      if(m_SNR >= SNR)
-      {
-        //m_peaks.mass.push_back(mass[i]); //Set mass usin original spectometer resolution
-        m_peaks->mass.push_back(predictPeakMassFFT(spectrum, i)); //Set mass using FFT interpolation
-        m_peaks->intensity.push_back(pMax);
-        m_peaks->SNR.push_back(m_SNR);
-        m_peaks->area.push_back(pMax); //TODO, implement area, currently im using a copy of intensity
+        m_peaks->mass.push_back( predictPeakMass(spectrum, i)); //Compute peak accurately using FFT interpolation); 
+        m_peaks->intensity.push_back(spectrum[i]);
+        m_peaks->SNR.push_back(spectrum[i]/noise_mean); 
+        m_peaks->area.push_back(predictPeakArea(spectrum, i)); //Normalized to non-FFT sapce
       }
     }
     slope_ant = slope;
   }
-  
   return m_peaks;
 }
 
-double PeakPicking::predictPeakMassFFT( double *spectrum, int iPeakMass )
+int PeakPicking::interpolateFFT(double *spectrum, int iPeakMass, bool ApplyHanning)
 {
   //Fill fft data vector taking care of extrems
   int idata = 0; //Indeix of data
@@ -131,7 +117,15 @@ double PeakPicking::predictPeakMassFFT( double *spectrum, int iPeakMass )
   {
     idata = iPeakMass - FFT_Size/2 + i;
     fft_in1[i] = (idata >= 0 && idata < dataLength) ? spectrum[idata] : 0.0;
-    fft_in1[i] *= HanningWin[i];
+    if(ApplyHanning)
+    {
+      fft_in1[i] *= HanningWin[i]; 
+    }
+
+    ///TODO l'error d'integració d'area es aki. Resulta que si no enfinestres el pic te fenomen de Gibbs i per tant la idea dels topalls falla
+    //Crec que tens dues opcions:
+    //  - Definir un criteri diferent per decidir l'interval d'integracio
+    //  - Buscar alguna funcio de enfinestrat que et dongui un pic suau sense perdre ambplada
   }
   
   //Compute FFT
@@ -151,40 +145,95 @@ double PeakPicking::predictPeakMassFFT( double *spectrum, int iPeakMass )
       fft_in2[i] = 0.0;  
     }
   }
-
+  
   //Compute Inverse FFT, fft_out2 contains the interpolated peak
   fftw_execute(fft_pinvers);
   
-  //Peak is around FFT_Size/2 so just look there for ir
+  //Peak is around FFT_Size/2 so just look there for it
   int imax = -1;
   double dmax = -1.0;
   for( int i = (int)std::floor((((double)FFTInter_Size)/((double)FFT_Size))*(0.5*(double)FFT_Size - 1.0)); 
-           i <= (int)std::ceil((((double)FFTInter_Size)/((double)FFT_Size))*(0.5*(double)FFT_Size + 1.0)); 
-           i++)
+       i <= (int)std::ceil((((double)FFTInter_Size)/((double)FFT_Size))*(0.5*(double)FFT_Size + 1.0)); 
+       i++)
   {
-    imax = fft_out2[i] > dmax ? i : imax;
-    dmax = fft_out2[i] > dmax ? fft_out2[i] : dmax;
+    if( fft_out2[i] > dmax )
+    {
+      imax = i;
+      dmax = fft_out2[i];
+    }
   }
+  
+  return imax;
+}
 
+double PeakPicking::predictPeakMass( double *spectrum, int iPeakMass )
+{
+  double pMass; 
+  int iPeak = interpolateFFT(spectrum, iPeakMass, true);
+  
   //Compute the original mass indexing space
-  double imass = (double)iPeakMass - (0.5*(double)FFT_Size) + ((double)imax) * ((double)FFT_Size)/((double)FFTInter_Size);
+  double imass = (double)iPeakMass - (0.5*(double)FFT_Size) + ((double)iPeak) * ((double)FFT_Size)/((double)FFTInter_Size);
 
   //Convert peak position indexes to mass values
   double peakPosL = std::floor(imass);
   double peakPosR = std::ceil(imass);
-  double exact_mass = 0.0;
   if(peakPosL == peakPosR)
   {
     //Peak exactly on mass channel, no decimal part
-    exact_mass =  mass[(int)imass];
+    pMass =  mass[(int)imass];
   }
   else
   {
     //Calculate peak position as a compositon of both neighbours mass channels
-    exact_mass = (peakPosR - imass)*mass[(int)peakPosL] + (imass - peakPosL)*mass[(int)peakPosR];
+    pMass = (peakPosR - imass)*mass[(int)peakPosL] + (imass - peakPosL)*mass[(int)peakPosR];
   }
 
-  return exact_mass;
+  return pMass;
+}
+
+double PeakPicking::predictPeakArea( double *spectrum, int iPeakMass )
+{
+  //Compte area 
+  //TODO: Els topalls estan fallant per fenomen de Gibbs
+ 
+  int iPeak = interpolateFFT(spectrum, iPeakMass, false);
+  double pArea = fft_out2[iPeak];
+  
+  //Integrate the left part of the peak
+  for( int i = iPeak; i >= 0; i-- )
+  {
+    if( i < iPeak )
+    {
+      if( i < (iPeak - 1) )
+      {
+        if(fft_out2[i] >= fft_out2[i + 2] ) 
+        {
+          //Break loop if slope increases too much at some point
+          break; //TODO disabling it for testing if the mistake is here
+        }
+      }
+      pArea += fft_out2[i];
+    }
+  }
+  
+  //Integrate the right part of the peak
+  for( int i = iPeak; i < FFTInter_Size; i++)
+  {
+    if( i > iPeak)
+    {
+      if( i > (iPeak + 1))
+      {
+        if(fft_out2[i] >= fft_out2[i - 2] ) 
+        {
+          //Break loop if slope increases too much at some point
+          break; //TODO disabling it for testing if the mistake is here
+        }
+      }
+      pArea += fft_out2[i];
+    }
+  }
+ 
+  return pArea * spectrum[iPeakMass] / fft_out2[iPeak]; //Return the area de-normalizing the FFT space
 }
 
 //Returns the internaly used Hanning windows (only for test purposes)
@@ -213,6 +262,17 @@ List PeakPicking::PeakObj2List(PeakPicking::Peaks *pks)
   return List::create( Named("mass") = mass, Named("intensity") = intensity, Named("SNR") = SNR);
 }
 
+NumericVector PeakPicking::getInterpolatedPeak(NumericVector data, int iPeak, bool ApplyHanning)
+{
+  double Cdata[data.length()];
+  memcpy(Cdata, data.begin(), sizeof(double)*data.length());
+  interpolateFFT(Cdata, iPeak, ApplyHanning);
+    
+  NumericVector interpData(FFTInter_Size);
+  memcpy(interpData.begin(), fft_out2, sizeof(double)*FFTInter_Size);
+  return(interpData);
+}
+
 ////// Rcpp Exported methods //////////////////////////////////////////////////////////
 //' DetectPeaks_C.
 //' 
@@ -224,11 +284,12 @@ List PeakPicking::PeakObj2List(PeakPicking::Peaks *pks)
 //' @param intensity a NumericVector where peaks must be detected.
 //' @param SNR Only peaks with an equal or higher SNR are retained.
 //' @param WinSize The windows used to detect peaks and caculate noise.
+//' @param UpSampling the oversampling used for acurate mass detection and area integration.
 //' 
 //' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
 //' 
 // [[Rcpp::export]]
-NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR = 5, int WinSize = 20)
+NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR = 5, int WinSize = 20, int UpSampling = 10)
 {
   if(mass.length() != intensity.length())
   {
@@ -243,7 +304,7 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   memcpy(spectrum, intensity.begin(), sizeof(double)*intensity.length());
   
-  PeakPicking ppObj(WinSize, massC, mass.length());
+  PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
   PeakPicking::Peaks *peaks = ppObj.peakPicking(spectrum, SNR);
   
   //Convert peaks to R matrix like object
@@ -259,5 +320,37 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   delete peaks;
   rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR", "area");
   return mp;
+}
+//' TestPeakInterpolation_C.
+//' 
+//' 
+//' @param mass a NumericVector containing the mass axis of the spectrum.
+//' @param intensity a NumericVector where peaks must be detected.
+//' @param peakIndex the location of the peak to interpolate in the spectrum.  
+//' @param WinSize The windows used to detect peaks and caculate noise.
+//' @param UpSampling the oversampling used for acurate mass detection and area integration.
+//' @param usHAnning if hanning windowing must be used befor interpolation.
+//' 
+//' @return a NumerixVector with the FFT interpolated peak shape.
+//' 
+// [[Rcpp::export]]
+NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize = 20, int UpSampling = 10, bool useHanning = false)
+{
+  if(mass.length() != intensity.length())
+  {
+    Rcpp::stop("Error in DetectPeaks_C() function: mass and intensity length must be equal.");
+    return NumericVector(0);
+  }
+  
+  double massC[mass.length()];
+  double spectrum[mass.length()];
+  
+  //Copy R data to C arrays
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
+  memcpy(spectrum, intensity.begin(), sizeof(double)*intensity.length());
+  
+  PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
+  
+  return(ppObj.getInterpolatedPeak(intensity, peakIndex, useHanning));
 }
 

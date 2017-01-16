@@ -23,7 +23,7 @@ ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
 
 \item{peakUpSampling}{upsampling factor used in peak interpolation fo exact mass prediction.}
 
-\item{SmoothingKernelSize}{size of smoothing kernel.}
+\item{SmoothingKernelSize}{size of smoothing kernel, if zero smoothing is disabled.}
 
 \item{UseManualCalibration}{if the manual calibration windows must be used.}
 
@@ -36,7 +36,12 @@ ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
 \item{NumOfThreads}{the number number of threads used to process the data.}
 }
 \value{
-a intensity matrix where each row corresponds to an spectrum.
+a named list containing:
+            - The process image reference (procImg).
+            - The results peak-picking (peakMat). This can be returned in two forms:
+                From1 (if binning is used) - a list containing three matrices (intensity, SNR and area) and a vector with a common mass axis.
+                Form2 (if NO binning is applied) - a list of detected peaks for each pixel.
+            - The applied mass shifts in first alignment iteration (alignShifts).
 }
 \description{
 Perform all image pre-processing using a multi-threading implementation.
