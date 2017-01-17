@@ -260,7 +260,7 @@ ImportWizardGui <- function()
   spin_peakWin <- drawLabelSpin(box_peakpick, "Detector window size:", 5, 50, 10)
   spin_peakOversample <- drawLabelSpin(box_peakpick, "Peak shape over-sampling:", 1, 50, 10)
   frm_SGKernSize <- gWidgets2::gframe("Savitzky-Golay kernel size:", container = box_peakpick)
-  ratio_SGkernSize<- gWidgets2::gradio(c(5,7,9,11), horizontal = T, container = frm_SGKernSize)
+  ratio_SGkernSize<- gWidgets2::gradio(c(0,5,7,9,11), horizontal = T, container = frm_SGKernSize)
   
   #Binning params
   frm_peakbinning <- gWidgets2::gframe("Peak-Binning", container = box_proc, spacing = 10)

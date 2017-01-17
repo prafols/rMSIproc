@@ -175,6 +175,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// TestHanningWindow
+NumericVector TestHanningWindow(NumericVector mass, int WinSize, int UpSampling);
+RcppExport SEXP rMSIproc_TestHanningWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(TestHanningWindow(mass, WinSize, UpSampling));
+    return rcpp_result_gen;
+END_RCPP
+}
 // PrintrMSIObjectInfo
 void PrintrMSIObjectInfo(String basePath, StringVector fileNames, int massChannels, IntegerVector numRows, String dataType);
 RcppExport SEXP rMSIproc_PrintrMSIObjectInfo(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP) {

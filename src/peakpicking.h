@@ -48,6 +48,9 @@ class PeakPicking
     //Function to test interpolations
     Rcpp::NumericVector getInterpolatedPeak(Rcpp::NumericVector data, int iPeak, bool ApplyHanning);
     
+    //Function to test Hanning Window implementation
+    Rcpp::NumericVector getHanningWindow();
+    
   private:
     int FFT_Size; //First FFT windows size
     int FFTInter_Size; //Second FFT Windows size, used for peak interpolation

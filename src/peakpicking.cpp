@@ -33,11 +33,28 @@ PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int
   memcpy(mass, massAxis, sizeof(double) * dataLength);
   
   //Compute Hanning window
-  //TODO improve hanning with the triple-one aproach
   HanningWin = new double[FFT_Size];
+  
+  const int leftHannLength = 2*((FFT_Size/2) - 1) + 1;
+  const int rightHannLength = 2*(FFT_Size - (1+FFT_Size/2)) - 1;
+  
   for( int i = 0; i < FFT_Size; i++)
   {
-    HanningWin[i] = 0.5*(1.0-cos((2.0*M_PI*(double)(i + 1))/(FFT_Size)));
+    if(i < (FFT_Size/2) )
+    {
+      //Left part hanning
+      HanningWin[i] = 0.5*(1.0-cos((2.0*M_PI*(double)(i))/(double)(leftHannLength - 1))); 
+    }
+    else if( i > (FFT_Size/2) )
+    {
+      //Right part hanning
+      HanningWin[i] = 0.5*(1.0-cos((2.0*M_PI*(double)(i - 3))/(double)(rightHannLength - 1)));
+    }
+    else
+    {
+      //The tree sample at center (peak will be always at FFT_Size/2)
+      HanningWin[i] = 1.0;
+    }
   }
   
   //Prepare FFT objects
@@ -121,11 +138,6 @@ int PeakPicking::interpolateFFT(double *spectrum, int iPeakMass, bool ApplyHanni
     {
       fft_in1[i] *= HanningWin[i]; 
     }
-
-    ///TODO l'error d'integració d'area es aki. Resulta que si no enfinestres el pic te fenomen de Gibbs i per tant la idea dels topalls falla
-    //Crec que tens dues opcions:
-    //  - Definir un criteri diferent per decidir l'interval d'integracio
-    //  - Buscar alguna funcio de enfinestrat que et dongui un pic suau sense perdre ambplada
   }
   
   //Compute FFT
@@ -193,47 +205,65 @@ double PeakPicking::predictPeakMass( double *spectrum, int iPeakMass )
 
 double PeakPicking::predictPeakArea( double *spectrum, int iPeakMass )
 {
-  //Compte area 
-  //TODO: Els topalls estan fallant per fenomen de Gibbs
- 
+  //Calculate integration range befor interpolation to avoid FFT Gibbs issues (left part).
+  int integrationLimitLeft = FFT_Size/2;
+  for( int i = (iPeakMass - 1); i >= (iPeakMass - FFT_Size/2); i-- )
+  {
+    if( i < 0)
+    {
+      //Break if out of spectrum
+      break;
+    }
+    if(spectrum[i] >= spectrum[i + 1] ) 
+    {
+      //Break loop if slope increases too much at some point
+      break; 
+    }
+    integrationLimitLeft--;
+  }
+  
+  //Calculate integration range befor interpolation to avoid FFT Gibbs issues (rigth part).
+  int integrationLimitRight = FFT_Size/2;
+  for( int i = (iPeakMass + 1); i < (iPeakMass + FFT_Size/2); i++)
+  {
+    if( i >= dataLength)
+    {
+      //Break if out of spectrum
+      break;
+    }
+    if(spectrum[i] >= spectrum[i - 1] ) 
+    {
+      //Break loop if slope increases too much at some point
+      break;
+    }
+    integrationLimitRight++;
+  }
+  
+  //Calculate mass step size linear approx on interpolated space
+  int massIdL = iPeakMass - FFT_Size/2;
+  int massIdR = iPeakMass + FFT_Size/2 - 1;
+  massIdL = massIdL < 0 ? 0 : massIdL;
+  massIdR = massIdR >= dataLength ? (dataLength - 1) : massIdR;
+  double massStep = (mass[massIdR] - mass[massIdL])/((double)FFTInter_Size);
+  
+  //Transform integration range to interpolated indexes
+  const double rangeConverter = ((double)FFTInter_Size)/((double)FFT_Size);
+  integrationLimitLeft = (int)round(((double)integrationLimitLeft) * rangeConverter);
+  integrationLimitRight = (int)round(((double)integrationLimitRight) * rangeConverter);
+  integrationLimitLeft = integrationLimitLeft < 0 ? 0 : integrationLimitLeft;
+  integrationLimitRight = integrationLimitRight > (FFTInter_Size - 1) ? (FFTInter_Size - 1) : integrationLimitRight;
+
+  //Peak interpolation
   int iPeak = interpolateFFT(spectrum, iPeakMass, false);
-  double pArea = fft_out2[iPeak];
   
-  //Integrate the left part of the peak
-  for( int i = iPeak; i >= 0; i-- )
+  //Area integration
+  double pArea = 0.0;
+  for( int i = integrationLimitLeft; i <= integrationLimitRight; i++)
   {
-    if( i < iPeak )
-    {
-      if( i < (iPeak - 1) )
-      {
-        if(fft_out2[i] >= fft_out2[i + 2] ) 
-        {
-          //Break loop if slope increases too much at some point
-          break; //TODO disabling it for testing if the mistake is here
-        }
-      }
-      pArea += fft_out2[i];
-    }
-  }
-  
-  //Integrate the right part of the peak
-  for( int i = iPeak; i < FFTInter_Size; i++)
-  {
-    if( i > iPeak)
-    {
-      if( i > (iPeak + 1))
-      {
-        if(fft_out2[i] >= fft_out2[i - 2] ) 
-        {
-          //Break loop if slope increases too much at some point
-          break; //TODO disabling it for testing if the mistake is here
-        }
-      }
-      pArea += fft_out2[i];
-    }
+    pArea+=fft_out2[i];
   }
  
-  return pArea * spectrum[iPeakMass] / fft_out2[iPeak]; //Return the area de-normalizing the FFT space
+  return pArea * (spectrum[iPeakMass] / fft_out2[iPeak]) * massStep; //Return the area de-normalizing the FFT space
 }
 
 //Returns the internaly used Hanning windows (only for test purposes)
@@ -271,6 +301,13 @@ NumericVector PeakPicking::getInterpolatedPeak(NumericVector data, int iPeak, bo
   NumericVector interpData(FFTInter_Size);
   memcpy(interpData.begin(), fft_out2, sizeof(double)*FFTInter_Size);
   return(interpData);
+}
+
+NumericVector PeakPicking::getHanningWindow()
+{
+  NumericVector RHann(FFT_Size);
+  memcpy(RHann.begin(), HanningWin, sizeof(double)*FFT_Size);
+  return RHann;
 }
 
 ////// Rcpp Exported methods //////////////////////////////////////////////////////////
@@ -329,7 +366,7 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
 //' @param peakIndex the location of the peak to interpolate in the spectrum.  
 //' @param WinSize The windows used to detect peaks and caculate noise.
 //' @param UpSampling the oversampling used for acurate mass detection and area integration.
-//' @param usHAnning if hanning windowing must be used befor interpolation.
+//' @param useHanning if hanning windowing must be used befor interpolation.
 //' 
 //' @return a NumerixVector with the FFT interpolated peak shape.
 //' 
@@ -354,3 +391,20 @@ NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensit
   return(ppObj.getInterpolatedPeak(intensity, peakIndex, useHanning));
 }
 
+//' TestHanningWindow.
+//' 
+//' Method to test the implementation of Hanning window in R session.
+//' @param mass a NumericVector containing the mass axis of the spectrum.
+//' @param WinSize The windows used to detect peaks and caculate noise.
+//' @param UpSampling the oversampling used for acurate mass detection and area integration.
+//' 
+//' @return a NumericVector containing the Hanning Window.
+//' 
+// [[Rcpp::export]]
+NumericVector TestHanningWindow(NumericVector mass, int WinSize = 20, int UpSampling = 10)
+{
+  double massC[mass.length()];
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
+  PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
+  return(ppObj.getHanningWindow());
+}

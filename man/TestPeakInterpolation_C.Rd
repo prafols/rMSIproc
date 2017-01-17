@@ -18,7 +18,7 @@ TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize = 20L,
 
 \item{UpSampling}{the oversampling used for acurate mass detection and area integration.}
 
-\item{usHAnning}{if hanning windowing must be used befor interpolation.}
+\item{useHanning}{if hanning windowing must be used befor interpolation.}
 }
 \value{
 a NumerixVector with the FFT interpolated peak shape.
