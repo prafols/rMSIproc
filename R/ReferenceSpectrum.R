@@ -35,10 +35,10 @@ InternalReferenceSpectrum <- function(img)
   maxId <- 0
   for( i in 1:length(img$data))
   {
-    cat(paste("Cube:",i, "Row:", j, "\n"))
     dc <- rMSI::loadImgCunckFromCube(img, i)
     for( j in 1:nrow(dc))
     {
+      cat(paste("Cube:",i, "Row:", j, "\n"))
       pxCor <- cor(img$mean, dc[j, ] )
       if( pxCor > maxCor )
       {
