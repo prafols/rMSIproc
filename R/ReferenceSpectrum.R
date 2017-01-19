@@ -29,12 +29,13 @@
 InternalReferenceSpectrum <- function(img)
 {
   cat("Calculating internal reference spectrum...\n")
-  pb <- txtProgressBar(min = 0,  max = nrow(img$pos), style = 3)
+  #pb <- txtProgressBar(min = 0,  max = nrow(img$pos), style = 3) #TODO disabled for best testing
   id <- 1
   maxCor <- 0
   maxId <- 0
   for( i in 1:length(img$data))
   {
+    cat(paste("Cube:",i, "Row:", j, "\n"))
     dc <- rMSI::loadImgCunckFromCube(img, i)
     for( j in 1:nrow(dc))
     {
@@ -44,10 +45,10 @@ InternalReferenceSpectrum <- function(img)
         maxCor <- pxCor
         maxId <- id
       }
-      setTxtProgressBar(pb, id)
+      #setTxtProgressBar(pb, id)  #TODO disabled for best testing
       id <- id + 1
     }
   }
-  close(pb)
+  #close(pb)  #TODO disabled for best testing
   return(rMSI::loadImgCunckFromIds(img, maxId)[1,])
 }
