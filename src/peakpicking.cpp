@@ -22,18 +22,21 @@
 #include "peakpicking.h"
 using namespace Rcpp;
 
+#define AREA_WINDOW_SIDE_WIDTH 3
 
 PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int UpSampling )
 {
   FFT_Size = (int)pow(2.0, std::ceil(log2(WinSize)));
+  FFT_Size = FFT_Size < 16 ? 16 : FFT_Size; //Minimum allowed windows size is 16 points.
   FFTInter_Size = (int)pow(2.0, std::ceil(log2(UpSampling*FFT_Size))); //FFT interpolation buffer
   
   dataLength = numOfDataPoints;
   mass = new double[dataLength];
   memcpy(mass, massAxis, sizeof(double) * dataLength);
   
-  //Compute Hanning window
+  //Compute Hanning and Area windows
   HanningWin = new double[FFT_Size];
+  AreaWin = new double[FFT_Size];
   
   const int leftHannLength = 2*((FFT_Size/2) - 1) + 1;
   const int rightHannLength = 2*(FFT_Size - (1+FFT_Size/2)) - 1;
@@ -55,6 +58,20 @@ PeakPicking::PeakPicking(int WinSize, double *massAxis, int numOfDataPoints, int
       //The tree sample at center (peak will be always at FFT_Size/2)
       HanningWin[i] = 1.0;
     }
+    
+    if(i < AREA_WINDOW_SIDE_WIDTH)
+    {
+      AreaWin[i] = 0.5*(1.0-cos((2.0*M_PI*(double)(i))/(double)(2*AREA_WINDOW_SIDE_WIDTH - 1)));
+    }
+    else if( i >= (FFT_Size - AREA_WINDOW_SIDE_WIDTH) )
+    {
+      AreaWin[i] = 0.5*(1.0-cos((2.0*M_PI*(double)(i - (FFT_Size - 2*AREA_WINDOW_SIDE_WIDTH )))/(double)(2*AREA_WINDOW_SIDE_WIDTH - 1)));
+    }
+    else
+    {
+      //Area central part
+      AreaWin[i] = 1.0;
+    }
   }
   
   //Prepare FFT objects
@@ -73,6 +90,7 @@ PeakPicking::~PeakPicking()
 {
   delete[] mass;
   delete[] HanningWin;
+  delete[] AreaWin;
   fftw_destroy_plan(fft_pdirect);
   fftw_destroy_plan(fft_pinvers);
   fftw_free(fft_in1); 
@@ -137,6 +155,11 @@ int PeakPicking::interpolateFFT(double *spectrum, int iPeakMass, bool ApplyHanni
     if(ApplyHanning)
     {
       fft_in1[i] *= HanningWin[i]; 
+    }
+    else
+    {
+      //No Hanning here so apply area windows to avoid Gibbs
+      fft_in1[i] *= AreaWin[i];
     }
   }
   
@@ -310,6 +333,13 @@ NumericVector PeakPicking::getHanningWindow()
   return RHann;
 }
 
+NumericVector PeakPicking::getAreaWindow()
+{
+  NumericVector RArea(FFT_Size);
+  memcpy(RArea.begin(), AreaWin, sizeof(double)*FFT_Size);
+  return RArea;
+}
+
 ////// Rcpp Exported methods //////////////////////////////////////////////////////////
 //' DetectPeaks_C.
 //' 
@@ -367,11 +397,12 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
 //' @param WinSize The windows used to detect peaks and caculate noise.
 //' @param UpSampling the oversampling used for acurate mass detection and area integration.
 //' @param useHanning if hanning windowing must be used befor interpolation.
+//' @param Iterations number of iterations to perform. This is just for testing interpolation efficiency
 //' 
 //' @return a NumerixVector with the FFT interpolated peak shape.
 //' 
 // [[Rcpp::export]]
-NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize = 20, int UpSampling = 10, bool useHanning = false)
+NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize = 20, int UpSampling = 10, bool useHanning = false, int Iterations = 1)
 {
   if(mass.length() != intensity.length())
   {
@@ -388,7 +419,13 @@ NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensit
   
   PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
   
-  return(ppObj.getInterpolatedPeak(intensity, peakIndex, useHanning));
+  NumericVector interpolated;
+  for( int i = 0; i < Iterations; i++)
+  {
+    interpolated = ppObj.getInterpolatedPeak(intensity, peakIndex, useHanning);
+  }
+  
+  return(interpolated);
 }
 
 //' TestHanningWindow.
@@ -407,4 +444,22 @@ NumericVector TestHanningWindow(NumericVector mass, int WinSize = 20, int UpSamp
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
   return(ppObj.getHanningWindow());
+}
+
+//' TestAreaWindow.
+//' 
+//' Method to test the implementation of Area window in R session.
+//' @param mass a NumericVector containing the mass axis of the spectrum.
+//' @param WinSize The windows used to detect peaks and caculate noise.
+//' @param UpSampling the oversampling used for acurate mass detection and area integration.
+//' 
+//' @return a NumericVector containing the Area Window.
+//' 
+// [[Rcpp::export]]
+NumericVector TestAreaWindow(NumericVector mass, int WinSize = 20, int UpSampling = 10)
+{
+  double massC[mass.length()];
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
+  PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
+  return(ppObj.getAreaWindow());
 }

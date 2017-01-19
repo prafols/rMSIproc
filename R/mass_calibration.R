@@ -192,7 +192,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   
   #GUI builder
   this$window <- gWidgets2::gwindow ( paste("Spectrum Calibration -",win_title ), visible = F )
-  Grp_Top <- gWidgets2::gpanedgroup(horizontal = F, container = window)
+    Grp_Top <- gWidgets2::gpanedgroup(horizontal = F, container = window)
   
   Grp_Bot <- gWidgets2::ggroup(horizontal = T, container = Grp_Top)
   Table_Ctl <- gWidgets2::gtable(CreateMzTable( c(NaN), c(NaN) ), multiple = F, container = Grp_Bot, chosen.col = 2) #First empty MZ table
@@ -223,7 +223,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   spectraFrame<-gWidgets2::gframe("", container = Grp_Top,  fill = T, expand = T, spacing = 5 )
   spectraWidget<-rMSI:::.SpectraPlotWidget(parent_widget = spectraFrame, top_window_widget = window, clicFuntion = this$SpectrumClicked, showOpenFileButton = F,  display_sel_red = T)
   
-  gWidgets2::size( window )<- c(800, 600)
+  gWidgets2::size( window )<- c(1024, 740)
   gWidgets2::size( spectraWidget )<- c(-1, 380)
   gWidgets2::size( Table_Ctl )<- c(-1, 200)
   

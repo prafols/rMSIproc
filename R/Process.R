@@ -259,8 +259,8 @@ ProcessWizard <- function( deleteRamdisk = T )
     #Process data
     procData <- ProcessImage(img = mImg, 
                  AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
-                 SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, SmoothingKernelSize = procParams$peakpicking$sgkernsize, 
-                 UseBinning = T, BinTolerance = procParams$binning$tolerance, BinFilter = procParams$binning$filter )
+                 SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, SmoothingKernelSize = procParams$smoothing$sgkernsize, 
+                 UseBinning = T, BinTolerance = procParams$binning$tolerance, BinFilter = procParams$binning$filter, NumOfThreads = procParams$nthreads )
     
     rm(mImg) #Now all is stored in procData
     gc()

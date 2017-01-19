@@ -160,8 +160,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // TestPeakInterpolation_C
-NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize, int UpSampling, bool useHanning);
-RcppExport SEXP rMSIproc_TestPeakInterpolation_C(SEXP massSEXP, SEXP intensitySEXP, SEXP peakIndexSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP, SEXP useHanningSEXP) {
+NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize, int UpSampling, bool useHanning, int Iterations);
+RcppExport SEXP rMSIproc_TestPeakInterpolation_C(SEXP massSEXP, SEXP intensitySEXP, SEXP peakIndexSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP, SEXP useHanningSEXP, SEXP IterationsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -171,7 +171,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
     Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
     Rcpp::traits::input_parameter< bool >::type useHanning(useHanningSEXP);
-    rcpp_result_gen = Rcpp::wrap(TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize, UpSampling, useHanning));
+    Rcpp::traits::input_parameter< int >::type Iterations(IterationsSEXP);
+    rcpp_result_gen = Rcpp::wrap(TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize, UpSampling, useHanning, Iterations));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -185,6 +186,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
     Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
     rcpp_result_gen = Rcpp::wrap(TestHanningWindow(mass, WinSize, UpSampling));
+    return rcpp_result_gen;
+END_RCPP
+}
+// TestAreaWindow
+NumericVector TestAreaWindow(NumericVector mass, int WinSize, int UpSampling);
+RcppExport SEXP rMSIproc_TestAreaWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type UpSampling(UpSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(TestAreaWindow(mass, WinSize, UpSampling));
     return rcpp_result_gen;
 END_RCPP
 }

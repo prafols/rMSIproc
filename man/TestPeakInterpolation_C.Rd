@@ -5,7 +5,7 @@
 \title{TestPeakInterpolation_C.}
 \usage{
 TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize = 20L,
-  UpSampling = 10L, useHanning = FALSE)
+  UpSampling = 10L, useHanning = FALSE, Iterations = 1L)
 }
 \arguments{
 \item{mass}{a NumericVector containing the mass axis of the spectrum.}
@@ -19,6 +19,8 @@ TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize = 20L,
 \item{UpSampling}{the oversampling used for acurate mass detection and area integration.}
 
 \item{useHanning}{if hanning windowing must be used befor interpolation.}
+
+\item{Iterations}{number of iterations to perform. This is just for testing interpolation efficiency}
 }
 \value{
 a NumerixVector with the FFT interpolated peak shape.

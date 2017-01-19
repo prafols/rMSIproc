@@ -117,11 +117,12 @@ DetectPeaks_C <- function(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 
 #' @param WinSize The windows used to detect peaks and caculate noise.
 #' @param UpSampling the oversampling used for acurate mass detection and area integration.
 #' @param useHanning if hanning windowing must be used befor interpolation.
+#' @param Iterations number of iterations to perform. This is just for testing interpolation efficiency
 #' 
 #' @return a NumerixVector with the FFT interpolated peak shape.
 #' 
-TestPeakInterpolation_C <- function(mass, intensity, peakIndex, WinSize = 20L, UpSampling = 10L, useHanning = FALSE) {
-    .Call('rMSIproc_TestPeakInterpolation_C', PACKAGE = 'rMSIproc', mass, intensity, peakIndex, WinSize, UpSampling, useHanning)
+TestPeakInterpolation_C <- function(mass, intensity, peakIndex, WinSize = 20L, UpSampling = 10L, useHanning = FALSE, Iterations = 1L) {
+    .Call('rMSIproc_TestPeakInterpolation_C', PACKAGE = 'rMSIproc', mass, intensity, peakIndex, WinSize, UpSampling, useHanning, Iterations)
 }
 
 #' TestHanningWindow.
@@ -135,6 +136,19 @@ TestPeakInterpolation_C <- function(mass, intensity, peakIndex, WinSize = 20L, U
 #' 
 TestHanningWindow <- function(mass, WinSize = 20L, UpSampling = 10L) {
     .Call('rMSIproc_TestHanningWindow', PACKAGE = 'rMSIproc', mass, WinSize, UpSampling)
+}
+
+#' TestAreaWindow.
+#' 
+#' Method to test the implementation of Area window in R session.
+#' @param mass a NumericVector containing the mass axis of the spectrum.
+#' @param WinSize The windows used to detect peaks and caculate noise.
+#' @param UpSampling the oversampling used for acurate mass detection and area integration.
+#' 
+#' @return a NumericVector containing the Area Window.
+#' 
+TestAreaWindow <- function(mass, WinSize = 20L, UpSampling = 10L) {
+    .Call('rMSIproc_TestAreaWindow', PACKAGE = 'rMSIproc', mass, WinSize, UpSampling)
 }
 
 PrintrMSIObjectInfo <- function(basePath, fileNames, massChannels, numRows, dataType) {

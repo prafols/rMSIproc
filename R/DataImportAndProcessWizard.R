@@ -92,6 +92,7 @@ ImportWizardGui <- function()
     #List tree
     this$procParamList <- list()
     this$procParamList$data <- list()
+    this$procParamList$smoothing <- list()
     this$procParamList$alignment <- list()
     this$procParamList$peakpicking <- list()
     this$procParamList$binning <- list()
@@ -198,6 +199,8 @@ ImportWizardGui <- function()
       return()
     }
     
+    #Smoothing list
+    this$procParamList$smoothing$sgkernsize <- as.integer(gWidgets2::svalue(this$ratio_SGkernSize))
     
     #Alignment list
     this$procParamList$alignment$iterations <- as.integer(gWidgets2::svalue(this$spin_AlignIterations))
@@ -207,11 +210,13 @@ ImportWizardGui <- function()
     this$procParamList$peakpicking$snr <- as.double(gWidgets2::svalue(this$spin_SNR))
     this$procParamList$peakpicking$winsize <- as.integer(gWidgets2::svalue(this$spin_peakWin))
     this$procParamList$peakpicking$oversample <- as.integer(gWidgets2::svalue(this$spin_peakOversample))
-    this$procParamList$peakpicking$sgkernsize <- as.integer(gWidgets2::svalue(this$ratio_SGkernSize))
     
     #Binning list
     this$procParamList$binning$tolerance <- as.double(gWidgets2::svalue(this$spin_binTolerance))
     this$procParamList$binning$filter <- as.double(gWidgets2::svalue(this$spin_binFilter)/100)
+    
+    #Number of threads
+    this$procParamList$nthreads <- as.integer( gWidgets2::svalue( this$spin_nThreads ))
     
     gWidgets2::dispose(h$obj)
   }
@@ -247,8 +252,15 @@ ImportWizardGui <- function()
     return (gWidgets2::gspinbutton(from = minVal, to = maxVal, by = 1, value = defaultVal, container = box_spin, digits = decPlaces)  )
   }
   
+  #Smoothing and alignment box
+  box_smoAln <- gWidgets2::ggroup(horizontal = F, container = box_proc)
+
+  #Smoothing params
+  frm_SGKernSize <- gWidgets2::gframe("Savitzky-Golay kernel size:", container = box_smoAln)
+  ratio_SGkernSize<- gWidgets2::gradio(c(0,5,7,9,11), selected = 2, horizontal = T, container = frm_SGKernSize)
+    
   #Alignment params
-  frm_alignment <- gWidgets2::gframe("Alignment", container = box_proc, spacing = 10)
+  frm_alignment <- gWidgets2::gframe("Alignment", container = box_smoAln, spacing = 10)
   box_alignment <- gWidgets2::ggroup(horizontal = F, container = frm_alignment)
   spin_AlignIterations <- drawLabelSpin(box_alignment, "Iterations:", 0, 5, 3)
   spin_AlignMaxDev <- drawLabelSpin(box_alignment, "Max Shift [ppm]:", 10, 1000, 200)
@@ -259,14 +271,19 @@ ImportWizardGui <- function()
   spin_SNR <- drawLabelSpin(box_peakpick, "SNR Threshold:", 1, 50, 5)
   spin_peakWin <- drawLabelSpin(box_peakpick, "Detector window size:", 5, 50, 10)
   spin_peakOversample <- drawLabelSpin(box_peakpick, "Peak shape over-sampling:", 1, 50, 10)
-  frm_SGKernSize <- gWidgets2::gframe("Savitzky-Golay kernel size:", container = box_peakpick)
-  ratio_SGkernSize<- gWidgets2::gradio(c(0,5,7,9,11), horizontal = T, container = frm_SGKernSize)
+
+  #Binning and numThreads box
+  box_binThreads <- gWidgets2::ggroup(horizontal = F, container = box_proc)
   
   #Binning params
-  frm_peakbinning <- gWidgets2::gframe("Peak-Binning", container = box_proc, spacing = 10)
+  frm_peakbinning <- gWidgets2::gframe("Peak-Binning", container = box_binThreads, spacing = 10)
   box_peakbinning <- gWidgets2::ggroup(horizontal = F, container = frm_peakbinning)
   spin_binTolerance <- drawLabelSpin(box_peakbinning, "Tolerance:", 0.01, 1, 0.05, decPlaces = 2)
   spin_binFilter <- drawLabelSpin(box_peakbinning, "Filter [%] :", 1, 100, 5)
+  
+  #Number of processing threads
+  frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_binThreads, spacing = 10)
+  spin_nThreads <- drawLabelSpin(frm_procThreads, "Max Threads:", 1, parallel::detectCores(), parallel::detectCores(), decPlaces = 0)
   
   #Data output box
   frm_dataOutput <- gWidgets2::gframe( "Data Output", container = box_main, expand = T, fill = T)
