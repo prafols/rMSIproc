@@ -213,7 +213,7 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
     }
     fft_direct_shiftScale_in[i][1] = 0.0; //The imaginary part is always zero because input es real
     
-    maxInit = fft_direct_shiftScale_in[i][0] > maxInit? fft_direct_shiftScale_in[i][0] : maxInit;
+    maxInit = fft_direct_shiftScale_in[i][0] > maxInit ? fft_direct_shiftScale_in[i][0] : maxInit;
   }
   fftw_execute(fft_pdshiftScale);
   
@@ -262,13 +262,16 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
     {
       data[i] = 0.0;
     }
-    maxEnd = data[i] > maxEnd? data[i] : maxEnd;
+    maxEnd = data[i] > maxEnd ? data[i] : maxEnd;
   }
   
   //Compensate gain
-  for(int i = 0; i < dataLength; i++)
+  if( maxEnd > 0.0 && maxInit > 0.0 )
   {
-    data[i] /= maxEnd/maxInit;
+    for(int i = 0; i < dataLength; i++)
+    {
+      data[i] /= maxEnd/maxInit;
+    }
   }
   
   fftwMtx->lock();
