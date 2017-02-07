@@ -268,8 +268,8 @@ ImportWizardGui <- function()
   #Peak picking params
   frm_peakpick <- gWidgets2::gframe("Peak-Picking", container = box_proc, spacing = 10)
   box_peakpick <- gWidgets2::ggroup(horizontal = F, container = frm_peakpick)
-  spin_SNR <- drawLabelSpin(box_peakpick, "SNR Threshold:", 1, 50, 5)
-  spin_peakWin <- drawLabelSpin(box_peakpick, "Detector window size:", 5, 50, 10)
+  spin_SNR <- drawLabelSpin(box_peakpick, "SNR Threshold:", 1, 100, 5)
+  spin_peakWin <- drawLabelSpin(box_peakpick, "Detector window size:", 5, 200, 20)
   spin_peakOversample <- drawLabelSpin(box_peakpick, "Peak shape over-sampling:", 1, 50, 10)
 
   #Binning and numThreads box

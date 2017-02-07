@@ -372,5 +372,5 @@ calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess" )
     stop(paste("The specified method:", method, "is not a valid method\n"))
   }
   
-  return( predict(fitmodel, newdata = data.frame( targetMass = testImg$mass)) )
+  return( predict(fitmodel, newdata = data.frame( targetMass = avgSpc_mz)) )
 }
