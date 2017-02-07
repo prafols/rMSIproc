@@ -4,12 +4,15 @@
 \alias{CalibrationWindow}
 \title{CalibrationWindow.}
 \usage{
-CalibrationWindow(mass, intensity, win_title = "")
+CalibrationWindow(mass, intensity, peak_win_size = 20, win_title = "",
+  method = "loess")
 }
 \arguments{
 \item{mass}{The mass vector of spectrum to calibrate.}
 
 \item{intensity}{The intensity vector of spectrum to calibrate.}
+
+\item{method}{a string with the method used for interpolation, valid methods are spline, linear or nocal if only target masses must be returned.}
 
 \item{use_zoo}{if the zoo package interpolation must be used}
 }

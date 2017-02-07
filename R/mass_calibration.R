@@ -22,11 +22,12 @@
 #' @param mass The mass vector of spectrum to calibrate.
 #' @param intensity The intensity vector of spectrum to calibrate.
 #' @param use_zoo if the zoo package interpolation must be used
+#' @param method a string with the method used for interpolation, valid methods are spline, linear or nocal if only target masses must be returned.
 #'
 #' @return a the calibrated mass axis.
 #' @export
 #'
-CalibrationWindow<-function( mass, intensity, win_title = "")
+CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = "", method = "loess")
 {
   options(guiToolkit="RGtk2") # Força que toolquit sigu GTK pq fas crides directes a events GTK!!!
   oldWarning<-options()$warn
@@ -40,11 +41,15 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   spectraWidget <- NULL
   dMass <- mass
   dIntensity <- intensity
+  refMz <- NULL #a vector of user selected reference masses
+  targetMz <- NULL #a vector of user selected target masses to calibrate
+  PeakWindow <- peak_win_size
   rm(mass)
   rm(intensity)
   
   Tbl_ColNames <- list(name = "Name", ref = "Ref. m/z", sel = "Sel. m/z", err = "Error [m/z]", ppm = "Error [ppm]", active = "Active")
   dMassCalibrated <- NULL
+  CalMethod <- method
   
   #Create an mzTable
   CreateMzTable <- function( ref_names, ref_mz )
@@ -68,7 +73,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
     }
   }
   
-  #A click on mass spectra widgets drives here. From here image recostruction will be called for various widgets
+  #A click on mass spectra widgets drives here. 
   SpectrumClicked <- function( channel, mass, tol )
   {
     if(tol < 0.5)
@@ -79,7 +84,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
     idHi <- which.min( abs( (mass + tol) - this$dMass  ) )
     subMass <- dMass[idLo:idHi]
     subIntensity <- this$dIntensity[idLo:idHi]
-    pks <- DetectPeaks(subMass, subIntensity, SNR = 1, WinSize = 10)
+    pks <- DetectPeaks(subMass, subIntensity, SNR = 1, WinSize = this$PeakWindow)
     if( length(pks$intensity) == 0 )
     {
       return()
@@ -97,7 +102,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
     gWidgets2::enabled(Btn_Active) <-T
     this$SetCalibrateButtonActiveState()
     
-    return(list(selMz = PeakMz, selTol = 0))
+    this$spectraWidget$SetSelectedMassTol(1, PeakMz, 0)
   }
   
   #Load an ASCII with reference masses
@@ -159,17 +164,24 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   BtnCalibrate <- function( ... )
   {
     valid_rows <- which( this$Table_Ctl[, this$Tbl_ColNames$active] )
-    refMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$ref]
-    targetMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$sel]
-    this$dMassCalibrated <- calMzAxis(this$dMass, refMz, targetMz)
-    gWidgets2::enabled(Chk_ShowCal) <-T
-    
-    this$spectraWidget$AddSpectra(  this$dMassCalibrated, dIntensity, col = "darkgreen", name = "cal")
-    gWidgets2::svalue(this$Chk_ShowRaw) <- F
-    gWidgets2::svalue(this$Chk_ShowCal) <- T
-    gWidgets2::enabled(Btn_Confirm) <- T
-    this$spectraWidget$ZoomResetClicked()
-    this$spectraWidget$SetActiveTool("Zoom")
+    this$refMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$ref]
+    this$targetMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$sel]
+    if(this$CalMethod == "nocal")
+    {
+      gWidgets2::dispose(this$this$window)
+    }
+    else
+    {
+      this$dMassCalibrated <- calMzAxis(this$dMass, this$refMz, this$targetMz, this$CalMethod)
+      gWidgets2::enabled(Chk_ShowCal) <-T
+      
+      this$spectraWidget$AddSpectra(  this$dMassCalibrated, dIntensity, col = "darkgreen", name = "cal")
+      gWidgets2::svalue(this$Chk_ShowRaw) <- F
+      gWidgets2::svalue(this$Chk_ShowCal) <- T
+      gWidgets2::enabled(Btn_Confirm) <- T
+      this$spectraWidget$ZoomResetClicked()
+      this$spectraWidget$SetActiveTool("Zoom")
+    }
   }
   
   #Clicked on checkbox
@@ -221,7 +233,7 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   gWidgets2::enabled(Chk_ShowCal) <-F
   
   spectraFrame<-gWidgets2::gframe("", container = Grp_Top,  fill = T, expand = T, spacing = 5 )
-  spectraWidget<-rMSI:::.SpectraPlotWidget(parent_widget = spectraFrame, top_window_widget = window, clicFuntion = this$SpectrumClicked, showOpenFileButton = F,  display_sel_red = T)
+  spectraWidget<-rMSI:::.SpectraPlotWidget(parent_widget = spectraFrame, top_window_widget = window, clicFuntion = this$SpectrumClicked, showOpenFileButton = F,  display_sel_red = T, display_sel_spins = F)
   
   gWidgets2::size( window )<- c(1024, 740)
   gWidgets2::size( spectraWidget )<- c(-1, 380)
@@ -248,8 +260,16 @@ CalibrationWindow<-function( mass, intensity, win_title = "")
   options(warn = oldWarning)
   rm(oldWarning)
   
-  #Return the mass axis... it is NULL if no calibration was done
-  return(this$dMassCalibrated)
+  if(this$CalMethod == "nocal")
+  {
+    #Return a list of masses and targets that can b used for calibration
+    return(list( ref = this$refMz, target = this$targetMz))
+  }
+  else
+  {
+    #Return the mass axis... it is NULL if no calibration was done
+    return(this$dMassCalibrated)
+  }
 }
 
 #' Apply a new mass axis to a complete image.
@@ -331,18 +351,26 @@ CalibrateImage<-function(img, output_fname, newMzAxis = NULL)
 #' @param avgSpc_mz  The mass axis to calibrate.
 #' @param ref_mz a vector of reference masses (for exaple the theorical gold peaks).
 #' @param target_mz manually slected masses to be fittet to ref_masses (must be the same length than ref_mz).
+#' @param method a string with the method used for interpolation, valid methods are loess and linear
 #'
-#' @return the calibrated mass axis.
+#' @return a list containing the calibrated mass axis and the interpolated mass error repect the original mass axis.
 #' @export
 #'
-calMzAxis <- function(avgSpc_mz, ref_mz, target_mz )
+calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess" )
 {
-  mz_orig <-sort(c(avgSpc_mz, target_mz)) #Put original plus target in a a single sorted vector
-  id_targets <- unlist(lapply(target_mz, function(x){ which.min(abs(x -  mz_orig)) })) #Get target positions in sorted vector
-  new_mz <- rep(NA, length(mz_orig))
-  new_mz[id_targets] <- ref_mz
-  error <- new_mz - mz_orig
-  error <- zoo::na.spline( error )
-  error<-error[-id_targets] #Remove the positions used for references
-  return(avgSpc_mz + error)
+  a <- data.frame( targetMass = target_mz, refMass =  ref_mz)
+  if(method == "linear")
+  {
+    fitmodel <- lm(refMass~targetMass, a)
+  }
+  else if (method == "loess")
+  {
+    fitmodel <- loess(refMass~targetMass, a, control = loess.control(surface = "direct"))
+  }
+  else
+  {
+    stop(paste("The specified method:", method, "is not a valid method\n"))
+  }
+  
+  return( predict(fitmodel, newdata = data.frame( targetMass = testImg$mass)) )
 }

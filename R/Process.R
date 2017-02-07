@@ -104,7 +104,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   #Manual calibration (user will be promp with calibration dialog)
   if( UseManualCalibration )
   {
-    img$mass <- CalibrationWindow( img$mass, img$mean, img$name )
+    img$mass <- CalibrationWindow( img$mass, img$mean, peakWindow ,img$name )
     if(is.null(img$mass))
     {
       rMSI::DeleteRamdisk(img)
