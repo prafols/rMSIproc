@@ -35,7 +35,7 @@ InternalReferenceSpectrum <- function(img)
   maxId <- 0
   for( i in 1:length(img$data))
   {
-    dc <- rMSI::loadImgCunckFromCube(img, i)
+    dc <- rMSI::loadImgChunkFromCube(img, i)
     for( j in 1:nrow(dc))
     {
       if(var(dc[j, ]) > 0)
@@ -52,5 +52,5 @@ InternalReferenceSpectrum <- function(img)
     }
   }
   close(pb)
-  return(rMSI::loadImgCunckFromIds(img, maxId)[1,])
+  return(rMSI::loadImgChunkFromIds(img, maxId)[1,])
 }
