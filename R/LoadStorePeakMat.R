@@ -23,6 +23,8 @@ LoadPeakMatrix <- function( data_path)
   }
   
   unlink(file.path(dirname(data_path), "tmp"), recursive = T)
+  class(ldata) <- "rMSIprocPeakMatrix"
+  
   cat("Done\n")
   return(ldata)
 }
@@ -39,6 +41,11 @@ LoadPeakMatrix <- function( data_path)
 #'
 StorePeakMatrix <- function( data_path, data )
 {
+  if( class(data) != "rMSIprocPeakMatrix")
+  {
+    stop("The provided peak matrix is not in rMSIprocPeakMatrix format\n")
+  }
+  
   dir.create(file.path(dirname(data_path), "tmp"), recursive = T)
   StorePeakMatrixC( file.path(dirname(data_path), "tmp"), data )
   cat("Adding data to zip archive...\n")

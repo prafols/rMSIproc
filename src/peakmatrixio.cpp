@@ -46,6 +46,36 @@ path(dir_path)
     areaMat = new NumericMatrix(totalRows, ncol);
     massVec = new NumericVector(ncol);
     posMat = new IntegerMatrix(totalRows, 2);
+    sNames = new StringVector(nimg);
+    
+    //Reading names.txt
+    String nameFile = path;
+    nameFile += "/names.txt";
+    std::ifstream fileNames(nameFile.get_cstring(), std::ios::in);
+    std::string str; 
+    if (fileNames.is_open())
+    {
+      int ip = 0;
+      while (std::getline(fileNames, str))
+      {
+        // Process str that contains each line of names.txt 
+        (*sNames)[ip] = str;
+        ip++;
+      }
+      fileNames.close();
+      if( ip != nimg)
+      {
+        stop("Fatal Error: number of samples names in names.txt does not match to number of images in peak matrix. Aborting...\n");
+      }
+    }
+    else
+    {
+      Rcout <<"Warning: No names.txt file found creating unknown names...\n"; 
+      for( int i = 0; i < nimg; i++)
+      {
+        (*sNames)[i] = "unknown sample";
+      }
+    }
   }
 }
 
@@ -57,6 +87,7 @@ PeakMatrixIO::~PeakMatrixIO()
   delete massVec;
   delete posMat;
   delete nRows;
+  delete sNames;
 }
 
 List PeakMatrixIO::LoadPeakMatrix()
@@ -72,7 +103,7 @@ List PeakMatrixIO::LoadPeakMatrix()
   Rcout << "Loading pixel positions\n";
   LoadPos();
   return List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
-                             Named("pos") = *posMat, Named("numPixels") = *nRows);
+                             Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames);
 }
 
 void PeakMatrixIO::StorePeakMatrix(List lpeak)
@@ -87,6 +118,7 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   massVec = new NumericVector(ncol);
   posMat = new IntegerMatrix(nrow, 2);
   nRows = new IntegerVector(nImg);
+  sNames = new StringVector(nImg);
   
   *intMat = as<NumericMatrix>(lpeak["intensity"]);
   *snrMat = as<NumericMatrix>(lpeak["SNR"]);
@@ -94,6 +126,7 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   *massVec = as<NumericVector>(lpeak["mass"]);
   *posMat = as<IntegerMatrix>(lpeak["pos"]);
   *nRows = as<IntegerVector>(lpeak["numPixels"]);
+  *sNames = as<StringVector>(lpeak["names"]);
   
   Rcout <<"Storing intensity matrix\n";
   StoreMat(intensity);
@@ -118,14 +151,32 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
     {
       nrow = (*nRows)[i];
       file.write((char*)(&nrow), sizeof(int));
+      
     }
-    
     file.close();
   }
   else
   {
-    stop("C Writing error: File can not be opened.\n");
+    stop("C Writing error: Def. file can not be opened.\n");
   } 
+  
+  //Writing the names.txt file
+  String namesFile = path;
+  namesFile += "/names.txt";
+  std::ofstream fileNames(namesFile.get_cstring(), std::ios::out|std::ios::trunc);
+  if(fileNames.is_open())
+  {
+    for(int i = 0; i < nImg; i++)
+    {
+      fileNames <<  ((*sNames)[i]) << "\n";
+    }
+    fileNames.close();
+  }
+  else
+  {
+    stop("C Writing error: Names file can not be opened.\n");
+  } 
+  
 }
 
 void PeakMatrixIO::StoreMat(DataType mt)

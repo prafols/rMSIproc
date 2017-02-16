@@ -39,6 +39,7 @@ class PeakMatrixIO
     Rcpp::NumericVector *massVec;
     Rcpp::IntegerMatrix *posMat;
     Rcpp::IntegerVector *nRows;
+    Rcpp::StringVector *sNames;
   
     void StoreMat(DataType mt);
     void LoadMat(DataType mt);
