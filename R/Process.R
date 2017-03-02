@@ -342,11 +342,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F )
     {
       imgName <- sub('\\..*$', '',mImg$name) #Remove extensions of image name
     }
-    
-    ###TODO error here! en processar el brain THS CS7 Au fent nomes el peak picking reventa per aki! Hi posu un cat a veure k tal...
-    ##TODO xo no he tingut temps dexecutar akest cat avui.
-    cat(paste("##TRAP## imgName = ", imgName, "\n"))
-    
+
     #Store peak matrix
     if( procParams$peakpicking$enabled )
     {
@@ -400,6 +396,12 @@ SaveProcessingParams <- function( procParams, filepath)
   }
   writeLines(paste("Data output directory = ", procParams$data$outpath, sep ="" ), con = fObj)
   
+  writeLines(paste("Smoothing enabled = ", procParams$smoothing$enabled, sep ="" ), con = fObj)
+  if(procParams$smoothing$enabled)
+  {
+    writeLines(paste("Smoothing SG kernel size = ", procParams$smoothing$sgkernsize, sep ="" ), con = fObj)
+  }
+  
   writeLines(paste("Alignment enabled = ", procParams$alignment$enabled, sep ="" ), con = fObj)
   if(procParams$alignment$enabled)
   {
@@ -426,9 +428,8 @@ SaveProcessingParams <- function( procParams, filepath)
     writeLines(paste("Peak-picking SNR threshold = ", procParams$peakpicking$snr, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking detector window = ", procParams$peakpicking$winsize, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking oversampling = ", procParams$peakpicking$oversample, sep ="" ), con = fObj)
-    writeLines(paste("Peak-picking SG kernel = ", procParams$peakpicking$sgkernsize, sep ="" ), con = fObj)
-    writeLines(paste("Peak-picking binning tolerance = ", procParams$binning$tolerance, sep ="" ), con = fObj)
-    writeLines(paste("Peak-picking binning filter = ", procParams$binning$filter, sep ="" ), con = fObj)
+        writeLines(paste("Peak-picking binning tolerance = ", procParams$peakpicking$bintolerance, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking binning filter = ", procParams$peakpicking$binfilter, sep ="" ), con = fObj)
   }
   close(fObj)
 }
