@@ -312,7 +312,9 @@ ImportWizardGui <- function()
   
   #Pre-processing box
   frm_preProcessing <- gWidgets2::gframe( "Pre-Processing parameters", container = box_mainH, expand = T, fill = T )
-  box_proc <- gWidgets2::ggroup(horizontal = F, container = frm_preProcessing, expand = T, fill = T, spacing = 20)
+  box_procH <- gWidgets2::ggroup(horizontal = T, container = frm_preProcessing, expand = T, fill = T, spacing = 20)
+  box_proc1 <- gWidgets2::ggroup(horizontal = F, container = box_procH, expand = T, fill = T, spacing = 20)
+  box_proc2 <- gWidgets2::ggroup(horizontal = F, container = box_procH, expand = T, fill = T, spacing = 20)
   drawLabelSpin <- function( parent_widget, sText, minVal, maxVal, defaultVal, decPlaces = 0 )
   {
     box_spin <- gWidgets2::ggroup(horizontal = T, container = parent_widget)
@@ -322,33 +324,33 @@ ImportWizardGui <- function()
   }
   
   #Smoothing params
-  frm_SGKernSize <- gWidgets2::gframe("Savitzky-Golay Smoothing:", container = box_proc)
+  frm_SGKernSize <- gWidgets2::gframe("Savitzky-Golay Smoothing:", container = box_proc1)
   box_smoothing <- gWidgets2::ggroup(horizontal = F, container = frm_SGKernSize)
   check_smoothing <- gWidgets2::gcheckbox("Enable smoothing", checked = T, container = box_smoothing, handler = this$ChkBoxSmoothingChanged )
   lblSg <- gWidgets2::glabel("Savitzky-Golay kernel size:", container = box_smoothing)
   ratio_SGkernSize<- gWidgets2::gradio(c(5,7,9,11), selected = 2, horizontal = T, container = box_smoothing)
     
   #Alignment params
-  frm_alignment <- gWidgets2::gframe("Alignment", container = box_proc, spacing = 10)
+  frm_alignment <- gWidgets2::gframe("Alignment", container = box_proc1, spacing = 10)
   box_alignment <- gWidgets2::ggroup(horizontal = F, container = frm_alignment)
   check_alignment <- gWidgets2::gcheckbox("Enable alignment", checked = T, container = box_alignment, handler = this$ChkBoxAlignmentChanged)
   spin_AlignIterations <- drawLabelSpin(box_alignment, "Iterations:", 1, 5, 3)
   spin_AlignMaxDev <- drawLabelSpin(box_alignment, "Max Shift [ppm]:", 10, 1000, 200)
   
   #Mass Calibration params
-  frm_calibration <- gWidgets2::gframe("Mass Calibration", container = box_proc, spacing = 10)
+  frm_calibration <- gWidgets2::gframe("Mass Calibration", container = box_proc1, spacing = 10)
   box_calibration <- gWidgets2::ggroup(horizontal = F, container = frm_calibration)
   check_calibration <- gWidgets2::gcheckbox("Enable calibration", checked = T, container = box_calibration, handler = this$ChkBoxCalibrationChanged)
   
   #Spectra Normalization params
-  frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc, spacing = 10)
+  frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc1, spacing = 10)
   box_spectraNorm <- gWidgets2::ggroup(horizontal = F, container = frm_spectraNorm)
   check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNorm )
   check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = T, container = box_spectraNorm )
   check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = T, container = box_spectraNorm )
   
   #Peak picking and binning params
-  frm_peakpick <- gWidgets2::gframe("Peak-Picking", container = box_proc, spacing = 10)
+  frm_peakpick <- gWidgets2::gframe("Peak-Picking", container = box_proc2, spacing = 10)
   box_peakpick <- gWidgets2::ggroup(horizontal = F, container = frm_peakpick)
   check_peakpicking <- gWidgets2::gcheckbox("Enable peak-picking", checked = T, container = box_peakpick, handler = this$ChkBoxPeakPickingChanged)
   spin_SNR <- drawLabelSpin(box_peakpick, "SNR Threshold:", 1, 100, 5)
@@ -358,7 +360,7 @@ ImportWizardGui <- function()
   spin_binFilter <- drawLabelSpin(box_peakpick, "Peak Filter [%] :", 1, 100, 5)
   
   #Number of processing threads
-  frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_proc, spacing = 10)
+  frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_proc2, spacing = 10)
   spin_nThreads <- drawLabelSpin(frm_procThreads, "Max Threads:", 1, parallel::detectCores(), parallel::detectCores(), decPlaces = 0)
   
   #Data output box
@@ -367,7 +369,7 @@ ImportWizardGui <- function()
   browseOut <- FileBrowseWidget( frm_dataOutput, sLabel = "Output directory:", dirSel = T, fFilter = "txt", setdir_fun = SetWorkingDir, getdir_fun = GetWorkingDir )
   
   ##Run button
-  btn_run <- gWidgets2::gbutton("Process Data", handler = this$RunClicked, container = box_proc)
+  btn_run <- gWidgets2::gbutton("Process Data", handler = this$RunClicked, container = box_proc2)
   
   gWidgets2::visible(mainWin) <- T
   
