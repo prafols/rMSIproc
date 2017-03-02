@@ -233,6 +233,7 @@ List MTPeakPicking::BinPeaks()
             mPeaks[j]->mass.erase(mPeaks[j]->mass.begin() + iPos);
             mPeaks[j]->intensity.erase(mPeaks[j]->intensity.begin() + iPos);
             mPeaks[j]->SNR.erase(mPeaks[j]->SNR.begin() + iPos);
+            mPeaks[j]->area.erase(mPeaks[j]->area.begin() + iPos);
           }
           else
           {

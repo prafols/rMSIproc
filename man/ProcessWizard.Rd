@@ -4,10 +4,12 @@
 \alias{ProcessWizard}
 \title{ProcessWizard.}
 \usage{
-ProcessWizard(deleteRamdisk = T)
+ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F)
 }
 \arguments{
 \item{deleteRamdisk}{if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).}
+
+\item{overwriteRamdisk}{if the current ramdisk must be overwrited.}
 }
 \description{
 Imports and process MSI data using a friendly GUI.

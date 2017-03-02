@@ -127,11 +127,11 @@ FileBrowseWidget <- function( parent_widget, sLabel = "File:", dirSel = F, multi
   lbl <- gWidgets2::glabel(sLabel, container = box_lbl)
   gWidgets2::size(lbl) <- c(110, -1)
   box_entry <- gWidgets2::ggroup(horizontal = F, container = box)
-  entry_dir<-gWidgets2::gedit(width = 60, container = box_entry)
+  entry_dir<-gWidgets2::gedit(width = 40, container = box_entry)
   gWidgets2::editable(entry_dir) <- F
   if( multiSel && !dirSel )
   {
-    entry_files<-gWidgets2::gtext(height = 200, container = box_entry)
+    entry_files<-gWidgets2::gtext(width = 350, height = 330, container = box_entry)
     gWidgets2::editable(entry_files) <- F
   }
   box_btn <- gWidgets2::ggroup(horizontal = F, container = box)

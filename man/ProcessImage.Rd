@@ -4,34 +4,50 @@
 \alias{ProcessImage}
 \title{ProcessImage.}
 \usage{
-ProcessImage(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200,
-  SNR = 5, peakWindow = 10, peakUpSampling = 10,
-  SmoothingKernelSize = 5, UseManualCalibration = T, UseBinning = T,
-  BinTolerance = 0.05, BinFilter = 0.05,
-  NumOfThreads = parallel::detectCores())
+ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
+  EnableAlignment = T, AlignmentIterations = 3,
+  AlignmentMaxShiftppm = 200, EnableCalibration = T,
+  EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10,
+  UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
+  EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T,
+  EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores())
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
 
-\item{AlignmentIterations}{if grather than zero FFT based aligment will be used and the ramdisk overwritted with alignment data.}
+\item{EnableSmoothing}{a boolean declaring if smoothing alignment must be performed.}
 
-\item{AlignmentMaxShiftppm}{the maximum shift that alignment can apply in ppm.}
+\item{SmoothingKernelSize}{size of smoothing kernel. NULL value may be specified if EnableSmoothing is FALSE.}
 
-\item{SNR}{minimal singal to noise ratio of peaks to retain.}
+\item{EnableAlignment}{a boolean declaring if label-free alignment must be performed.}
 
-\item{peakWindow}{windows size used for peak detection. Generally should be similar to peak with number of data points.}
+\item{AlignmentIterations}{number of iterations of label-free alignment. The rMSI ramdisk will be overwritted with aligned data. NULL value may be specified if EnableAlignment is FALSE.}
 
-\item{peakUpSampling}{upsampling factor used in peak interpolation fo exact mass prediction.}
+\item{AlignmentMaxShiftppm}{the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.}
 
-\item{SmoothingKernelSize}{size of smoothing kernel, if zero smoothing is disabled.}
+\item{EnableCalibration}{a boolean declaring if mass calibration must be performed.}
 
-\item{UseManualCalibration}{if the manual calibration windows must be used.}
+\item{EnablePeakPicking}{a boolean declaring if peak-pickin (and binning) must be performed.}
+
+\item{SNR}{minimal singal to noise ratio of peaks to retain. NULL value may be specified if EnablePeakPicking is FALSE.}
+
+\item{peakWindow}{windows size used for peak detection. Generally should be similar to peak with number of data points.  NULL value may be specified if EnablePeakPicking is FALSE.}
+
+\item{peakUpSampling}{upsampling factor used in peak interpolation fo exact mass prediction. NULL value may be specified if EnablePeakPicking is FALSE.}
 
 \item{UseBinning}{if true binned matrices are returned instead of peak lists.}
 
-\item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.}
+\item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units. NULL value may be specified if EnablePeakPicking is FALSE.}
 
-\item{BinFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.}
+\item{BinFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.}
+
+\item{EnableSpectraNormalization}{if normalization must be applied.}
+
+\item{EnableTICNorm}{if TIC normalization must be performed on spectra.}
+
+\item{EnableMAXNorm}{if MAX normalization must be performed on spectra.}
+
+\item{EnableTICAcqNorm}{if TICAcq normalization must be performed on spectra.}
 
 \item{NumOfThreads}{the number number of threads used to process the data.}
 }

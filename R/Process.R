@@ -23,16 +23,23 @@
 #' A recomeneded value of aligment ietarations is 3.
 #' 
 #' @param img an rMSI data object to process.
-#' @param AlignmentIterations if grather than zero FFT based aligment will be used and the ramdisk overwritted with alignment data.
-#' @param AlignmentMaxShiftppm the maximum shift that alignment can apply in ppm.
-#' @param SNR minimal singal to noise ratio of peaks to retain.
-#' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.
-#' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction.
-#' @param SmoothingKernelSize size of smoothing kernel, if zero smoothing is disabled.
-#' @param UseManualCalibration if the manual calibration windows must be used.
+#' @param EnableSmoothing a boolean declaring if smoothing alignment must be performed.
+#' @param SmoothingKernelSize size of smoothing kernel. NULL value may be specified if EnableSmoothing is FALSE.
+#' @param EnableAlignment a boolean declaring if label-free alignment must be performed.
+#' @param AlignmentIterations number of iterations of label-free alignment. The rMSI ramdisk will be overwritted with aligned data. NULL value may be specified if EnableAlignment is FALSE.
+#' @param AlignmentMaxShiftppm the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.
+#' @param EnableCalibration a boolean declaring if mass calibration must be performed.
+#' @param EnablePeakPicking a boolean declaring if peak-pickin (and binning) must be performed.
+#' @param SNR minimal singal to noise ratio of peaks to retain. NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.  NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param UseBinning if true binned matrices are returned instead of peak lists.
-#' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
-#' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+#' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units. NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param EnableSpectraNormalization if normalization must be applied.
+#' @param EnableTICNorm if TIC normalization must be performed on spectra.
+#' @param EnableMAXNorm if MAX normalization must be performed on spectra.
+#' @param EnableTICAcqNorm if TICAcq normalization must be performed on spectra.
 #' @param NumOfThreads the number number of threads used to process the data.
 #' 
 #'
@@ -45,9 +52,13 @@
 #' 
 #' @export
 #'
-ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 200, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         SmoothingKernelSize = 5, UseManualCalibration = T,
-                         UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05, 
+ProcessImage <- function(img, 
+                         EnableSmoothing = T, SmoothingKernelSize = 5,
+                         EnableAlignment = T, AlignmentIterations = 3, AlignmentMaxShiftppm = 200,
+                         EnableCalibration = T,
+                         EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
+                         UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
+                         EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
                          NumOfThreads = parallel::detectCores())
 {
   pt <- Sys.time()
@@ -61,7 +72,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   }
   
   #Apply Savitzky-Golay smoothing to RAW data and average spectrum
-  if(SmoothingKernelSize > 0)
+  if( EnableSmoothing )
   {
     cat("Running Savitzkt-Golay Smoothing...\n")
     img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
@@ -75,7 +86,7 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   }
   
   #Label-free Alignment
-  if(AlignmentIterations > 0)
+  if( EnableAlignment )
   {
     #Calculate reference spectrum for label free alignment
     refSpc <- InternalReferenceSpectrum(img)
@@ -96,13 +107,16 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   }
   
   #Recalculate mean spectrum
-  img$mean <- rMSI::AverageSpectrum(img)
+  if( EnableSmoothing || EnableAlignment )
+  {
+    img$mean <- rMSI::AverageSpectrum(img)
+  }
   
   #Do not count time while the user is in manual calibration window
   elap_1st_stage <- Sys.time() - pt
   
   #Manual calibration (user will be promp with calibration dialog)
-  if( UseManualCalibration )
+  if( EnableCalibration )
   {
     img$mass <- CalibrationWindow( img$mass, img$mean, peakWindow ,img$name )
     if(is.null(img$mass))
@@ -117,27 +131,46 @@ ProcessImage <- function(img, AlignmentIterations = 0, AlignmentMaxShiftppm = 20
   pt <- Sys.time()
   
   #Peak-Picking and binning
-  cat("Running Peak Picking...\n")
-  pkMatrix <- FullImagePeakPicking(basePath = dataInf$basepath,
-                                   fileNames = dataInf$filenames,
-                                   mass = img$mass,  
-                                   numRows = dataInf$nrows,
-                                   dataType = dataInf$datatype, 
-                                   numOfThreads = NumOfThreads, 
-                                   SNR = SNR, 
-                                   WinSize = peakWindow, 
-                                   InterpolationUpSampling = peakUpSampling, 
-                                   doBinning = UseBinning, 
-                                   binningTolerance = BinTolerance, 
-                                   binningFilter = BinFilter)
+  if( EnablePeakPicking )
+  {
+    cat("Running Peak Picking...\n")
+    pkMatrix <- FullImagePeakPicking(basePath = dataInf$basepath,
+                                     fileNames = dataInf$filenames,
+                                     mass = img$mass,  
+                                     numRows = dataInf$nrows,
+                                     dataType = dataInf$datatype, 
+                                     numOfThreads = NumOfThreads, 
+                                     SNR = SNR, 
+                                     WinSize = peakWindow, 
+                                     InterpolationUpSampling = peakUpSampling, 
+                                     doBinning = UseBinning, 
+                                     binningTolerance = BinTolerance, 
+                                     binningFilter = BinFilter)
+  }
+  else
+  {
+    pkMatrix <- NULL
+  }
   
   #Calculate some normalizations
-  img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
-  img <- rMSI::NormalizeMAX(img, remove_empty_pixels = T)
-  img <- rMSI::NormalizeByAcqDegradation(img)
+  if( EnableSpectraNormalization )
+  {
+    if( EnableTICNorm )
+    {
+      img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
+    }
+    if( EnableMAXNorm )
+    {
+      img <- rMSI::NormalizeMAX(img, remove_empty_pixels = T)
+    }
+    if( EnableTICAcqNorm )
+    {
+      img <- rMSI::NormalizeByAcqDegradation(img)
+    }
+  }
   
   #Add a copy of img$pos to pkMatrix
-  if(UseBinning)
+  if( EnablePeakPicking && UseBinning)
   {
     pkMatrix <- FormatPeakMatrix(pkMatrix, img$pos,  c(nrow(img$pos)), c(img$name))
   }
@@ -249,10 +282,11 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
 #'   - a rMSIproc formated matrices with binned peaks.
 #'   - a plain text file with used processing parameters.
 #' @param deleteRamdisk if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).
+#' @param overwriteRamdisk if the current ramdisk must be overwrited.
 #'  
 #' @export
 #'
-ProcessWizard <- function( deleteRamdisk = T )
+ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F )
 {
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
@@ -283,24 +317,41 @@ ProcessWizard <- function( deleteRamdisk = T )
     }
     else
     {
-      mImg <- rMSI::LoadMsiData( procParams$data$source$datapath[i], ff_overwrite = T )  
+      mImg <- rMSI::LoadMsiData( procParams$data$source$datapath[i], ff_overwrite = overwriteRamdisk )  
     }
     
     #Process data
-    procData <- ProcessImage(img = mImg, 
-                 AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
-                 SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, SmoothingKernelSize = procParams$smoothing$sgkernsize, 
-                 UseBinning = T, BinTolerance = procParams$binning$tolerance, BinFilter = procParams$binning$filter, NumOfThreads = procParams$nthreads )
-    
-    rm(mImg) #Now all is stored in procData
-    gc()
-    
+    procData <- ProcessImage(img = mImg,
+                             EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
+                             EnableAlignment = procParams$alignment$enabled, AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
+                             EnableCalibration = procParams$calibration$enabled,
+                             EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, 
+                             UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, 
+                             EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
+                             NumOfThreads = procParams$nthreads )
+  
     #Store MS image to a tar file
-    imgName <- sub('\\..*$', '',procData$procImg$name) #Remove extensions of image name
-    rMSI::SaveMsiData( procData$procImg, file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
+    if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled )
+    {
+      rm(mImg) #Now all is stored in procData
+      gc()
+      imgName <- sub('\\..*$', '',procData$procImg$name) #Remove extensions of image name
+      rMSI::SaveMsiData( procData$procImg, file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
+    }
+    else
+    {
+      imgName <- sub('\\..*$', '',mImg$name) #Remove extensions of image name
+    }
+    
+    ###TODO error here! en processar el brain THS CS7 Au fent nomes el peak picking reventa per aki! Hi posu un cat a veure k tal...
+    ##TODO xo no he tingut temps dexecutar akest cat avui.
+    cat(paste("##TRAP## imgName = ", imgName, "\n"))
     
     #Store peak matrix
-    StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
+    if( procParams$peakpicking$enabled )
+    {
+      StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
+    }
     
     #Delete data and clear memory
     if(deleteRamdisk)
@@ -348,15 +399,36 @@ SaveProcessingParams <- function( procParams, filepath)
     }
   }
   writeLines(paste("Data output directory = ", procParams$data$outpath, sep ="" ), con = fObj)
-  writeLines(paste("Alignment iterations = ", procParams$alignment$iterations, sep ="" ), con = fObj)
-  writeLines(paste("Alignment max shift [ppm] = ", procParams$alignment$maxshift, sep ="" ), con = fObj)
   
-  writeLines(paste("Peak-picking SNR threshold = ", procParams$peakpicking$snr, sep ="" ), con = fObj)
-  writeLines(paste("Peak-picking detector window = ", procParams$peakpicking$winsize, sep ="" ), con = fObj)
-  writeLines(paste("Peak-picking oversampling = ", procParams$peakpicking$oversample, sep ="" ), con = fObj)
-  writeLines(paste("Peak-picking SG kernel = ", procParams$peakpicking$sgkernsize, sep ="" ), con = fObj)
+  writeLines(paste("Alignment enabled = ", procParams$alignment$enabled, sep ="" ), con = fObj)
+  if(procParams$alignment$enabled)
+  {
+    writeLines(paste("Alignment iterations = ", procParams$alignment$iterations, sep ="" ), con = fObj)
+    writeLines(paste("Alignment max shift [ppm] = ", procParams$alignment$maxshift, sep ="" ), con = fObj)
+  }
   
-  writeLines(paste("Peak-binning tolerance = ", procParams$binning$tolerance, sep ="" ), con = fObj)
-  writeLines(paste("Peak-binning filter = ", procParams$binning$filter, sep ="" ), con = fObj)
+  writeLines(paste("Calibration enabled = ", procParams$calibration$enabled, sep ="" ), con = fObj)
+  if(procParams$calibration$enabled)
+  {
+    #Reserverd for future expansion...
+  }
+
+  if(procParams$spectraNormalization$enabled)
+  {
+    writeLines(paste("Spectra TIC normalization enabled = ", procParams$spectraNormalization$TIC, sep ="" ), con = fObj)
+    writeLines(paste("Spectra MAX normalization enabled = ", procParams$spectraNormalization$MAX, sep ="" ), con = fObj)
+    writeLines(paste("Spectra TICAcq normalization enabled = ", procParams$spectraNormalization$AcqTIC, sep ="" ), con = fObj)
+  }
+  
+  writeLines(paste("Peak-picking enabled = ", procParams$peakpicking$enabled, sep ="" ), con = fObj)
+  if( procParams$peakpicking$enabled)
+  {
+    writeLines(paste("Peak-picking SNR threshold = ", procParams$peakpicking$snr, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking detector window = ", procParams$peakpicking$winsize, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking oversampling = ", procParams$peakpicking$oversample, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking SG kernel = ", procParams$peakpicking$sgkernsize, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking binning tolerance = ", procParams$binning$tolerance, sep ="" ), con = fObj)
+    writeLines(paste("Peak-picking binning filter = ", procParams$binning$filter, sep ="" ), con = fObj)
+  }
   close(fObj)
 }
