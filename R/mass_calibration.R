@@ -23,11 +23,12 @@
 #' @param intensity The intensity vector of spectrum to calibrate.
 #' @param use_zoo if the zoo package interpolation must be used
 #' @param method a string with the method used for interpolation, valid methods are spline, linear or nocal if only target masses must be returned.
+#' @param CalibrationSpan the span of the loess method for calibration.
 #'
 #' @return a the calibrated mass axis.
 #' @export
 #'
-CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = "", method = "loess")
+CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = "", method = "loess", CalibrationSpan = 0.75)
 {
   options(guiToolkit="RGtk2") # Força que toolquit sigu GTK pq fas crides directes a events GTK!!!
   oldWarning<-options()$warn
@@ -43,9 +44,11 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
   dIntensity <- intensity
   refMz <- NULL #a vector of user selected reference masses
   targetMz <- NULL #a vector of user selected target masses to calibrate
+  refNames <- NULL #a vector of user selected reference names to calibrate
   PeakWindow <- peak_win_size
   rm(mass)
   rm(intensity)
+  Span <- CalibrationSpan
   
   Tbl_ColNames <- list(name = "Name", ref = "Ref. m/z", sel = "Sel. m/z", err = "Error [m/z]", ppm = "Error [ppm]", active = "Active")
   dMassCalibrated <- NULL
@@ -166,13 +169,14 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
     valid_rows <- which( this$Table_Ctl[, this$Tbl_ColNames$active] )
     this$refMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$ref]
     this$targetMz <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$sel]
+    this$refNames <- this$Table_Ctl[valid_rows, this$Tbl_ColNames$name ]
     if(this$CalMethod == "nocal")
     {
       gWidgets2::dispose(this$this$window)
     }
     else
     {
-      this$dMassCalibrated <- calMzAxis(this$dMass, this$refMz, this$targetMz, this$CalMethod)
+      this$dMassCalibrated <- calMzAxis(this$dMass, this$refMz, this$targetMz, this$CalMethod, CalSpan = this$Span)
       gWidgets2::enabled(Chk_ShowCal) <-T
       
       this$spectraWidget$AddSpectra(  this$dMassCalibrated, dIntensity, col = "darkgreen", name = "cal")
@@ -262,8 +266,8 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
   
   if(this$CalMethod == "nocal")
   {
-    #Return a list of masses and targets that can b used for calibration
-    return(list( ref = this$refMz, target = this$targetMz))
+    #Return a dataframe of masses and targets that can be used for calibration
+    return( data.frame( name = this$refNames, ref = this$refMz, target = this$targetMz  ))
   }
   else
   {
@@ -352,11 +356,13 @@ CalibrateImage<-function(img, output_fname, newMzAxis = NULL)
 #' @param ref_mz a vector of reference masses (for exaple the theorical gold peaks).
 #' @param target_mz manually slected masses to be fittet to ref_masses (must be the same length than ref_mz).
 #' @param method a string with the method used for interpolation, valid methods are loess and linear
+#' @param CalSpan the span of loess method.
 #'
 #' @return a list containing the calibrated mass axis and the interpolated mass error repect the original mass axis.
+#' 
 #' @export
 #'
-calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess" )
+calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess", CalSpan = 0.75 )
 {
   a <- data.frame( targetMass = target_mz, refMass =  ref_mz)
   if(method == "linear")
@@ -365,7 +371,7 @@ calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess" )
   }
   else if (method == "loess")
   {
-    fitmodel <- loess(refMass~targetMass, a, control = loess.control(surface = "direct"))
+    fitmodel <- loess(refMass~targetMass, a, control = loess.control(surface = "direct"), span = CalSpan)
   }
   else
   {

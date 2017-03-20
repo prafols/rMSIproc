@@ -9,7 +9,7 @@ StorePeakMatrix(data_path, data)
 \arguments{
 \item{data_path}{full path including filename where data must be stored.}
 
-\item{data}{a List containing intensity, SNR and area matrices and mass axis vector.}
+\item{data}{a List containing intensity, SNR and area matrices, the mass axis vector and a data.frame containing in each variable a normalization vector.}
 }
 \description{
 Stores a binned peaks matrix to HDD.

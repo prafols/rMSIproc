@@ -4,12 +4,15 @@
 \alias{ProcessWizard}
 \title{ProcessWizard.}
 \usage{
-ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F)
+ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F,
+  calibrationSpan = 0.75)
 }
 \arguments{
 \item{deleteRamdisk}{if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).}
 
 \item{overwriteRamdisk}{if the current ramdisk must be overwrited.}
+
+\item{calibrationSpan}{the used span in the loess fitting for mass calibration.}
 }
 \description{
 Imports and process MSI data using a friendly GUI.

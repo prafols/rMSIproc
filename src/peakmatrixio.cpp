@@ -102,8 +102,24 @@ List PeakMatrixIO::LoadPeakMatrix()
   LoadMass();
   Rcout << "Loading pixel positions\n";
   LoadPos();
-  return List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
-                             Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames);
+  
+  
+  List retList = List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
+                                 Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames );
+  
+  
+  // check if norms.txt and load normalizations if so
+  String normsTxtFile = path;
+  normsTxtFile += "/norms.txt";
+  std::ifstream fileNormsTxt(normsTxtFile);
+  if (fileNormsTxt.is_open())
+  {
+    Rcout << "Loading normalizations\n";
+    retList["normalizations"] = LoadNormalizationMatrix();
+    fileNormsTxt.close();
+  }
+  
+  return retList;
 }
 
 void PeakMatrixIO::StorePeakMatrix(List lpeak)
@@ -176,6 +192,14 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   {
     stop("C Writing error: Names file can not be opened.\n");
   } 
+  
+  //Check if there ara also normalizations to store
+  if( lpeak.containsElementNamed("normalizations") )
+  {
+    Rcout <<"Storing normalizations files\n";
+    DataFrame norm = as<DataFrame>(lpeak["normalizations"]);
+    StoreNormalizationMatrix(norm);
+  }
   
 }
 
@@ -352,13 +376,107 @@ NumericMatrix *PeakMatrixIO::setMatPointer(DataType mt)
   return mat;
 }
 
+DataFrame PeakMatrixIO::LoadNormalizationMatrix()
+{
+  //1 Read the norms.txt file to get number of columns and normalization names.
+  String normsTxtFile = path;
+  normsTxtFile += "/norms.txt";
+  std::ifstream fileNormNames(normsTxtFile.get_cstring(), std::ios::in);
+  std::string str; 
+  CharacterVector normNames;
+  if (fileNormNames.is_open())
+  {
+    while (std::getline(fileNormNames, str))
+    {
+      normNames.push_back(str);
+    }
+    fileNormNames.close();
+  }
+  else
+  {
+    stop("Error: No norms.txt file found but this function was called, this is a bug...\n"); 
+  }
+  
+  Rcout << "Found " << normNames.length() << " normalizations in norms.txt\n";
+  
+  List tmpNorms( normNames.length() );
+  
+  char buffer[sizeof(double)*posMat->rows()]; //Reading  buffer
+  String normsMatFile = path;
+  normsMatFile += "/norms.mat";
+  std::ifstream file(normsMatFile.get_cstring(), std::ios::in|std::ios::binary);
+  if (file.is_open())
+  {
+    for( int i = 0; i < tmpNorms.length(); i++)
+    {
+      file.read (buffer, sizeof(double)*posMat->rows());  
+      tmpNorms[i] = NumericVector(posMat->rows());
+      memcpy(as<NumericVector>(tmpNorms[i]).begin(), buffer, sizeof(double)*(posMat->rows()));
+    }
+    file.close();
+  }
+  else
+  {
+    stop("C Reading error: File can not be open.\n");
+  }
+  
+  //Create  the dataframe from the tmp list and names
+  DataFrame DFnorms(tmpNorms);
+  DFnorms.attr("names") = normNames;
+
+  return(DFnorms);
+}
+
+void PeakMatrixIO::StoreNormalizationMatrix(DataFrame norms)
+{
+  //Store normalization data.frame streaming data by columns (each column is a noramalization vector)
+  double buffer[norms.nrows()]; //Writing  buffer
+  NumericVector dfColumn;
+  String fname = path;
+  fname += "/norms.mat";
+  std::ofstream file(fname.get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
+  if (file.is_open())
+  {
+    for( int i = 0; i < norms.size(); i++)
+    {
+      //Copy data to buffer
+      dfColumn = norms[i];
+      memcpy(buffer, dfColumn.begin(), sizeof(double)*dfColumn.length());
+      file.write((char*)buffer, sizeof(double)*norms.nrows()); 
+    }
+    file.close();
+  }
+  else
+  {
+    stop("C Writing error: File can not be opened.\n");
+  }
+  
+  //Store the names in a plain text file
+  String namesFile = path;
+  namesFile += "/norms.txt";
+  std::ofstream fileNames(namesFile.get_cstring(), std::ios::out|std::ios::trunc);
+  StringVector normNames = norms.names();
+  if(fileNames.is_open())
+  {
+    for(int i = 0; i < normNames.length(); i++)
+    {
+      fileNames <<  normNames[i] << "\n";
+    }
+    fileNames.close();
+  }
+  else
+  {
+    stop("C Writing error: Names file can not be opened.\n");
+  } 
+}
+
 //// R exports /////////////////////////////////////////
 //'LoadPeakMatrix.
 //'
 //'Loads a binned peaks matrix from HDD.
 //'
 //'@param path full path to directory from where data must be loaded.
-//'@return  an R List containing intensity, SNR and area matrices and mass axis vector.
+//'@return  an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
 //'
 // [[Rcpp::export]]
 List LoadPeakMatrixC( String path )
@@ -372,7 +490,7 @@ List LoadPeakMatrixC( String path )
 //'Stores a binned peaks matrix to HDD.
 //'
 //'@param path full path to directory where data must be stored.
-//'@param mat an R List containing intensity, SNR and area matrices and mass axis vector.
+//'@param mat an R List containing intensity, SNR and area matrices the mass axis vector and an R data.frame containing a normalization on each column.
 //'
 // [[Rcpp::export]]
 void StorePeakMatrixC( String path, List mat )

@@ -29,7 +29,7 @@ class PeakMatrixIO
     
     Rcpp::List LoadPeakMatrix();
     void StorePeakMatrix(Rcpp::List lpeak);
-    
+
   private:
     Rcpp::String path;
     enum DataType {intensity, SNR, area, mass, pos};
@@ -49,6 +49,8 @@ class PeakMatrixIO
     void LoadPos();
     Rcpp::String getFileName(DataType mt);
     Rcpp::NumericMatrix *setMatPointer(DataType mt);
+    Rcpp::DataFrame LoadNormalizationMatrix();
+    void StoreNormalizationMatrix(Rcpp::DataFrame norms);
 };
 
 #endif

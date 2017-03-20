@@ -41,6 +41,7 @@
 #' @param EnableMAXNorm if MAX normalization must be performed on spectra.
 #' @param EnableTICAcqNorm if TICAcq normalization must be performed on spectra.
 #' @param NumOfThreads the number number of threads used to process the data.
+#' @param CalSpan the used span for the loess fittin used in mass calibration.
 #' 
 #'
 #' @return  a named list containing:
@@ -59,7 +60,7 @@ ProcessImage <- function(img,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = parallel::detectCores())
+                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 {
   pt <- Sys.time()
   
@@ -74,7 +75,7 @@ ProcessImage <- function(img,
   #Apply Savitzky-Golay smoothing to RAW data and average spectrum
   if( EnableSmoothing )
   {
-    cat("Running Savitzkt-Golay Smoothing...\n")
+    cat("Running Savitzky-Golay Smoothing...\n")
     img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
     FullImageSmoothing(basePath = dataInf$basepath, 
                        fileNames = dataInf$filenames, 
@@ -118,7 +119,7 @@ ProcessImage <- function(img,
   #Manual calibration (user will be promp with calibration dialog)
   if( EnableCalibration )
   {
-    img$mass <- CalibrationWindow( img$mass, img$mean, peakWindow ,img$name )
+    img$mass <- CalibrationWindow( img$mass, img$mean, peakWindow ,img$name, CalibrationSpan = CalSpan )
     if(is.null(img$mass))
     {
       rMSI::DeleteRamdisk(img)
@@ -221,9 +222,44 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
   #Merge peak matrices
   pkMatrix <- MergePeakMatricesC( PeakMatrixList, binningTolerance, binningFilter )
   
-  #Concatenate pos arrays
+  #Testing if normalizations arrays are concatenable (otherwise raise an error)
+  normNames1 <- NULL
+  if( !is.null(PeakMatrixList[[1]]$normalizations))
+  {
+    normNames1 <- names(PeakMatrixList[[1]]$normalizations)
+  }
+  for( i in 1:length(PeakMatrixList))
+  {
+    if( is.null(normNames1) != is.null(PeakMatrixList[[i]]$normalizations))
+    {
+      stop("Error: Normalizations is not present for all peak matrices. Please, provide peak matrices with same normalizations.\n")
+    }
+    if( !is.null(PeakMatrixList[[i]]$normalizations))
+    {
+      normNamesI <- names(PeakMatrixList[[i]]$normalizations)
+      if( length(normNamesI) != length(normNames1) )
+      {
+        stop("Error: Peak matrices contains different numbers of normalizations.\n")
+      }
+      for( j  in 1:length(normNames1))
+      {
+        if( normNamesI[j] != normNames1[j] )
+        {
+          stop("Error: Peak matrices contains normalizations with differents names.\n")
+        }
+      }
+    }
+  }
+  
+  #Concatenate pos arrays and normalizations arrays 
   numOfPixels <- sum(unlist(lapply(PeakMatrixList, function(x){ nrow(x$pos) })))
   pkMatrix$pos <- matrix(nrow = numOfPixels, ncol = 2 )
+  if( !is.null(normNames1) )
+  {
+    pkMatrix$normalizations <- data.frame( matrix( NA, nrow = numOfPixels, ncol = length(normNames1)) )
+    names(pkMatrix$normalizations) <- normNames1
+  }
+  
   colnames(pkMatrix$pos) <- c("x", "y")
   iStart <- 1 #Index of matrix row
   MaxXant <- 0
@@ -245,6 +281,12 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
     }
     MaxXant <- max( pkMatrix$pos[ (iStart:iStop ), "x"]  )
     MaxYant <- max( pkMatrix$pos[ (iStart:iStop ), "y"]  )
+    
+    #Set normalizations
+    if( !is.null(pkMatrix$normalizations) )
+    {
+      pkMatrix$normalizations[ (iStart:iStop) , ] <- PeakMatrixList[[i]]$normalizations[,]
+    }
     iStart <- iStop + 1
     
     #Set matrix names
@@ -283,10 +325,11 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
 #'   - a plain text file with used processing parameters.
 #' @param deleteRamdisk if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).
 #' @param overwriteRamdisk if the current ramdisk must be overwrited.
+#' @param calibrationSpan the used span in the loess fitting for mass calibration.
 #'  
 #' @export
 #'
-ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F )
+ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationSpan = 0.75 )
 {
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
@@ -328,7 +371,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F )
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, 
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, 
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
-                             NumOfThreads = procParams$nthreads )
+                             NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
   
     #Store MS image to a tar file
     if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled )
@@ -346,6 +389,12 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F )
     #Store peak matrix
     if( procParams$peakpicking$enabled )
     {
+      #Append normalizations to 
+      if( !is.null( procData$procImg$normalizations) )
+      {
+        procData$peakMat$normalizations <-  as.data.frame(procData$procImg$normalizations )
+      }
+      
       StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
     }
     

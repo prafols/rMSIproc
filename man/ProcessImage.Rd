@@ -10,7 +10,8 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10,
   UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
   EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T,
-  EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores())
+  EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores(),
+  CalSpan = 0.75)
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
@@ -50,6 +51,8 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 \item{EnableTICAcqNorm}{if TICAcq normalization must be performed on spectra.}
 
 \item{NumOfThreads}{the number number of threads used to process the data.}
+
+\item{CalSpan}{the used span for the loess fittin used in mass calibration.}
 }
 \value{
 a named list containing:

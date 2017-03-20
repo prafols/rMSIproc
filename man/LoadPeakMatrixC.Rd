@@ -10,7 +10,7 @@ LoadPeakMatrixC(path)
 \item{path}{full path to directory from where data must be loaded.}
 }
 \value{
-an R List containing intensity, SNR and area matrices and mass axis vector.
+an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
 }
 \description{
 Loads a binned peaks matrix from HDD.

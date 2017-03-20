@@ -73,7 +73,7 @@ NoiseEstimationFFTExpWinMat <- function(x, filWinSize = 40L) {
 #'Loads a binned peaks matrix from HDD.
 #'
 #'@param path full path to directory from where data must be loaded.
-#'@return  an R List containing intensity, SNR and area matrices and mass axis vector.
+#'@return  an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
 #'
 LoadPeakMatrixC <- function(path) {
     .Call('rMSIproc_LoadPeakMatrixC', PACKAGE = 'rMSIproc', path)
@@ -84,7 +84,7 @@ LoadPeakMatrixC <- function(path) {
 #'Stores a binned peaks matrix to HDD.
 #'
 #'@param path full path to directory where data must be stored.
-#'@param mat an R List containing intensity, SNR and area matrices and mass axis vector.
+#'@param mat an R List containing intensity, SNR and area matrices the mass axis vector and an R data.frame containing a normalization on each column.
 #'
 StorePeakMatrixC <- function(path, mat) {
     invisible(.Call('rMSIproc_StorePeakMatrixC', PACKAGE = 'rMSIproc', path, mat))

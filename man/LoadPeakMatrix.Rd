@@ -10,7 +10,7 @@ LoadPeakMatrix(data_path)
 \item{data_path}{full path to zip file where data is stored.}
 }
 \value{
-an R List containing intensity, SNR and area matrices and mass axis vector.
+an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
 }
 \description{
 Loads a binned peaks matrix from HDD.

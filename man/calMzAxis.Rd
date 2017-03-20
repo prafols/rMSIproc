@@ -4,7 +4,7 @@
 \alias{calMzAxis}
 \title{calMzAxis.}
 \usage{
-calMzAxis(avgSpc_mz, ref_mz, target_mz, method = "loess")
+calMzAxis(avgSpc_mz, ref_mz, target_mz, method = "loess", CalSpan = 0.75)
 }
 \arguments{
 \item{avgSpc_mz}{The mass axis to calibrate.}
@@ -14,6 +14,8 @@ calMzAxis(avgSpc_mz, ref_mz, target_mz, method = "loess")
 \item{target_mz}{manually slected masses to be fittet to ref_masses (must be the same length than ref_mz).}
 
 \item{method}{a string with the method used for interpolation, valid methods are loess and linear}
+
+\item{CalSpan}{the span of loess method.}
 }
 \value{
 a list containing the calibrated mass axis and the interpolated mass error repect the original mass axis.

@@ -9,7 +9,7 @@ StorePeakMatrixC(path, mat)
 \arguments{
 \item{path}{full path to directory where data must be stored.}
 
-\item{mat}{an R List containing intensity, SNR and area matrices and mass axis vector.}
+\item{mat}{an R List containing intensity, SNR and area matrices the mass axis vector and an R data.frame containing a normalization on each column.}
 }
 \description{
 Stores a binned peaks matrix to HDD.

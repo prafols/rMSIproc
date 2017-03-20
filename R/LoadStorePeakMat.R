@@ -4,10 +4,10 @@
 #'
 #' @param data_path full path to zip file where data is stored.
 #'
-#' @return an R List containing intensity, SNR and area matrices and mass axis vector.
+#' @return an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
 #' @export
 #'
-LoadPeakMatrix <- function( data_path)
+LoadPeakMatrix <- function( data_path )
 {
   dir.create(file.path(dirname(data_path), "tmp"), recursive = T)
   cat("Unzipping data...\n")
@@ -35,7 +35,7 @@ LoadPeakMatrix <- function( data_path)
 #' Data is stored zip compressed, so it is recomeneded to specify the name with .zip extension.
 #'
 #' @param data_path full path including filename where data must be stored.
-#' @param data a List containing intensity, SNR and area matrices and mass axis vector.
+#' @param data a List containing intensity, SNR and area matrices, the mass axis vector and a data.frame containing in each variable a normalization vector. 
 #'
 #' @export
 #'
