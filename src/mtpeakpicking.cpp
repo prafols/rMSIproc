@@ -140,7 +140,7 @@ List MTPeakPicking::BinPeaks()
   for(int i = 0; i < numOfPixels; i++)
   {
     Tic[i] = 0.0;
-    for( int j = 0; j < mPeaks[i]->intensity.size(); j++)
+    for( unsigned int j = 0; j < mPeaks[i]->intensity.size(); j++)
     {
       Tic[i] += mPeaks[i]->intensity[j];
     }
@@ -177,7 +177,7 @@ List MTPeakPicking::BinPeaks()
     
     Tic[iMax] = -1.0; //Mark current spectrum as processed by deleting its TIC
     
-    for( int ip = 0; ip <  mPeaks[iMax]->mass.size(); ip ++)
+    for( unsigned int ip = 0; ip <  mPeaks[iMax]->mass.size(); ip ++)
     {
       binMass.push_back(mPeaks[iMax]->mass[ip]); //Append element to the mass vector (names of bin Matrix)
       binMat.resize(binMat.size() + 1); //Append new column
@@ -193,9 +193,10 @@ List MTPeakPicking::BinPeaks()
         if(j != iMax) //Do not process current Peaks obj
         {
           //Find the nearest peak, the nearest peak postion is reatined in iPos var
-          double dist, dist_ant = 1e50;
+          double dist = 0.0;
+          double dist_ant = 1e50;
           int iPos = 0;
-          for( int imass = 0; imass <  mPeaks[j]->mass.size(); imass++)
+          for( unsigned int imass = 0; imass <  mPeaks[j]->mass.size(); imass++)
           {
             iPos = imass;
             dist = binMass[binMass.size() - 1] - mPeaks[j]->mass[imass];

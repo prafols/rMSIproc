@@ -111,7 +111,7 @@ List PeakMatrixIO::LoadPeakMatrix()
   // check if norms.txt and load normalizations if so
   String normsTxtFile = path;
   normsTxtFile += "/norms.txt";
-  std::ifstream fileNormsTxt(normsTxtFile);
+  std::ifstream fileNormsTxt(normsTxtFile.get_cstring());
   if (fileNormsTxt.is_open())
   {
     Rcout << "Loading normalizations\n";
