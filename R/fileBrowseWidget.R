@@ -136,7 +136,6 @@ FileBrowseWidget <- function( parent_widget, sLabel = "File:", dirSel = F, multi
   }
   box_btn <- gWidgets2::ggroup(horizontal = F, container = box)
   btn <- gWidgets2::gbutton("Browse", handler = this$BrowseDialog, container = box_btn )
-  gWidgets2::size(btn) <- c(-1, 20)
   
   ## Set the name for the class
   class(this) <- append(class(this),"FileBrowseWidget")

@@ -176,7 +176,7 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
     }
     else
     {
-      this$dMassCalibrated <- calMzAxis(this$dMass, this$refMz, this$targetMz, this$CalMethod, CalSpan = this$Span)
+      this$dMassCalibrated <- calMzAxis(this$dMass, this$refMz, this$targetMz, this$CalMethod, CalSpan = gWidgets2::svalue(this$Spin_Span) )
       gWidgets2::enabled(Chk_ShowCal) <-T
       
       this$spectraWidget$AddSpectra(  this$dMassCalibrated, dIntensity, col = "darkgreen", name = "cal")
@@ -220,6 +220,9 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
   Grp_Btn <- gWidgets2::ggroup(horizontal = F, container = Grp_Bot)
   Btn_LoadRef <- gWidgets2::gbutton("Load Ref m/z", container = Grp_Btn, handler = this$LoadRefMzAscii)
   Btn_Active <- gWidgets2::gcheckbox("m/z active", checked = F, use.togglebutton = T, handler = this$BtnActiveChanged, container = Grp_Btn)
+  Grp_CalSpan <- gWidgets2::ggroup(horizontal = T, container = Grp_Btn)
+  lblSpan <- gWidgets2::glabel("Loess Span:", container = Grp_CalSpan)
+  Spin_Span <- gWidgets2::gspinbutton(from = 0.1, to = 2, by = 0.05, value = Span, digits = 2, container = Grp_CalSpan)
   Btn_Calibrate <- gWidgets2::gbutton("Calibrate", container = Grp_Btn, handler = this$BtnCalibrate)
   gWidgets2::enabled(Btn_Active) <-F
   gWidgets2::enabled(Btn_Calibrate) <-F
