@@ -29,6 +29,7 @@
 #' @param AlignmentIterations number of iterations of label-free alignment. The rMSI ramdisk will be overwritted with aligned data. NULL value may be specified if EnableAlignment is FALSE.
 #' @param AlignmentMaxShiftppm the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.
 #' @param EnableCalibration a boolean declaring if mass calibration must be performed.
+#' @param CalibrationPeakWin the windows size used for peak detection in calibration window.
 #' @param EnablePeakPicking a boolean declaring if peak-pickin (and binning) must be performed.
 #' @param SNR minimal singal to noise ratio of peaks to retain. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.  NULL value may be specified if EnablePeakPicking is FALSE.
@@ -56,7 +57,7 @@
 ProcessImage <- function(img, 
                          EnableSmoothing = T, SmoothingKernelSize = 5,
                          EnableAlignment = T, AlignmentIterations = 3, AlignmentMaxShiftppm = 200,
-                         EnableCalibration = T,
+                         EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
@@ -119,7 +120,7 @@ ProcessImage <- function(img,
   #Manual calibration (user will be promp with calibration dialog)
   if( EnableCalibration )
   {
-    img$mass <- CalibrationWindow( img$mass, img$mean, peakWindow ,img$name, CalibrationSpan = CalSpan )
+    img$mass <- CalibrationWindow( img$mass, img$mean, CalibrationPeakWin ,img$name, CalibrationSpan = CalSpan )
     if(is.null(img$mass))
     {
       rMSI::DeleteRamdisk(img)
@@ -367,14 +368,14 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     procData <- ProcessImage(img = mImg,
                              EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
                              EnableAlignment = procParams$alignment$enabled, AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
-                             EnableCalibration = procParams$calibration$enabled,
+                             EnableCalibration = procParams$calibration$enabled, CalibrationPeakWin = procParams$calibration$winsize,
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, 
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, 
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
                              NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
   
     #Store MS image to a tar file
-    if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled )
+    if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"  )
     {
       rm(mImg) #Now all is stored in procData
       gc()

@@ -234,7 +234,14 @@ ImportWizardGui <- function()
     this$procParamList$calibration$enabled <- gWidgets2::svalue(this$check_calibration)
     if( this$procParamList$calibration$enabled )
     {
-      #Reserverd for future extentions...
+      if(gWidgets2::svalue(this$check_peakpicking))
+      {
+        this$procParamList$calibration$winsize <- as.integer(gWidgets2::svalue(this$spin_peakWin))
+      }
+      else
+      {
+        this$procParamList$calibration$winsize <- 20
+      }
     }
     
     this$procParamList$spectraNormalization$enabled <- (gWidgets2::svalue(this$check_TICnorm) | gWidgets2::svalue(this$check_MAXnorm) | gWidgets2::svalue(this$check_TicACQnorm))

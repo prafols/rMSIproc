@@ -7,11 +7,11 @@
 ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   EnableAlignment = T, AlignmentIterations = 3,
   AlignmentMaxShiftppm = 200, EnableCalibration = T,
-  EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10,
-  UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
-  EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T,
-  EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores(),
-  CalSpan = 0.75)
+  CalibrationPeakWin = 20, EnablePeakPicking = T, SNR = 5,
+  peakWindow = 10, peakUpSampling = 10, UseBinning = T,
+  BinTolerance = 0.05, BinFilter = 0.05, EnableSpectraNormalization = T,
+  EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
+  NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
@@ -27,6 +27,8 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 \item{AlignmentMaxShiftppm}{the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.}
 
 \item{EnableCalibration}{a boolean declaring if mass calibration must be performed.}
+
+\item{CalibrationPeakWin}{the windows size used for peak detection in calibration window.}
 
 \item{EnablePeakPicking}{a boolean declaring if peak-pickin (and binning) must be performed.}
 
