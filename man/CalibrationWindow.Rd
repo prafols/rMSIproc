@@ -24,4 +24,3 @@ a the calibrated mass axis.
 \description{
 CalibrationWindow.
 }
-

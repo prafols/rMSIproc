@@ -83,7 +83,7 @@ List FullImageAlign( String basePath, StringVector fileNames,
 {
   
   //Copy R data to C arrays
-  double refC[refSpectrum.length()];
+  double *refC = new double[refSpectrum.length()];
   int numRowsC[fileNames.length()];
   memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
@@ -100,5 +100,6 @@ List FullImageAlign( String basePath, StringVector fileNames,
   myProcParams.ref_spectrum = refC;
   
   MTLabelFreeAlign myAlignment(myProcParams);
+  delete[] refC;
   return myAlignment.Run();
 }

@@ -51,9 +51,10 @@ AlignIterations(iterations)
   
   fft_ref_low = new  double[FFT_Size];
   fft_ref_high = new  double[FFT_Size];
+  
   ComputeRef(ref_spectrum, true);
   ComputeRef(ref_spectrum, false);
-  
+
   //Lag limits relative to number of points
   lagMax = (lagLimitppm/1.0e6)*(double)dataLength;
   
@@ -87,6 +88,7 @@ void LabelFreeAlign::ComputeRef(double *data_ref, bool bHigh)
   {
     memcpy(fft_direct_in, data_ref, sizeof(double)*WinLength);
   }
+  
   TimeWindow(fft_direct_in,  bHigh);
   ZeroPadding(fft_direct_in, bHigh, FFT_Size, WinLength);
   fftw_execute(fft_pdirect);
@@ -97,9 +99,9 @@ void LabelFreeAlign::ComputeRef(double *data_ref, bool bHigh)
   }
   else
   {
-    data_ptr = fft_ref_low;
+    data_ptr = fft_ref_low; //Its crashing only with this ptr
   }
-  memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size);
+  memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size); //Its crashing here!!!!
   
   //Compute Conj
   for( int i = ((FFT_Size + 1)/2 - 1) ; i < FFT_Size; i++)
@@ -149,8 +151,8 @@ void LabelFreeAlign::TimeWindow(double *data, bool bHigh)
 LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
 {
   //Hanning Windowing
-  double topWin_data[FFT_Size];
-  double botWin_data[FFT_Size];
+  double *topWin_data = new double[FFT_Size];
+  double *botWin_data = new double[FFT_Size];
   TLags firstLag;
   
   for(int i = 0; i < AlignIterations; i++)
@@ -186,6 +188,9 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
     //Apply the scaling and shift to original data, after that the pointer to data contains the aligned sptectrum
     FourierLinerScaleShift(data, K, Sh);
   }
+  
+  delete[] topWin_data;
+  delete[] botWin_data;
     
   return firstLag;
 }
@@ -437,21 +442,25 @@ double TestFourierBestCor(NumericVector ref, NumericVector x, bool bRefLow)
 }
 */
 
-/*
-//To run this debug function the ##### method must be set as public
+//To run for debug purposes
 // [[Rcpp::export]]
 NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x)
 {
-  double refC[ref.length()];
-  double xC[x.length()];
+  double *refC = new double[ref.length()];
+  double *xC = new double[x.length()];
+  
   boost::mutex mtx;
   memcpy(refC, ref.begin(), sizeof(double)*ref.length());
   memcpy(xC, x.begin(), sizeof(double)*x.length());
+  
   LabelFreeAlign alngObj(refC, ref.length(), &mtx);
   LabelFreeAlign::TLags lags = alngObj.AlignSpectrum(xC);
+
   Rcout<<"Lag low = "<<lags.lagLow<<" Lag high = "<<lags.lagHigh<<"\n";
   NumericVector y(x.length());
-  memcpy(y.begin(), refC, sizeof(double)*x.length());
+  memcpy(y.begin(), xC, sizeof(double)*x.length());
+
+  delete[] refC;
+  delete[] xC;
   return y;
 }
-*/

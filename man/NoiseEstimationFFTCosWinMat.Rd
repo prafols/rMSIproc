@@ -17,4 +17,3 @@ an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spe
 \description{
 Estimate the noise of some spectra using a FFT filter and a cosinus window in frequency domain.
 }
-

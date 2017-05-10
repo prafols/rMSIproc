@@ -69,4 +69,3 @@ Perform all image pre-processing using a multi-threading implementation.
 If aligment is used then the hdd files are overwirted with aligned data.
 A recomeneded value of aligment ietarations is 3.
 }
-

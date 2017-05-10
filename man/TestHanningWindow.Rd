@@ -19,4 +19,3 @@ a NumericVector containing the Hanning Window.
 \description{
 Method to test the implementation of Hanning window in R session.
 }
-

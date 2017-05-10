@@ -29,4 +29,3 @@ Processed data includes:
   - a rMSIproc formated matrices with binned peaks.
   - a plain text file with used processing parameters.
 }
-

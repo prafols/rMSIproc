@@ -14,4 +14,3 @@ StorePeakMatrixC(path, mat)
 \description{
 Stores a binned peaks matrix to HDD.
 }
-

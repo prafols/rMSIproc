@@ -15,4 +15,3 @@ StorePeakMatrix(data_path, data)
 Stores a binned peaks matrix to HDD.
 Data is stored zip compressed, so it is recomeneded to specify the name with .zip extension.
 }
-

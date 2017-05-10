@@ -23,4 +23,3 @@ a intensity matrix where each row corresponds to an spectrum.
 Merges a list containing various peak matrices in a single peak matrix.
 The rMSIproc binning method is used to calculate the new masses.
 }
-

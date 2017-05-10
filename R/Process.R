@@ -343,6 +343,10 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   #Get number of images
   if( procParams$data$source$type == "xmass" )
   {
+    # TODO: A big warning here, when the new implementation of XML bruker parser is ready...
+    # then the numofimage may not be the same as the number of XML files.
+    # so the xml's must be parsed before going into data import...
+    # you must use the new method CountImagesInBrukerXml() from rMSI package here to count the number of images in each xml file.
     NumOfImages <- length(procParams$data$source$xmlpath)
   }
   else
@@ -357,6 +361,8 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     #Load each image
     if( procParams$data$source$type == "xmass" )
     {
+      # TODO with the new method I only want that importBrukerXmassImg imports a single image each time.
+      # So... I need an extra param in importBrukerXmassImg to select the image to import... or thing somethin more elegant...
       mImg <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, procParams$data$source$xmlpath[i], procParams$data$source$spectrumpath )
     }
     else

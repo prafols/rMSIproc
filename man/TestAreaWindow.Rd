@@ -19,4 +19,3 @@ a NumericVector containing the Area Window.
 \description{
 Method to test the implementation of Area window in R session.
 }
-

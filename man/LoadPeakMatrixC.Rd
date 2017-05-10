@@ -15,4 +15,3 @@ an R List containing intensity, SNR and area matrices, mass axis vector and if a
 \description{
 Loads a binned peaks matrix from HDD.
 }
-

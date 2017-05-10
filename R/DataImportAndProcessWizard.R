@@ -335,7 +335,7 @@ ImportWizardGui <- function()
   box_smoothing <- gWidgets2::ggroup(horizontal = F, container = frm_SGKernSize)
   check_smoothing <- gWidgets2::gcheckbox("Enable smoothing", checked = T, container = box_smoothing, handler = this$ChkBoxSmoothingChanged )
   lblSg <- gWidgets2::glabel("Savitzky-Golay kernel size:", container = box_smoothing)
-  ratio_SGkernSize<- gWidgets2::gradio(c(5,7,9,11), selected = 2, horizontal = T, container = box_smoothing)
+  ratio_SGkernSize<- gWidgets2::gradio(c(5,7,9,11,13,15), selected = 2, horizontal = T, container = box_smoothing)
     
   #Alignment params
   frm_alignment <- gWidgets2::gframe("Alignment", container = box_proc1, spacing = 10)

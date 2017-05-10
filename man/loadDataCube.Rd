@@ -19,4 +19,3 @@ Loads an rMSI data cube (aka. ramdisk file) to an R matrix using C++ backend.
 This method is just for testing convinience and should not be used because it copies a matrix indexed by rows to a
 matrix indexed by columns so it performs very slowly. Instead of using this method use rMSI::loadImgCunckFromCube.
 }
-

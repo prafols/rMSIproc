@@ -69,7 +69,7 @@ void NoiseEstimation::NoiseEstimationFFT(double *data, int dataLength)
 {
   
   //Copy data adding padding zeros
-  double xc_data[FFT_Size];
+  double *xc_data = new double[FFT_Size];
   for( int i = 0; i < FFT_Size; i++)
   {
     xc_data[i] = i < dataLength? data[i] : 0.0;
@@ -78,6 +78,7 @@ void NoiseEstimation::NoiseEstimationFFT(double *data, int dataLength)
   if( filWinSize == 0 || filWinMode == none )
   {
     stop("Error: Filtering Windows has not been calculated yet");
+    delete[] xc_data;
     return; 
   }
   
@@ -105,25 +106,29 @@ void NoiseEstimation::NoiseEstimationFFT(double *data, int dataLength)
   {
     data[i] = fft_in[i] / (double)FFT_Size; //Amplitude scaling to fit original range
   }
+  
+  delete[] xc_data;
 }
 
 NumericVector NoiseEstimation::NoiseEstimationFFTCosWin( NumericVector data, int WinSize )
 {
-  double xc_data[data.length()];
+  double *xc_data = new double[data.length()];
   memcpy(xc_data, data.begin(), sizeof(double)*data.length());
   NoiseEstimationFFTCosWin(xc_data, data.length(), WinSize);
   NumericVector y(data.length());
   memcpy(y.begin(), xc_data, sizeof(double)*data.length());
+  delete[] xc_data;
   return y;
 }
 
 NumericVector NoiseEstimation::NoiseEstimationFFTExpWin( NumericVector data, int WinSize )
 {
-  double xc_data[data.length()];
+  double *xc_data = new double[data.length()];
   memcpy(xc_data, data.begin(), sizeof(double)*data.length());
   NoiseEstimationFFTExpWin(xc_data, data.length(), WinSize);
   NumericVector y(data.length());
   memcpy(y.begin(), xc_data, sizeof(double)*data.length());
+  delete[] xc_data;
   return y;
 }
 

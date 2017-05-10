@@ -15,4 +15,3 @@ SaveProcessingParams(procParams, filepath)
 Save all parameters in a list of processing params generated using ImportWizardGui() function.
 Parameters will be saved in a plain text file.
 }
-

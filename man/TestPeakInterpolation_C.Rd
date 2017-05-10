@@ -28,4 +28,3 @@ a NumerixVector with the FFT interpolated peak shape.
 \description{
 TestPeakInterpolation_C.
 }
-

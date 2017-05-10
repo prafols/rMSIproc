@@ -20,4 +20,3 @@ CalibrateImage(img, output_fname, newMzAxis = NULL)
 Apply a new mass axis to a complete image.
 A GUI to calibrate the mean spectrum will be shown.
 }
-

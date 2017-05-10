@@ -65,8 +65,40 @@ Smoothing::Smoothing(int SavitzkyGolayKerSize )
     sgC.push_back(9.0/429.0);
     sgC.push_back(-36.0/429.0);
     break;
+  case 13:
+    sgC.push_back(-11.0/143.0);
+    sgC.push_back(0.0/143.0);
+    sgC.push_back(9.0/143.0);
+    sgC.push_back(16.0/143.0);
+    sgC.push_back(21.0/143.0);
+    sgC.push_back(24.0/143.0);
+    sgC.push_back(25.0/143.0);
+    sgC.push_back(24.0/143.0);
+    sgC.push_back(21.0/143.0);
+    sgC.push_back(16.0/143.0);
+    sgC.push_back(9.0/143.0);
+    sgC.push_back(0.0/143.0);
+    sgC.push_back(-11.0/143.0);
+    break;
+  case 15:
+    sgC.push_back(-78.0/1105.0);
+    sgC.push_back(-13.0/1105.0);
+    sgC.push_back(42.0/1105.0);
+    sgC.push_back(87.0/1105.0);
+    sgC.push_back(122.0/1105.0);
+    sgC.push_back(147.0/1105.0);
+    sgC.push_back(162.0/1105.0);
+    sgC.push_back(167.0/1105.0);
+    sgC.push_back(162.0/1105.0);
+    sgC.push_back(147.0/1105.0);
+    sgC.push_back(122.0/1105.0);
+    sgC.push_back(87.0/1105.0);
+    sgC.push_back(42.0/1105.0);
+    sgC.push_back(-13.0/1105.0);
+    sgC.push_back(-78.0/1105.0);
+    break;
   default:
-    stop("Error, not valid SavitzkyGolay kernel size, valid values are: 5, 7, 9 and 11");
+    stop("Error, not valid SavitzkyGolay kernel size, valid values are: 5, 7, 9, 11, 13, 15");
   }
   
 }
@@ -78,11 +110,12 @@ Smoothing::~Smoothing()
 
 NumericVector Smoothing::smoothSavitzkyGolay(NumericVector x)
 {
-  double xC[x.length()];
+  double *xC = new double[x.length()];
   memcpy(xC, x.begin(), sizeof(double)*x.length());
   smoothSavitzkyGolay(xC, x.length());
   NumericVector y(x.length());
   memcpy(y.begin(), xC, sizeof(double)*y.length());
+  delete[] xC;
   return y;
 }
 
@@ -90,7 +123,7 @@ NumericVector Smoothing::smoothSavitzkyGolay(NumericVector x)
 void Smoothing::smoothSavitzkyGolay(double *x, int length)
 {
   //Convolution with SavitzkyGolay kernel
-  double y[length];
+  double *y = new double[length];
   for( int i = 0; i < length; i++)
   {
     y[i] = 0; //Init a zero
@@ -105,6 +138,7 @@ void Smoothing::smoothSavitzkyGolay(double *x, int length)
   
   //Overwrite input pointer
   memcpy(x, y, sizeof(double)*length);
+  delete[] y;
 }
 
 
@@ -112,7 +146,7 @@ void Smoothing::smoothSavitzkyGolay(double *x, int length)
 //' 
 //' Computes the Savitzky-Golay smoothing of a vector x using a filter size of sgSize.
 //' @param x the data vector to smooth.
-//' @param sgSize valid values are: 5, 7, 9 and 11.
+//' @param sgSize valid values are: 5, 7, 9, 11, 13, 15.
 //' @return the smoothed data vector.
 // [[Rcpp::export]]
 NumericVector Smoothing_SavitzkyGolay(NumericVector x, int sgSize = 5)

@@ -103,12 +103,14 @@ PeakPicking::~PeakPicking()
 PeakPicking::Peaks *PeakPicking::peakPicking(double *spectrum, double SNR )
 {
   //Calculate noise
-  double noise[dataLength];
+  double *noise = new double[dataLength];
   memcpy(noise, spectrum, sizeof(double)*dataLength);
   neObj->NoiseEstimationFFTExpWin(noise, dataLength, FFT_Size*2);
   
   //Detect peaks
-  return detectPeaks(spectrum, noise, SNR);
+  PeakPicking::Peaks *pks = detectPeaks(spectrum, noise, SNR);
+  delete[] noise;
+  return pks;
 }
 
 //Detect all local maximums and Filter peaks using SNR min value in a sliding window
@@ -317,12 +319,13 @@ List PeakPicking::PeakObj2List(PeakPicking::Peaks *pks)
 
 NumericVector PeakPicking::getInterpolatedPeak(NumericVector data, int iPeak, bool ApplyHanning)
 {
-  double Cdata[data.length()];
+  double *Cdata = new double[data.length()];
   memcpy(Cdata, data.begin(), sizeof(double)*data.length());
   interpolateFFT(Cdata, iPeak, ApplyHanning);
     
   NumericVector interpData(FFTInter_Size);
   memcpy(interpData.begin(), fft_out2, sizeof(double)*FFTInter_Size);
+  delete[] Cdata;
   return(interpData);
 }
 
@@ -364,8 +367,8 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
     return NumericMatrix(0,0);
   }
     
-  double massC[mass.length()];
-  double spectrum[mass.length()];
+  double *massC = new double[mass.length()];
+  double *spectrum = new double[mass.length()];
   
   //Copy R data to C arrays
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
@@ -385,6 +388,8 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   }
   
   delete peaks;
+  delete[] massC;
+  delete[] spectrum;
   rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR", "area");
   return mp;
 }
@@ -410,8 +415,8 @@ NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensit
     return NumericVector(0);
   }
   
-  double massC[mass.length()];
-  double spectrum[mass.length()];
+  double *massC = new double[mass.length()];
+  double *spectrum = new double[mass.length()];
   
   //Copy R data to C arrays
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
@@ -424,6 +429,9 @@ NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensit
   {
     interpolated = ppObj.getInterpolatedPeak(intensity, peakIndex, useHanning);
   }
+  
+  delete[] massC;
+  delete[] spectrum;
   
   return(interpolated);
 }
@@ -440,10 +448,12 @@ NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensit
 // [[Rcpp::export]]
 NumericVector TestHanningWindow(NumericVector mass, int WinSize = 20, int UpSampling = 10)
 {
-  double massC[mass.length()];
+  double *massC = new double[mass.length()];
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
-  return(ppObj.getHanningWindow());
+  NumericVector hannWin = ppObj.getHanningWindow();
+  delete[] massC;
+  return hannWin;
 }
 
 //' TestAreaWindow.
@@ -458,8 +468,10 @@ NumericVector TestHanningWindow(NumericVector mass, int WinSize = 20, int UpSamp
 // [[Rcpp::export]]
 NumericVector TestAreaWindow(NumericVector mass, int WinSize = 20, int UpSampling = 10)
 {
-  double massC[mass.length()];
+  double *massC = new double[mass.length()];
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   PeakPicking ppObj(WinSize, massC, mass.length(), UpSampling);
-  return(ppObj.getAreaWindow());
+  NumericVector areaWin = ppObj.getAreaWindow();
+  delete[] massC;
+  return areaWin;
 }

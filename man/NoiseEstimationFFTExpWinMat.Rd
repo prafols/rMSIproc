@@ -17,4 +17,3 @@ a
 \description{
 Estimate the noise of some spectra using a FFT filter and a decay exponential window in frequency domain.
 }
-

@@ -338,7 +338,7 @@ List FullImagePeakPicking (String basePath, StringVector fileNames,
                                 bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
 {
   //Copy R data to C arrays
-  double massC[mass.length()];
+  double *massC = new double[mass.length()];
   int numRowsC[fileNames.length()];
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
@@ -359,6 +359,8 @@ List FullImagePeakPicking (String basePath, StringVector fileNames,
   myProcParams.performBinning = doBinning;
   
   MTPeakPicking myPeakPicking(myProcParams);
+  delete[] massC;
+  
   return myPeakPicking.Run();
 }
 

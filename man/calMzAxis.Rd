@@ -23,4 +23,3 @@ a list containing the calibrated mass axis and the interpolated mass error repec
 \description{
 calMzAxis.
 }
-

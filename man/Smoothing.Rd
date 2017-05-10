@@ -21,4 +21,3 @@ the smoothed data.
 \description{
 Smoothing.
 }
-

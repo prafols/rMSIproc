@@ -16,4 +16,3 @@ an intensity vector corresponding to the reference spectrum.
 Calculates the dataset reference spectrum to use in label free alignment.
 The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
 }
-

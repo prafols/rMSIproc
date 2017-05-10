@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// AlignSpectrumToReference
+NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x);
+RcppExport SEXP rMSIproc_AlignSpectrumToReference(SEXP refSEXP, SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type ref(refSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(AlignSpectrumToReference(ref, x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FullImageAlign
 List FullImageAlign(String basePath, StringVector fileNames, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, int AlignmentIterations, int AlignmentMaxShiftPpm);
 RcppExport SEXP rMSIproc_FullImageAlign(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP) {

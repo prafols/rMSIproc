@@ -12,4 +12,3 @@ printrMSIdataInfo(img)
 \description{
 Prints HDD storing information of rMSI data object using the C++ backend.
 }
-

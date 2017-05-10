@@ -17,4 +17,3 @@ an Rcpp::NumericVector containing the estimated noise.
 \description{
 Estimate the noise of a spectrum using a FFT filter and a cosinus window in frequency domain.
 }
-

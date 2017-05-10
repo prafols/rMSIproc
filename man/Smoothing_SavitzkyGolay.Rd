@@ -9,7 +9,7 @@ Smoothing_SavitzkyGolay(x, sgSize = 5L)
 \arguments{
 \item{x}{the data vector to smooth.}
 
-\item{sgSize}{valid values are: 5, 7, 9 and 11.}
+\item{sgSize}{valid values are: 5, 7, 9, 11, 13, 15.}
 }
 \value{
 the smoothed data vector.
@@ -17,4 +17,3 @@ the smoothed data vector.
 \description{
 Computes the Savitzky-Golay smoothing of a vector x using a filter size of sgSize.
 }
-

@@ -23,4 +23,3 @@ a list containing mass, intensity, SNR and area fields of detected peaks.
 \description{
 DetectPeaks'
 }
-

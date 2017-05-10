@@ -25,4 +25,3 @@ Detect peaks from a Rcpp::NumericVector object and returns data in a R matrix.
 This method is only exported to be use by R function DetectPeaks which is an actual R function.
 The returned peak positions follows C indexing style, this is starts with zero.
 }
-

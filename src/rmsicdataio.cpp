@@ -73,30 +73,56 @@ CrMSIDataIO::DataCube *CrMSIDataIO::loadDataCube( int iCube)
   std::ifstream file(getFullPath(iCube).get_cstring(), std::ios::in|std::ios::binary);
   if (file.is_open())
   {
-    typedef int dformat; //Initially supose it is integer
-    if(ffDataType == "double")
+    if(ffDataType == "integer")
     {
-      typedef double dformat;
+      char buffer[sizeof(int)* rowCounts[iCube]];
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //Load ic column to a char buffer
+        file.read (buffer, sizeof(int)* rowCounts[iCube]); 
+        //copy data to column ic: data_ptr[][ic]
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          data_ptr->data[ir][ic] = (double)*((int*)(buffer + ir*sizeof(int)));
+        }
+      }
     }
-    if( ffDataType != "integer" && ffDataType != "double")
+    else if(ffDataType == "double")
+    {
+      char buffer[sizeof(double)* rowCounts[iCube]];
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //Load ic column to a char buffer
+        file.read (buffer, sizeof(double)* rowCounts[iCube]); 
+        //copy data to column ic: data_ptr[][ic]
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          data_ptr->data[ir][ic] = *((double*)(buffer + ir*sizeof(double)));
+        }
+      }
+    }
+    else if(ffDataType == "single")
+    {
+      char buffer[sizeof(float)* rowCounts[iCube]];
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //Load ic column to a char buffer
+        file.read (buffer, sizeof(float)* rowCounts[iCube]); 
+        //copy data to column ic: data_ptr[][ic]
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          data_ptr->data[ir][ic] = (double)*((float*)(buffer + ir*sizeof(float)));
+        }
+      }
+    }
+    else
     {
       file.close();
       stop("C Reading error: Invalid data format.");
       return 0;
-    }
-    char buffer[ sizeof(dformat)* rowCounts[iCube]];
-    
-    //Binary data reading, ff read in columns
-    for( int ic = 0; ic < dataLength; ic++)
-    {
-      //Load ic column to a char buffer
-      file.read (buffer, sizeof(dformat)* rowCounts[iCube]); 
-      
-      //copy data to column ic: data_ptr[][ic]
-      for(int ir = 0; ir < rowCounts[iCube]; ir++)
-      {
-        data_ptr->data[ir][ic] = (double)*((dformat*)(buffer + ir*sizeof(dformat)));
-      }
     }
     file.close();
   }
@@ -124,31 +150,64 @@ void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
   std::ofstream file(getFullPath(iCube).get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
   if (file.is_open())
   {
-    typedef int dformat; //Initially supose it is integer
-    if(ffDataType == "double")
+    if(ffDataType == "integer")
     {
-      typedef double dformat;
+      int buffer[rowCounts[iCube]];
+      
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //copy data to write buffer
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          buffer[ir] = (int)(data_ptr->data[ir][ic]);
+        }
+        
+        //Write ic column to a char buffer
+        file.write((char*)buffer, sizeof(int)* rowCounts[iCube]);
+      }
     }
-    if( ffDataType != "integer" && ffDataType != "double")
+    else if(ffDataType == "double")
+    {
+      double buffer[rowCounts[iCube]];
+      
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //copy data to write buffer
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          buffer[ir] = data_ptr->data[ir][ic];
+        }
+        
+        //Write ic column to a char buffer
+        file.write((char*)buffer, sizeof(double)* rowCounts[iCube]);
+      }
+    }
+    else if(ffDataType == "single")
+    {
+      float buffer[rowCounts[iCube]];
+      
+      //Binary data reading, ff read in columns
+      for( int ic = 0; ic < dataLength; ic++)
+      {
+        //copy data to write buffer
+        for(int ir = 0; ir < rowCounts[iCube]; ir++)
+        {
+          buffer[ir] = (float)(data_ptr->data[ir][ic]);
+        }
+        
+        //Write ic column to a char buffer
+        file.write((char*)buffer, sizeof(float)* rowCounts[iCube]);
+      }
+    }
+    else
     {
       file.close();
       stop("C Writing error: Invalid data format.");
       return;
     }
-    dformat buffer[rowCounts[iCube]];
-    
-    //Binary data reading, ff read in columns
-    for( int ic = 0; ic < dataLength; ic++)
-    {
-      //copy data to write buffer
-      for(int ir = 0; ir < rowCounts[iCube]; ir++)
-      {
-        buffer[ir] = data_ptr->data[ir][ic];
-      }
-      
-      //Write ic column to a char buffer
-      file.write((char*)buffer, sizeof(dformat)* rowCounts[iCube]);
-    }
+
     file.close();
   }
   else
