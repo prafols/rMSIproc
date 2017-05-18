@@ -26,7 +26,6 @@
 #' @param CalibrationSpan the span of the loess method for calibration.
 #'
 #' @return a the calibrated mass axis.
-#' @export
 #'
 CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = "", method = "loess", CalibrationSpan = 0.75)
 {
@@ -287,8 +286,6 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
 #' @param newMzAxis if a new mz axis specified it is used for the calibration window
 #' @param useZoo if zoo interpolation must be used (caution this may introduce m/z error if large compensations are made)
 #'
-#' @export
-#'
 CalibrateImage<-function(img, output_fname, newMzAxis = NULL)
 {
   #Copy the img objet
@@ -362,8 +359,6 @@ CalibrateImage<-function(img, output_fname, newMzAxis = NULL)
 #' @param CalSpan the span of loess method.
 #'
 #' @return a list containing the calibrated mass axis and the interpolated mass error repect the original mass axis.
-#' 
-#' @export
 #'
 calMzAxis <- function(avgSpc_mz, ref_mz, target_mz, method = "loess", CalSpan = 0.75 )
 {

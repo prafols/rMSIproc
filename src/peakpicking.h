@@ -51,11 +51,13 @@ class PeakPicking
     //Function to test Hanning Window implementation
     Rcpp::NumericVector getHanningWindow();
     Rcpp::NumericVector getAreaWindow();
+    double *mass;
+    
+    double predictPeakArea( double *spectrum, int iPeakMass ); //Public because is used by zeroremover
     
   private:
     int FFT_Size; //First FFT windows size
     int FFTInter_Size; //Second FFT Windows size, used for peak interpolation
-    double *mass;
     double *HanningWin; //Hanning function computed in constructor for acurate peak mass prediction.
     double *AreaWin; //Wide window function to aboid Gibbs phenomenon on area interpolation.
     int dataLength;
@@ -71,7 +73,6 @@ class PeakPicking
     fftw_plan fft_pinvers;
     
     double predictPeakMass( double *spectrum, int iPeakMass );
-    double predictPeakArea( double *spectrum, int iPeakMass );
     int interpolateFFT(double *spectrum, int iPeakMass, bool ApplyHanning); //Interpolatea m/z peak and return its location in interpolated space (fft_out2)
     Peaks *detectPeaks( double *spectrum, double *noise, double SNR );
 };

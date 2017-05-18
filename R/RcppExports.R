@@ -17,6 +17,10 @@ MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 0.05, binningFil
     .Call('rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
 }
 
+ReplacePeakMatrixZerosC <- function(PeakMatrix, basePath, fileNames, mass, numRows, dataType, numOfThreads, WinSize = 10L, InterpolationUpSampling = 10L) {
+    .Call('rMSIproc_ReplacePeakMatrixZerosC', PACKAGE = 'rMSIproc', PeakMatrix, basePath, fileNames, mass, numRows, dataType, numOfThreads, WinSize, InterpolationUpSampling)
+}
+
 FullImageSmoothing <- function(basePath, fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize = 5L) {
     invisible(.Call('rMSIproc_FullImageSmoothing', PACKAGE = 'rMSIproc', basePath, fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize))
 }
@@ -29,7 +33,6 @@ FullImageSmoothing <- function(basePath, fileNames, massChannels, numRows, dataT
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericVector containing the estimated noise.
-#' @export
 NoiseEstimationFFTCosWin <- function(x, filWinSize = 40L) {
     .Call('rMSIproc_NoiseEstimationFFTCosWin', PACKAGE = 'rMSIproc', x, filWinSize)
 }
@@ -42,7 +45,6 @@ NoiseEstimationFFTCosWin <- function(x, filWinSize = 40L) {
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericVector containing the estimated noise.
-#' @export
 NoiseEstimationFFTExpWin <- function(x, filWinSize = 40L) {
     .Call('rMSIproc_NoiseEstimationFFTExpWin', PACKAGE = 'rMSIproc', x, filWinSize)
 }
@@ -55,7 +57,6 @@ NoiseEstimationFFTExpWin <- function(x, filWinSize = 40L) {
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spectrum is a row.
-#' @export
 NoiseEstimationFFTCosWinMat <- function(x, filWinSize = 40L) {
     .Call('rMSIproc_NoiseEstimationFFTCosWinMat', PACKAGE = 'rMSIproc', x, filWinSize)
 }

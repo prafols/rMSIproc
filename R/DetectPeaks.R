@@ -25,7 +25,6 @@
 #' @param OverSampling the used oversampling value for interpolating the peak shape and improve mass and area calculation.
 #'
 #' @return a list containing mass, intensity, SNR and area fields of detected peaks.
-#' @export
 #'
 DetectPeaks <- function(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 {

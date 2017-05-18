@@ -24,7 +24,6 @@
 #' @param img MSI image to calculate internal reference spectrum.
 #'
 #' @return an intensity vector corresponding to the reference spectrum.
-#' @export
 #'
 InternalReferenceSpectrum <- function(img)
 {

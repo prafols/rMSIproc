@@ -24,8 +24,6 @@
 #' 
 #' @param img and rMSI object image.
 #'
-#' @export
-#'
 printrMSIdataInfo <- function( img )
 {
   dataInf <- getrMSIdataInfo(img)
@@ -42,7 +40,6 @@ printrMSIdataInfo <- function( img )
 #' @param cubeSel the cube to load R index.
 #'
 #' @return an R matrix with spectra in rows.
-#' @export
 #'
 loadDataCube <- function( img, cubeSel )
 {

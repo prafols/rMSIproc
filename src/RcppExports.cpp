@@ -70,6 +70,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ReplacePeakMatrixZerosC
+List ReplacePeakMatrixZerosC(List PeakMatrix, String basePath, StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, int WinSize, int InterpolationUpSampling);
+RcppExport SEXP rMSIproc_ReplacePeakMatrixZerosC(SEXP PeakMatrixSEXP, SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type PeakMatrix(PeakMatrixSEXP);
+    Rcpp::traits::input_parameter< String >::type basePath(basePathSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type WinSize(WinSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type InterpolationUpSampling(InterpolationUpSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(ReplacePeakMatrixZerosC(PeakMatrix, basePath, fileNames, mass, numRows, dataType, numOfThreads, WinSize, InterpolationUpSampling));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FullImageSmoothing
 void FullImageSmoothing(String basePath, StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads, int SmoothingKernelSize);
 RcppExport SEXP rMSIproc_FullImageSmoothing(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SmoothingKernelSizeSEXP) {

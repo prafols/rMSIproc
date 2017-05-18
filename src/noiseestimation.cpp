@@ -167,7 +167,6 @@ int NoiseEstimation::getFFTSize()
 //' @param filWinSize an integer specified the cosinus win size in samples.
 //' 
 //' @return an Rcpp::NumericVector containing the estimated noise.
-//' @export
 // [[Rcpp::export]]
 NumericVector NoiseEstimationFFTCosWin(NumericVector x,  int filWinSize = 40)
 {
@@ -183,7 +182,6 @@ NumericVector NoiseEstimationFFTCosWin(NumericVector x,  int filWinSize = 40)
 //' @param filWinSize an integer specified the cosinus win size in samples.
 //' 
 //' @return an Rcpp::NumericVector containing the estimated noise.
-//' @export
 // [[Rcpp::export]]
 NumericVector NoiseEstimationFFTExpWin(NumericVector x,  int filWinSize = 40)
 {
@@ -199,7 +197,6 @@ NumericVector NoiseEstimationFFTExpWin(NumericVector x,  int filWinSize = 40)
 //' @param filWinSize an integer specified the cosinus win size in samples.
 //' 
 //' @return an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spectrum is a row.
-//' @export
 // [[Rcpp::export]]
 NumericMatrix NoiseEstimationFFTCosWinMat(NumericMatrix x,  int filWinSize = 40)
 {

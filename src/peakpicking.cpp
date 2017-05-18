@@ -288,7 +288,15 @@ double PeakPicking::predictPeakArea( double *spectrum, int iPeakMass )
     pArea+=fft_out2[i];
   }
  
-  return pArea * (spectrum[iPeakMass] / fft_out2[iPeak]) * massStep; //Return the area de-normalizing the FFT space
+  if( fft_out2[iPeak] == 0.0 )
+  {
+    pArea = 0.0; //Avoid zero division
+  }
+  else
+  {
+    pArea *= (spectrum[iPeakMass] / fft_out2[iPeak]) * massStep;
+  }
+  return pArea; //Return the area de-normalizing the FFT space
 }
 
 //Returns the internaly used Hanning windows (only for test purposes)

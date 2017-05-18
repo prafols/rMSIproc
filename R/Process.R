@@ -51,8 +51,6 @@
 #'                 From1 (if binning is used) - a list containing three matrices (intensity, SNR and area) and a vector with a common mass axis.
 #'                 Form2 (if NO binning is applied) - a list of detected peaks for each pixel.
 #'             - The applied mass shifts in first alignment iteration (alignShifts).
-#' 
-#' @export
 #'
 ProcessImage <- function(img, 
                          EnableSmoothing = T, SmoothingKernelSize = 5,
@@ -148,6 +146,21 @@ ProcessImage <- function(img,
                                      doBinning = UseBinning, 
                                      binningTolerance = BinTolerance, 
                                      binningFilter = BinFilter)
+    
+    if(UseBinning)
+    {
+      cat("Replacing zero values in the binned peak matrix...\n")
+      pkMatrix <- ReplacePeakMatrixZerosC(pkMatrix, 
+                                          basePath = dataInf$basepath, 
+                                          fileNames = dataInf$filenames, 
+                                          mass = img$mass, 
+                                          numRows = dataInf$nrows, 
+                                          dataType = dataInf$datatype, 
+                                          numOfThreads = NumOfThreads, 
+                                          WinSize = peakWindow,  
+                                          InterpolationUpSampling = peakUpSampling )
+    }
+    
   }
   else
   {
@@ -214,7 +227,6 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names)
 #' @param OffsetPosByX if true the pos matrices are concatenated by offseting in X direction, if false Y direction is used.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
-#' @export
 #'
 MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningFilter = 0.01, OffsetPosByX = F  )
 {
@@ -327,8 +339,6 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningF
 #' @param deleteRamdisk if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).
 #' @param overwriteRamdisk if the current ramdisk must be overwrited.
 #' @param calibrationSpan the used span in the loess fitting for mass calibration.
-#'  
-#' @export
 #'
 ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationSpan = 0.75 )
 {
@@ -426,8 +436,6 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
 #'
 #' @param procParams a list of parameters.
 #' @param filepath a full path where params will be stored
-#'
-#' @export
 #'
 SaveProcessingParams <- function( procParams, filepath)
 {
