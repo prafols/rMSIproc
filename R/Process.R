@@ -351,19 +351,23 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   }
   
   #Get number of images
+  brukerXmlCounters <- rep(0, length(procParams$data$source$xmlpath))
   if( procParams$data$source$type == "xmass" )
   {
-    # TODO: A big warning here, when the new implementation of XML bruker parser is ready...
-    # then the numofimage may not be the same as the number of XML files.
-    # so the xml's must be parsed before going into data import...
-    # you must use the new method CountImagesInBrukerXml() from rMSI package here to count the number of images in each xml file.
-    NumOfImages <- length(procParams$data$source$xmlpath)
+    for( i in 1:length(procParams$data$source$xmlpath))
+    {
+      brukerXmlCounters[i] <- rMSI:::CountImagesInBrukerXml(procParams$data$source$xmlpath[i])
+    }
+    NumOfImages <- sum(brukerXmlCounters)
   }
   else
   {
     NumOfImages <- length(procParams$data$source$datapath)
   }
   
+  brukerCounter_ant <- 0
+  selBrukerXML <- 1
+  selBrukerClass <- 0
   for( i in 1:NumOfImages)
   {
     cat(paste("Working on image", i, "of", NumOfImages, "\n"))
@@ -371,9 +375,17 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     #Load each image
     if( procParams$data$source$type == "xmass" )
     {
-      # TODO with the new method I only want that importBrukerXmassImg imports a single image each time.
-      # So... I need an extra param in importBrukerXmassImg to select the image to import... or thing somethin more elegant...
-      mImg <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, procParams$data$source$xmlpath[i], procParams$data$source$spectrumpath )
+      if (brukerXmlCounters[selBrukerXML] >= i - brukerCounter_ant)
+      {
+        selBrukerClass <- selBrukerClass + 1
+      }
+      else
+      {
+        brukerCounter_ant <- brukerXmlCounters[selBrukerXML] + brukerCounter_ant
+        selBrukerXML <- selBrukerXML + 1
+        selBrukerClass <- 1
+      }
+      mImg <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, procParams$data$source$xmlpath[selBrukerXML], procParams$data$source$spectrumpath, selected_img = selBrukerClass )
     }
     else
     {
@@ -385,11 +397,11 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
                              EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
                              EnableAlignment = procParams$alignment$enabled, AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
                              EnableCalibration = procParams$calibration$enabled, CalibrationPeakWin = procParams$calibration$winsize,
-                             EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample, 
-                             UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, 
+                             EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
+                             UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter,
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
                              NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
-  
+
     #Store MS image to a tar file
     if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"  )
     {
@@ -406,15 +418,15 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     #Store peak matrix
     if( procParams$peakpicking$enabled )
     {
-      #Append normalizations to 
+      #Append normalizations to
       if( !is.null( procData$procImg$normalizations) )
       {
         procData$peakMat$normalizations <-  as.data.frame(procData$procImg$normalizations )
       }
-      
+
       StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
     }
-    
+
     #Delete data and clear memory
     if(deleteRamdisk)
     {
