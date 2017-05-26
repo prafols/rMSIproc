@@ -1,2 +1,0 @@
-#Build only the current R arch in windows
-R_ARCH :=		--arch $(shell echo 'cat(.Platform$$r_arch)' | R --vanilla --slave)
