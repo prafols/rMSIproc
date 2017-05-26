@@ -331,7 +331,6 @@ void PeakMatrixIO::LoadPos()
 
 String PeakMatrixIO::getFileName(DataType mt)
 {
-  //TODO: improve that method to avoid / char as path separator
   String fname = path;
   switch(mt)
   {

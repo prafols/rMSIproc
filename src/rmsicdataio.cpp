@@ -220,7 +220,6 @@ void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
 
 String CrMSIDataIO::getFullPath(int cube_id)
 {
-  //TODO revisar pq els path pugin ser compatibles amb Windows
   String fname = ffFiles[cube_id]; 
   std::stringstream mPath;
   mPath << dataPath.get_cstring() << "/" << fname.get_cstring();

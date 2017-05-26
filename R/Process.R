@@ -76,6 +76,10 @@ ProcessImage <- function(img,
   {
     cat("Running Savitzky-Golay Smoothing...\n")
     img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
+    
+    #The ff file must be closed befor running the Cpp code
+    lapply(img$data, function(x){ ff::close.ff(x) })
+    
     FullImageSmoothing(basePath = dataInf$basepath, 
                        fileNames = dataInf$filenames, 
                        massChannels = length(img$mass), 
@@ -83,6 +87,9 @@ ProcessImage <- function(img,
                        dataType = dataInf$datatype, 
                        numOfThreads = NumOfThreads, 
                        SmoothingKernelSize = SmoothingKernelSize)
+    
+    #The ff file must be re-open to continue
+    lapply(img$data, function(x){ ff::open.ff(x) })
   }
   
   #Label-free Alignment
@@ -92,6 +99,9 @@ ProcessImage <- function(img,
     refSpc <- InternalReferenceSpectrum(img)
     
     cat("Running Label-Free Alignment...\n")
+    #The ff file must be closed befor running the Cpp code
+    lapply(img$data, function(x){ ff::close.ff(x) })
+    
     alngLags <- FullImageAlign(basePath = dataInf$basepath,
                                fileNames = dataInf$filenames, 
                                refSpectrum = refSpc, 
@@ -100,6 +110,9 @@ ProcessImage <- function(img,
                                numOfThreads = NumOfThreads, 
                                AlignmentIterations = AlignmentIterations,
                                AlignmentMaxShiftPpm = AlignmentMaxShiftppm)
+    
+    #The ff file must be re-open to continue
+    lapply(img$data, function(x){ ff::open.ff(x) })
   }
   else
   {
