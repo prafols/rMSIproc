@@ -71,11 +71,11 @@ FileBrowseWidget <- function( parent_widget, sLabel = "File:", dirSel = F, multi
           }
         }
         gWidgets2::svalue(this$entry_files) <- mPathTxt
-        gWidgets2::svalue(this$entry_dir) <- dirname(this$sPath[1])
+        RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$entry_dir), dirname(this$sPath[1]))
       }
       else
       {
-        gWidgets2::svalue(this$entry_dir) <- this$sPath
+        RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$entry_dir), this$sPath)
       }
     }
     if(!is.null(this$SetWorkDir))
@@ -115,7 +115,7 @@ FileBrowseWidget <- function( parent_widget, sLabel = "File:", dirSel = F, multi
   ClearPath <- function()
   {
     this$sPath <- c()
-    gWidgets2::svalue(this$entry_dir) <- ""
+    RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$entry_dir), "")
     gWidgets2::svalue(this$entry_files) <- ""
   }
     
