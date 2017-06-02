@@ -9,7 +9,7 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   AlignmentMaxShiftppm = 200, EnableCalibration = T,
   CalibrationPeakWin = 20, EnablePeakPicking = T, SNR = 5,
   peakWindow = 10, peakUpSampling = 10, UseBinning = T,
-  BinTolerance = 0.05, BinFilter = 0.05, EnableSpectraNormalization = T,
+  BinTolerance = 100, BinFilter = 0.05, EnableSpectraNormalization = T,
   EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
   NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 }
@@ -40,7 +40,7 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 
 \item{UseBinning}{if true binned matrices are returned instead of peak lists.}
 
-\item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units. NULL value may be specified if EnablePeakPicking is FALSE.}
+\item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. NULL value may be specified if EnablePeakPicking is FALSE.}
 
 \item{BinFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.}
 

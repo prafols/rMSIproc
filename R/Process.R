@@ -35,7 +35,7 @@
 #' @param peakWindow windows size used for peak detection. Generally should be similar to peak with number of data points.  NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param peakUpSampling upsampling factor used in peak interpolation fo exact mass prediction. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param UseBinning if true binned matrices are returned instead of peak lists.
-#' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units. NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param EnableSpectraNormalization if normalization must be applied.
 #' @param EnableTICNorm if TIC normalization must be performed on spectra.
@@ -57,7 +57,7 @@ ProcessImage <- function(img,
                          EnableAlignment = T, AlignmentIterations = 3, AlignmentMaxShiftppm = 200,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         UseBinning = T, BinTolerance = 0.05, BinFilter = 0.05,
+                         UseBinning = T, BinTolerance = 100, BinFilter = 0.05,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
                          NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 {
@@ -235,13 +235,13 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names)
 #' The rMSIproc binning method is used to calculate the new masses.
 #'
 #' @param PeakMatrixList A list of various peak matrix objexts produced using rMSIproc.
-#' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the peak width in Da units.
+#' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.
 #' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
 #' @param OffsetPosByX if true the pos matrices are concatenated by offseting in X direction, if false Y direction is used.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
 #'
-MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 0.05, binningFilter = 0.01, OffsetPosByX = F  )
+MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFilter = 0.01, OffsetPosByX = F  )
 {
   pt <- Sys.time()
   

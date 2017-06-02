@@ -200,6 +200,7 @@ List MTPeakPicking::BinPeaks()
           {
             iPos = imass;
             dist = binMass[binMass.size() - 1] - mPeaks[j]->mass[imass];
+            dist = 1e6*dist/binMass[binMass.size() - 1]; //Translation to ppm
             if(dist <= 0)
             {
               if(std::abs(dist_ant) < std::abs(dist))
