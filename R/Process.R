@@ -39,6 +39,7 @@
 #' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param EnableSpectraNormalization if normalization must be applied.
 #' @param EnableTICNorm if TIC normalization must be performed on spectra.
+#' @param EnableRMSNorm if RMS normalization must be performed on spectra.
 #' @param EnableMAXNorm if MAX normalization must be performed on spectra.
 #' @param EnableTICAcqNorm if TICAcq normalization must be performed on spectra.
 #' @param NumOfThreads the number number of threads used to process the data.
@@ -58,7 +59,7 @@ ProcessImage <- function(img,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 100, BinFilter = 0.05,
-                         EnableSpectraNormalization = T, EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
+                         EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
                          NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 {
   pt <- Sys.time()
@@ -186,6 +187,10 @@ ProcessImage <- function(img,
     if( EnableTICNorm )
     {
       img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
+    }
+    if( EnableRMSNorm )
+    {
+      img <- rMSI::NormalizeRMS(img, remove_empty_pixels = T)
     }
     if( EnableMAXNorm )
     {
@@ -412,7 +417,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
                              EnableCalibration = procParams$calibration$enabled, CalibrationPeakWin = procParams$calibration$winsize,
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter,
-                             EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
+                             EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableRMSNorm = procParams$spectraNormalization$RMS, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
                              NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
 
     #Store MS image to a tar file
@@ -507,6 +512,7 @@ SaveProcessingParams <- function( procParams, filepath)
   if(procParams$spectraNormalization$enabled)
   {
     writeLines(paste("Spectra TIC normalization enabled = ", procParams$spectraNormalization$TIC, sep ="" ), con = fObj)
+    writeLines(paste("Spectra RMS normalization enabled = ", procParams$spectraNormalization$RMS, sep ="" ), con = fObj)
     writeLines(paste("Spectra MAX normalization enabled = ", procParams$spectraNormalization$MAX, sep ="" ), con = fObj)
     writeLines(paste("Spectra TICAcq normalization enabled = ", procParams$spectraNormalization$AcqTIC, sep ="" ), con = fObj)
   }

@@ -244,10 +244,11 @@ ImportWizardGui <- function()
       }
     }
     
-    this$procParamList$spectraNormalization$enabled <- (gWidgets2::svalue(this$check_TICnorm) | gWidgets2::svalue(this$check_MAXnorm) | gWidgets2::svalue(this$check_TicACQnorm))
+    this$procParamList$spectraNormalization$enabled <- ( gWidgets2::svalue(this$check_TICnorm) | gWidgets2::svalue(this$check_RMSnorm) | gWidgets2::svalue(this$check_MAXnorm) | gWidgets2::svalue(this$check_TicACQnorm) )
     if(this$procParamList$spectraNormalization$enabled)
     {
       this$procParamList$spectraNormalization$TIC <- gWidgets2::svalue(this$check_TICnorm)
+      this$procParamList$spectraNormalization$RMS <- gWidgets2::svalue(this$check_RMSnorm)
       this$procParamList$spectraNormalization$MAX <- gWidgets2::svalue(this$check_MAXnorm)
       this$procParamList$spectraNormalization$AcqTIC <- gWidgets2::svalue(this$check_TicACQnorm)
     }
@@ -353,6 +354,7 @@ ImportWizardGui <- function()
   frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc1, spacing = 10)
   box_spectraNorm <- gWidgets2::ggroup(horizontal = F, container = frm_spectraNorm)
   check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNorm )
+  check_RMSnorm <- gWidgets2::gcheckbox("RMS", checked = T, container = box_spectraNorm )
   check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = T, container = box_spectraNorm )
   check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = T, container = box_spectraNorm )
   

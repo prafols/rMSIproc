@@ -10,8 +10,9 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   CalibrationPeakWin = 20, EnablePeakPicking = T, SNR = 5,
   peakWindow = 10, peakUpSampling = 10, UseBinning = T,
   BinTolerance = 100, BinFilter = 0.05, EnableSpectraNormalization = T,
-  EnableTICNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-  NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
+  EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T,
+  EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores(),
+  CalSpan = 0.75)
 }
 \arguments{
 \item{img}{an rMSI data object to process.}
@@ -47,6 +48,8 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 \item{EnableSpectraNormalization}{if normalization must be applied.}
 
 \item{EnableTICNorm}{if TIC normalization must be performed on spectra.}
+
+\item{EnableRMSNorm}{if RMS normalization must be performed on spectra.}
 
 \item{EnableMAXNorm}{if MAX normalization must be performed on spectra.}
 
