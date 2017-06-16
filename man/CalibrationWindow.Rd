@@ -5,18 +5,16 @@
 \title{CalibrationWindow.}
 \usage{
 CalibrationWindow(mass, intensity, peak_win_size = 20, win_title = "",
-  method = "loess", CalibrationSpan = 0.75)
+  CalibrationSpan = 0.75, NotPerformCalibration = F)
 }
 \arguments{
 \item{mass}{The mass vector of spectrum to calibrate.}
 
 \item{intensity}{The intensity vector of spectrum to calibrate.}
 
-\item{method}{a string with the method used for interpolation, valid methods are spline, linear or nocal if only target masses must be returned.}
-
 \item{CalibrationSpan}{the span of the loess method for calibration.}
 
-\item{use_zoo}{if the zoo package interpolation must be used}
+\item{NotPerformCalibration}{a boolean to disbale calibration. The list of target masses will be returned instead.}
 }
 \value{
 a the calibrated mass axis.

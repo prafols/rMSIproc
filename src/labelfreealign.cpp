@@ -99,9 +99,9 @@ void LabelFreeAlign::ComputeRef(double *data_ref, bool bHigh)
   }
   else
   {
-    data_ptr = fft_ref_low; //Its crashing only with this ptr
+    data_ptr = fft_ref_low; 
   }
-  memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size); //Its crashing here!!!!
+  memcpy(data_ptr, fft_direct_out, sizeof(double)*FFT_Size); 
   
   //Compute Conj
   for( int i = ((FFT_Size + 1)/2 - 1) ; i < FFT_Size; i++)
