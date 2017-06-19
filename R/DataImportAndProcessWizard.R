@@ -228,6 +228,11 @@ ImportWizardGui <- function()
     {
       this$procParamList$alignment$iterations <- as.integer(gWidgets2::svalue(this$spin_AlignIterations))
       this$procParamList$alignment$maxshift <- as.double(gWidgets2::svalue(this$spin_AlignMaxDev))
+      this$procParamList$alignment$bilinear <- as.logical(gWidgets2::svalue(this$check_AlignBilinear))
+      this$procParamList$alignment$reflow <- as.double(gWidgets2::svalue(this$spin_AlignRefLow))
+      this$procParamList$alignment$refmid <- as.double(gWidgets2::svalue(this$spin_AlignRefMid))
+      this$procParamList$alignment$refhigh <- as.double(gWidgets2::svalue(this$spin_AlignRefHigh))
+      this$procParamList$alignment$oversampling <- as.integer(gWidgets2::svalue(this$spin_AlignOverSampling))
     }
     
     #Calibration list
@@ -281,6 +286,11 @@ ImportWizardGui <- function()
   {
     gWidgets2::enabled( this$spin_AlignIterations) <- gWidgets2::svalue(check_alignment)
     gWidgets2::enabled( this$spin_AlignMaxDev) <- gWidgets2::svalue(check_alignment)
+    gWidgets2::enabled( this$check_AlignBilinear) <- gWidgets2::svalue(check_alignment)
+    gWidgets2::enabled( this$spin_AlignRefLow) <- gWidgets2::svalue(check_alignment)
+    gWidgets2::enabled( this$spin_AlignRefMid) <- gWidgets2::svalue(check_alignment)
+    gWidgets2::enabled( this$spin_AlignRefHigh) <- gWidgets2::svalue(check_alignment)
+    gWidgets2::enabled( this$spin_AlignOverSampling) <- gWidgets2::svalue(check_alignment)
   }
   
   ChkBoxCalibrationChanged <- function(...)
@@ -323,12 +333,12 @@ ImportWizardGui <- function()
   box_procH <- gWidgets2::ggroup(horizontal = T, container = frm_preProcessing, expand = T, fill = T, spacing = 20)
   box_proc1 <- gWidgets2::ggroup(horizontal = F, container = box_procH, expand = T, fill = T, spacing = 20)
   box_proc2 <- gWidgets2::ggroup(horizontal = F, container = box_procH, expand = T, fill = T, spacing = 20)
-  drawLabelSpin <- function( parent_widget, sText, minVal, maxVal, defaultVal, decPlaces = 0 )
+  drawLabelSpin <- function( parent_widget, sText, minVal, maxVal, defaultVal, decPlaces = 0, increments = 1 )
   {
     box_spin <- gWidgets2::ggroup(horizontal = T, container = parent_widget)
     gWidgets2::glabel(sText, container = box_spin )
     gWidgets2::addSpring(box_spin)
-    return (gWidgets2::gspinbutton(from = minVal, to = maxVal, by = 1, value = defaultVal, container = box_spin, digits = decPlaces)  )
+    return (gWidgets2::gspinbutton(from = minVal, to = maxVal, by = increments, value = defaultVal, container = box_spin, digits = decPlaces)  )
   }
   
   #Smoothing params
@@ -342,8 +352,13 @@ ImportWizardGui <- function()
   frm_alignment <- gWidgets2::gframe("Alignment", container = box_proc1, spacing = 10)
   box_alignment <- gWidgets2::ggroup(horizontal = F, container = frm_alignment)
   check_alignment <- gWidgets2::gcheckbox("Enable alignment", checked = T, container = box_alignment, handler = this$ChkBoxAlignmentChanged)
+  check_AlignBilinear <- gWidgets2::gcheckbox("Bilinear mode", checked = F, container = box_alignment )
   spin_AlignIterations <- drawLabelSpin(box_alignment, "Iterations:", 1, 5, 3)
   spin_AlignMaxDev <- drawLabelSpin(box_alignment, "Max Shift [ppm]:", 10, 1000, 200)
+  spin_AlignRefLow <- drawLabelSpin(box_alignment, "Ref. Bottom:", 0, 1, 0, decPlaces = 2, increments = 0.05)
+  spin_AlignRefMid <- drawLabelSpin(box_alignment, "Ref. Center:", 0, 1, 0.5, decPlaces = 2, increments = 0.05)
+  spin_AlignRefHigh <- drawLabelSpin(box_alignment, "Ref. Top:", 0, 1, 1, decPlaces = 2, increments = 0.05)
+  spin_AlignOverSampling <- drawLabelSpin(box_alignment, "Over-Sampling:", 1, 10, 2, decPlaces = 0)
   
   #Mass Calibration params
   frm_calibration <- gWidgets2::gframe("Mass Calibration", container = box_proc1, spacing = 10)
@@ -352,11 +367,13 @@ ImportWizardGui <- function()
   
   #Spectra Normalization params
   frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc1, spacing = 10)
-  box_spectraNorm <- gWidgets2::ggroup(horizontal = F, container = frm_spectraNorm)
-  check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNorm )
-  check_RMSnorm <- gWidgets2::gcheckbox("RMS", checked = T, container = box_spectraNorm )
-  check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = T, container = box_spectraNorm )
-  check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = T, container = box_spectraNorm )
+  box_spectraNorm <- gWidgets2::ggroup(horizontal = T, container = frm_spectraNorm)
+  box_spectraNormL <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
+  box_spectraNormR <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
+  check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNormL )
+  check_RMSnorm <- gWidgets2::gcheckbox("RMS", checked = T, container = box_spectraNormL )
+  check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = T, container = box_spectraNormR )
+  check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = T, container = box_spectraNormR )
   
   #Peak picking and binning params
   frm_peakpick <- gWidgets2::gframe("Peak-Picking", container = box_proc2, spacing = 10)

@@ -6,9 +6,10 @@
 \usage{
 ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   EnableAlignment = T, AlignmentIterations = 3,
-  AlignmentMaxShiftppm = 200, EnableCalibration = T,
-  CalibrationPeakWin = 20, EnablePeakPicking = T, SNR = 5,
-  peakWindow = 10, peakUpSampling = 10, UseBinning = T,
+  AlignmentMaxShiftppm = 200, AlignmentBilinear = F, AlignmentRefLow = 0,
+  AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
+  EnableCalibration = T, CalibrationPeakWin = 20, EnablePeakPicking = T,
+  SNR = 5, peakWindow = 10, peakUpSampling = 10, UseBinning = T,
   BinTolerance = 100, BinFilter = 0.05, EnableSpectraNormalization = T,
   EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T,
   EnableTICAcqNorm = T, NumOfThreads = parallel::detectCores(),
@@ -26,6 +27,16 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 \item{AlignmentIterations}{number of iterations of label-free alignment. The rMSI ramdisk will be overwritted with aligned data. NULL value may be specified if EnableAlignment is FALSE.}
 
 \item{AlignmentMaxShiftppm}{the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.}
+
+\item{AlignmentBilinear}{if TRUE the biliniar algiment mode will be used insetad of linear.}
+
+\item{AlignmentRefLow}{the relative location of the spectrum where the bottom part correlation is calculated.}
+
+\item{AlignmentRefMid}{the relative location of the spectrum where the central part correlation is calculated (only for bilinear mode).}
+
+\item{AlignmentRefHigh}{the relative location of the spectrum where the top part correlation is calculated.}
+
+\item{AlignmentOversampling}{the oversampling used in spectrum scale/shift to provide better accuracy.}
 
 \item{EnableCalibration}{a boolean declaring if mass calibration must be performed.}
 

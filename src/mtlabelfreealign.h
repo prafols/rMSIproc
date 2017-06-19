@@ -32,12 +32,17 @@ class MTLabelFreeAlign : public ThreadingMsiProc
     {
       double *ref_spectrum; //Reference spectrum used for alignment
       int massChannels; //Number of points in the mass axis array
+      bool bilinearMode; //If the alignment must be performed linear or bilinear
       Rcpp::String basePath; //Full path where ramdisks are stored
       Rcpp::StringVector fileNames; //Filname of each ramdisk file
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type
       int AlignmentIterations;
       int AlignmentMaxShift;
+      double RefLow;
+      double RefMid;
+      double RefHigh;
+      int OverSampling;
       int numOfThreads;
     }ImgProcDef;  
     

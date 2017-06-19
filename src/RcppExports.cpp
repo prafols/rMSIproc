@@ -6,20 +6,27 @@
 using namespace Rcpp;
 
 // AlignSpectrumToReference
-NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x);
-RcppExport SEXP rMSIproc_AlignSpectrumToReference(SEXP refSEXP, SEXP xSEXP) {
+NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x, bool bilinear, double lagRefLow, double lagRefMid, double lagRefHigh, int iterations, double lagLimitppm, int fftOverSampling);
+RcppExport SEXP rMSIproc_AlignSpectrumToReference(SEXP refSEXP, SEXP xSEXP, SEXP bilinearSEXP, SEXP lagRefLowSEXP, SEXP lagRefMidSEXP, SEXP lagRefHighSEXP, SEXP iterationsSEXP, SEXP lagLimitppmSEXP, SEXP fftOverSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type ref(refSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(AlignSpectrumToReference(ref, x));
+    Rcpp::traits::input_parameter< bool >::type bilinear(bilinearSEXP);
+    Rcpp::traits::input_parameter< double >::type lagRefLow(lagRefLowSEXP);
+    Rcpp::traits::input_parameter< double >::type lagRefMid(lagRefMidSEXP);
+    Rcpp::traits::input_parameter< double >::type lagRefHigh(lagRefHighSEXP);
+    Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< double >::type lagLimitppm(lagLimitppmSEXP);
+    Rcpp::traits::input_parameter< int >::type fftOverSampling(fftOverSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(AlignSpectrumToReference(ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling));
     return rcpp_result_gen;
 END_RCPP
 }
 // FullImageAlign
-List FullImageAlign(String basePath, StringVector fileNames, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, int AlignmentIterations, int AlignmentMaxShiftPpm);
-RcppExport SEXP rMSIproc_FullImageAlign(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP) {
+List FullImageAlign(String basePath, StringVector fileNames, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool AlignmentBilinear, int AlignmentIterations, int AlignmentMaxShiftPpm, double RefLow, double RefMid, double RefHigh, int OverSampling);
+RcppExport SEXP rMSIproc_FullImageAlign(SEXP basePathSEXP, SEXP fileNamesSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentBilinearSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP, SEXP RefLowSEXP, SEXP RefMidSEXP, SEXP RefHighSEXP, SEXP OverSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,9 +36,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
     Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
     Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< bool >::type AlignmentBilinear(AlignmentBilinearSEXP);
     Rcpp::traits::input_parameter< int >::type AlignmentIterations(AlignmentIterationsSEXP);
     Rcpp::traits::input_parameter< int >::type AlignmentMaxShiftPpm(AlignmentMaxShiftPpmSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImageAlign(basePath, fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentIterations, AlignmentMaxShiftPpm));
+    Rcpp::traits::input_parameter< double >::type RefLow(RefLowSEXP);
+    Rcpp::traits::input_parameter< double >::type RefMid(RefMidSEXP);
+    Rcpp::traits::input_parameter< double >::type RefHigh(RefHighSEXP);
+    Rcpp::traits::input_parameter< int >::type OverSampling(OverSamplingSEXP);
+    rcpp_result_gen = Rcpp::wrap(FullImageAlign(basePath, fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling));
     return rcpp_result_gen;
 END_RCPP
 }

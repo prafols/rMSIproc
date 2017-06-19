@@ -28,6 +28,11 @@
 #' @param EnableAlignment a boolean declaring if label-free alignment must be performed.
 #' @param AlignmentIterations number of iterations of label-free alignment. The rMSI ramdisk will be overwritted with aligned data. NULL value may be specified if EnableAlignment is FALSE.
 #' @param AlignmentMaxShiftppm the maximum shift that alignment can apply in ppm. NULL value may be specified if EnableAlignment is FALSE.
+#' @param AlignmentBilinear if TRUE the biliniar algiment mode will be used insetad of linear.
+#' @param AlignmentRefLow the relative location of the spectrum where the bottom part correlation is calculated.
+#' @param AlignmentRefMid the relative location of the spectrum where the central part correlation is calculated (only for bilinear mode).
+#' @param AlignmentRefHigh the relative location of the spectrum where the top part correlation is calculated.
+#' @param AlignmentOversampling the oversampling used in spectrum scale/shift to provide better accuracy.
 #' @param EnableCalibration a boolean declaring if mass calibration must be performed.
 #' @param CalibrationPeakWin the windows size used for peak detection in calibration window.
 #' @param EnablePeakPicking a boolean declaring if peak-pickin (and binning) must be performed.
@@ -55,7 +60,8 @@
 #'
 ProcessImage <- function(img, 
                          EnableSmoothing = T, SmoothingKernelSize = 5,
-                         EnableAlignment = T, AlignmentIterations = 3, AlignmentMaxShiftppm = 200,
+                         EnableAlignment = T, AlignmentIterations = 3, AlignmentMaxShiftppm = 200, AlignmentBilinear = F,
+                         AlignmentRefLow = 0, AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 100, BinFilter = 0.05,
@@ -109,8 +115,13 @@ ProcessImage <- function(img,
                                numRows = dataInf$nrows,
                                dataType = dataInf$datatype, 
                                numOfThreads = NumOfThreads, 
+                               AlignmentBilinear = AlignmentBilinear,
                                AlignmentIterations = AlignmentIterations,
-                               AlignmentMaxShiftPpm = AlignmentMaxShiftppm)
+                               AlignmentMaxShiftPpm = AlignmentMaxShiftppm,
+                               RefLow = AlignmentRefLow,
+                               RefMid = AlignmentRefMid, 
+                               RefHigh = AlignmentRefHigh, 
+                               OverSampling = AlignmentOversampling )
     
     #The ff file must be re-open to continue
     lapply(img$data, function(x){ ff::open.ff(x) })
@@ -414,6 +425,8 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     procData <- ProcessImage(img = mImg,
                              EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
                              EnableAlignment = procParams$alignment$enabled, AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
+                             AlignmentBilinear = procParams$alignment$bilinear, AlignmentOversampling = procParams$alignment$oversampling,
+                             AlignmentRefLow = procParams$alignment$reflow, AlignmentRefMid = procParams$alignment$refmid, AlignmentRefHigh = procParams$alignment$refhigh,
                              EnableCalibration = procParams$calibration$enabled, CalibrationPeakWin = procParams$calibration$winsize,
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter,
@@ -501,6 +514,11 @@ SaveProcessingParams <- function( procParams, filepath)
   {
     writeLines(paste("Alignment iterations = ", procParams$alignment$iterations, sep ="" ), con = fObj)
     writeLines(paste("Alignment max shift [ppm] = ", procParams$alignment$maxshift, sep ="" ), con = fObj)
+    writeLines(paste("Alignment Bilinear = ", procParams$alignment$bilinear, sep ="" ), con = fObj)
+    writeLines(paste("Alignment Oversampling = ", procParams$alignment$oversampling, sep ="" ), con = fObj)
+    writeLines(paste("Alignment Ref. Low = ", procParams$alignment$reflow, sep ="" ), con = fObj)
+    writeLines(paste("Alignment Ref. Mid = ", procParams$alignment$refmid, sep ="" ), con = fObj)
+    writeLines(paste("Alignment Ref. High = ", procParams$alignment$refhigh, sep ="" ), con = fObj)
   }
   
   writeLines(paste("Calibration enabled = ", procParams$calibration$enabled, sep ="" ), con = fObj)

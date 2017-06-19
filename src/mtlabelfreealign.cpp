@@ -27,7 +27,10 @@ MTLabelFreeAlign::MTLabelFreeAlign(ImgProcDef imgRunInfo) :
   alngObj = new LabelFreeAlign*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
-    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, &fftSharedMutex, imgRunInfo.AlignmentIterations, imgRunInfo.AlignmentMaxShift);
+    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, imgRunInfo.bilinearMode, 
+                                    &fftSharedMutex, imgRunInfo.AlignmentIterations, 
+                                    imgRunInfo.RefLow, imgRunInfo.RefMid, imgRunInfo.RefHigh,
+                                    imgRunInfo.AlignmentMaxShift,  imgRunInfo.OverSampling);
   }
   numOfPixels = 0;
   for( int i = 0; i < imgRunInfo.fileNames.length(); i++)
@@ -79,7 +82,8 @@ void MTLabelFreeAlign::ProcessingFunction(int threadSlot)
 List FullImageAlign( String basePath, StringVector fileNames, 
                                 NumericVector refSpectrum, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
-                                int AlignmentIterations = 3, int AlignmentMaxShiftPpm = 200 )
+                                bool AlignmentBilinear = false, int AlignmentIterations = 3, int AlignmentMaxShiftPpm = 200,
+                                double RefLow = 0.0, double RefMid = 0.5, double RefHigh = 1.0, int OverSampling = 2 )
 {
   
   //Copy R data to C arrays
@@ -93,11 +97,16 @@ List FullImageAlign( String basePath, StringVector fileNames,
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
   myProcParams.massChannels = refSpectrum.length();
+  myProcParams.bilinearMode = AlignmentBilinear;
   myProcParams.numOfThreads = numOfThreads;
   myProcParams.numRows = numRowsC; 
   myProcParams.AlignmentIterations = AlignmentIterations;
   myProcParams.AlignmentMaxShift = AlignmentMaxShiftPpm;
   myProcParams.ref_spectrum = refC;
+  myProcParams.RefLow = RefLow;
+  myProcParams.RefMid = RefMid;
+  myProcParams.RefHigh = RefHigh;
+  myProcParams.OverSampling = OverSampling;
   
   MTLabelFreeAlign myAlignment(myProcParams);
   delete[] refC;

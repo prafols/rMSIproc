@@ -23,21 +23,30 @@
 #include <fftw3.h>
 #include <boost/thread.hpp>
 
+#define BOTTOM_SPECTRUM 0
+#define CENTER_SPECTRUM 1
+#define TOP_SPECTRUM 2
+
 class LabelFreeAlign
 {
   public:
     //spectraSplit the low/high part of spectra to keep (the resting points to unit will be removed).
-    LabelFreeAlign(double *ref_spectrum, int numOfPoints,  boost::mutex *sharedMutex, int iterations = 3, double lagLimitppm = 200, double spectraSplit = 0.6);
+    LabelFreeAlign(double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations = 3, 
+                   double lagRefLow = 0.1, double lagRefMid = 0.5, double lagRefHigh = 0.9,
+                   double lagLimitppm = 200, int fftOverSampling = 2, double winSizeRelative = 0.6);
     ~LabelFreeAlign();
     
     //Data accessors to internal vars to test this class
     Rcpp::NumericVector getHannWindow();
+    Rcpp::NumericVector getHannWindowCenter();
     Rcpp::NumericVector getRefLowFFT();
+    Rcpp::NumericVector getRefCenterFFT();
     Rcpp::NumericVector getRefHighFFT();
     
     typedef struct
     {
       double lagHigh;
+      double lagMid;
       double lagLow;
     }TLags;
     
@@ -46,13 +55,12 @@ class LabelFreeAlign
     TLags AlignSpectrum(double *data );
 
  private:
-    void ComputeRef(double *data_ref, bool bHigh);
+    void ComputeRef(double *data_ref, int spectrumPart);
     void ZeroPadding(double *data,bool reverse, int targetSize, int dataSize);
-    void FourierLinerScaleShift(double *data, double scaling, double shift);
-    
-    //bLow if is true then apply the hann win to the low part of spectrum
-    void TimeWindow(double *data, bool bHigh);
+    void CopyData2Window(double *data_int, double *data_out,  int spectrumPart);
+    void TimeWindow(double *data, int spectrumPart);
     int FourierBestCor(double *data, double *ref);
+    void FourierLinerScaleShift(double *data, double scaling, double shift);
   
     int dataLength; //Number of points used in each spectrum
     int WinLength; //Number of points of spectrum retained in hanning window
@@ -70,10 +78,17 @@ class LabelFreeAlign
 
     //Mem space to store pre-computed reference FFT space values
     double *fft_ref_low;
+    double *fft_ref_center;
     double *fft_ref_high;
     double *HannWindow;
+    double *HannWindowCenter;
     double lagMax;
+    bool bBilinear;
     int AlignIterations;
+    double RefLagLow;
+    double RefLagMid;
+    double RefLagHigh;
+    int FFTScaleShiftOverSampling;
     
     boost::mutex *fftwMtx; //Lock mechanism for signalling the FourierLinerScaleShift fftw non-thread-safe calls
 };
