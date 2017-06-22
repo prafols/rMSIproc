@@ -32,8 +32,6 @@ class MTReplaceZeroPeaks : public ThreadingMsiProc
       double *massAxis; //Array containing the mass axis
       int massChannels; //Number of points in the mass axis array
       int peakInterpolationUpSampling; //Upsampling value for peak interpolation
-  
-      Rcpp::String basePath; //Full path where ramdisks are stored
       Rcpp::StringVector fileNames; //Filname of each ramdisk file
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type

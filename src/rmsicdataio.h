@@ -23,12 +23,11 @@ class CrMSIDataIO
 {
   public:
     CrMSIDataIO();
-    //basePath: full path to the directory containing ramdisk files in *.dat format.
-    //fileNames: a vector of names of each ramdisk files in basepath.
+    //fileNames: a vector of full path names of each ramdisk file.
     //massChannels: the length of mass axis so the number of columns in the datacube.
     //numRows: a vector of integers with the same length as fileNames containing the number of rows of each datacube.
     //dataType: a string specifing the C data type used to store data in the ramdisk.
-    CrMSIDataIO( Rcpp::String basePath, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType );
+    CrMSIDataIO( Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType );
     ~CrMSIDataIO();
     void printDataInfo();
     
@@ -58,14 +57,10 @@ class CrMSIDataIO
     int getFirstSpectrumIdInCube(int cube_id);
 
   private:
-    Rcpp::String dataPath;
     Rcpp::StringVector ffFiles;
     int dataLength;
     int *rowCounts;
     Rcpp::String ffDataType;
-    
-    //Returns the full path to a ramdisk
-    Rcpp::String getFullPath(int cube_id);
 };
   
 #endif

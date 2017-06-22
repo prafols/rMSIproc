@@ -32,12 +32,13 @@ class PeakMatrixIO
 
   private:
     Rcpp::String path;
-    enum DataType {intensity, SNR, area, mass, pos};
+    enum DataType {intensity, SNR, area, mass, pos, motors};
     Rcpp::NumericMatrix *intMat;
     Rcpp::NumericMatrix *snrMat;
     Rcpp::NumericMatrix *areaMat;
     Rcpp::NumericVector *massVec;
     Rcpp::IntegerMatrix *posMat;
+    Rcpp::IntegerMatrix *motorMat;
     Rcpp::IntegerVector *nRows;
     Rcpp::StringVector *sNames;
   
@@ -45,10 +46,11 @@ class PeakMatrixIO
     void LoadMat(DataType mt);
     void StoreMass();
     void LoadMass();
-    void StorePos();
-    void LoadPos();
+    void StorePos(DataType mt);
+    void LoadPos(DataType mt);
     Rcpp::String getFileName(DataType mt);
     Rcpp::NumericMatrix *setMatPointer(DataType mt);
+    Rcpp::IntegerMatrix *setPosPointer(DataType mt);
     Rcpp::DataFrame LoadNormalizationMatrix();
     void StoreNormalizationMatrix(Rcpp::DataFrame norms);
 };

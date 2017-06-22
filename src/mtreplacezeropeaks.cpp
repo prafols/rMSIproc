@@ -22,7 +22,7 @@
 using namespace Rcpp;
 
 MTReplaceZeroPeaks::MTReplaceZeroPeaks(ImgProcDef imgRunInfo, List peakMatrix):
-  ThreadingMsiProc( imgRunInfo.numOfThreads, false, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+  ThreadingMsiProc( imgRunInfo.numOfThreads, false, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   replacedZerosCounters = new int[numOfThreadsDouble];
   for( int i = 0; i < numOfThreadsDouble; i++)
@@ -121,7 +121,7 @@ void MTReplaceZeroPeaks::ProcessingFunction(int threadSlot)
 }
 
 // [[Rcpp::export]]
-List ReplacePeakMatrixZerosC(List PeakMatrix, String basePath, StringVector fileNames, 
+List ReplacePeakMatrixZeros(List PeakMatrix, StringVector fileNames, 
                              NumericVector mass, IntegerVector numRows,
                              String dataType, int numOfThreads, 
                              int WinSize = 10, int InterpolationUpSampling = 10)
@@ -133,7 +133,6 @@ List ReplacePeakMatrixZerosC(List PeakMatrix, String basePath, StringVector file
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   MTReplaceZeroPeaks::ImgProcDef imgParams;
-  imgParams.basePath = basePath;
   imgParams.dataType = dataType;
   imgParams.fileNames = fileNames;
   imgParams.massAxis = massC;

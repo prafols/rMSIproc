@@ -4,13 +4,15 @@
 \alias{InternalReferenceSpectrum}
 \title{InternalReferenceSpectrum.}
 \usage{
-InternalReferenceSpectrum(img)
+InternalReferenceSpectrum(img, reference = img$mean)
 }
 \arguments{
 \item{img}{MSI image to calculate internal reference spectrum.}
+
+\item{reference}{the spectrum to use as reference for correlations.}
 }
 \value{
-an intensity vector corresponding to the reference spectrum.
+a list with the intensity vector corresponding to the reference spectrum and the correlation coefficient.
 }
 \description{
 Calculates the dataset reference spectrum to use in label free alignment.

@@ -31,7 +31,6 @@ class MTSmoothing : public ThreadingMsiProc
     {
       int massChannels; //Number of points in the mass axis array
       int SmoothingKernelSize; //SavitzkyGolay kernel size for smoothing
-      Rcpp::String basePath; //Full path where ramdisks are stored
       Rcpp::StringVector fileNames; //Filname of each ramdisk file
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type

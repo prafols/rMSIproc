@@ -22,12 +22,12 @@
 #' The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
 #'
 #' @param img MSI image to calculate internal reference spectrum.
+#' @param reference the spectrum to use as reference for correlations.
 #'
-#' @return an intensity vector corresponding to the reference spectrum.
+#' @return a list with the intensity vector corresponding to the reference spectrum and the correlation coefficient.
 #'
-InternalReferenceSpectrum <- function(img)
+InternalReferenceSpectrum <- function(img, reference = img$mean)
 {
-  cat("Calculating internal reference spectrum...\n")
   pb <- txtProgressBar(min = 0,  max = nrow(img$pos), style = 3)
   id <- 1
   maxCor <- 0
@@ -39,7 +39,7 @@ InternalReferenceSpectrum <- function(img)
     {
       if(var(dc[j, ]) > 0)
       {
-        pxCor <- cor(img$mean, dc[j, ] )
+        pxCor <- cor(reference, dc[j, ] )
         if( pxCor > maxCor )
         {
           maxCor <- pxCor
@@ -51,5 +51,38 @@ InternalReferenceSpectrum <- function(img)
     }
   }
   close(pb)
-  return(rMSI::loadImgChunkFromIds(img, maxId)[1,])
+  return( list(spectrum = rMSI::loadImgChunkFromIds(img, maxId)[1,], correlation = maxCor ))
+}
+
+#' InternalReferenceSpectrumMultipleDatasets.
+#' 
+#' Calculates the dataset reference spectrum to use in label free alignment.
+#' The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
+#'
+#' @param img_list a list of various rMSI objects.
+#'
+#' @return the intensity vector corresponding to the reference spectrum.
+#' 
+InternalReferenceSpectrumMultipleDatasets <- function(img_list)
+{
+  #Calculate a global reference
+  globalAverage <- rep(0, length(img_list[[1]]$mass) )
+  for( i in 1:length(img_list))
+  {
+    globalAverage <- globalAverage + img_list[[i]]$mean
+  }
+  globalAverage <- globalAverage/length(img_list)
+  
+  #Calculate correlations
+  bestRefs <- list()
+  for( i in 1:length(img_list) )
+  {
+    cat(paste0("Calculating internal reference spectrum ", i, "/",length(img_list),"...\n"))
+    bestRefs[[i]] <- InternalReferenceSpectrum(img_list[[i]], globalAverage)
+  }
+  
+  #Select the best correlation in all datasets
+  bestID <- which.max(unlist(lapply(bestRefs, function(x){ return(x$correlation) })))
+  
+  return( bestRefs[[bestID]]$spectrum )
 }

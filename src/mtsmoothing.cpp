@@ -22,7 +22,7 @@
 using namespace Rcpp;
 
 MTSmoothing::MTSmoothing(ImgProcDef imgRunInfo) : 
-  ThreadingMsiProc( imgRunInfo.numOfThreads, true, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+  ThreadingMsiProc( imgRunInfo.numOfThreads, true, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   smObj = new Smoothing*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
@@ -56,7 +56,7 @@ void MTSmoothing::ProcessingFunction(int threadSlot)
 }
 
 // [[Rcpp::export]]
-void FullImageSmoothing ( String basePath, StringVector fileNames, 
+void FullImageSmoothing ( StringVector fileNames, 
                                 int massChannels, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
                                 int SmoothingKernelSize = 5 )
@@ -66,7 +66,6 @@ void FullImageSmoothing ( String basePath, StringVector fileNames,
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   MTSmoothing::ImgProcDef myProcParams;
-  myProcParams.basePath = basePath;
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
   myProcParams.massChannels = massChannels;

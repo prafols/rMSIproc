@@ -22,7 +22,7 @@
 #' If aligment is used then the hdd files are overwirted with aligned data.
 #' A recomeneded value of aligment ietarations is 3.
 #' 
-#' @param img an rMSI data object to process.
+#' @param img an rMSI data object to process or a list of rMSI objects if various datasets must merged for processing.
 #' @param EnableSmoothing a boolean declaring if smoothing alignment must be performed.
 #' @param SmoothingKernelSize size of smoothing kernel. NULL value may be specified if EnableSmoothing is FALSE.
 #' @param EnableAlignment a boolean declaring if label-free alignment must be performed.
@@ -70,47 +70,78 @@ ProcessImage <- function(img,
 {
   pt <- Sys.time()
   
-  dataInf <- getrMSIdataInfo(img)
-
-  #Avoid using MALDIquant from here
-  if(class(img$mean) == "MassSpectrum")
+  
+  if(class(img) == "rMSIObj")
   {
-    img$mean <- img$mean@intensity
+    #Single image processing
+    dataInf <- getrMSIdataInfo(img)
+    img_list <- list(img)
+    rm(img)
+    bReturnAList <- FALSE #Ensure the return the same data structre as it was provided
+  }
+  else
+  {
+    #Multiple image processing
+    img_list <- img
+    rm(img)
+    for(i in 1:length(img_list))
+    {
+      if( class(img_list[[i]]) != "rMSIObj" )
+      {
+        stop("Error: Found an object that is not class of rMSIObj, aboring...\n")
+      }
+    }
+    dataInf <- getrMSIdataInfoMultipleDataSets(img_list)
+    bReturnAList <- TRUE #Ensure the return the same data structre as it was provided
+  }
+  
+  #Avoid using MALDIquant from here
+  for(i in 1:length(img_list))
+  {
+    if(class(img_list[[i]]$mean) == "MassSpectrum")
+    {
+      img_list[[i]]$mean <- img_list[[i]]$mean@intensity
+    }
   }
   
   #Apply Savitzky-Golay smoothing to RAW data and average spectrum
   if( EnableSmoothing )
   {
     cat("Running Savitzky-Golay Smoothing...\n")
-    img$mean <- Smoothing_SavitzkyGolay(img$mean, SmoothingKernelSize)
+    #The ff files must be closed befor running the Cpp code
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+    }
     
-    #The ff file must be closed befor running the Cpp code
-    lapply(img$data, function(x){ ff::close.ff(x) })
-    
-    FullImageSmoothing(basePath = dataInf$basepath, 
-                       fileNames = dataInf$filenames, 
-                       massChannels = length(img$mass), 
+    FullImageSmoothing(fileNames = dataInf$filenames, 
+                       massChannels = dataInf$masschannels, 
                        numRows = dataInf$nrows,
                        dataType = dataInf$datatype, 
                        numOfThreads = NumOfThreads, 
                        SmoothingKernelSize = SmoothingKernelSize)
     
     #The ff file must be re-open to continue
-    lapply(img$data, function(x){ ff::open.ff(x) })
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+    }
   }
   
   #Label-free Alignment
   if( EnableAlignment )
   {
     #Calculate reference spectrum for label free alignment
-    refSpc <- InternalReferenceSpectrum(img)
+    refSpc <- InternalReferenceSpectrumMultipleDatasets(img_list)
     
     cat("Running Label-Free Alignment...\n")
     #The ff file must be closed befor running the Cpp code
-    lapply(img$data, function(x){ ff::close.ff(x) })
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+    }
     
-    alngLags <- FullImageAlign(basePath = dataInf$basepath,
-                               fileNames = dataInf$filenames, 
+    alngLags <- FullImageAlign(fileNames = dataInf$filenames, 
                                refSpectrum = refSpc, 
                                numRows = dataInf$nrows,
                                dataType = dataInf$datatype, 
@@ -124,7 +155,10 @@ ProcessImage <- function(img,
                                OverSampling = AlignmentOversampling )
     
     #The ff file must be re-open to continue
-    lapply(img$data, function(x){ ff::open.ff(x) })
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+    }
   }
   else
   {
@@ -134,7 +168,10 @@ ProcessImage <- function(img,
   #Recalculate mean spectrum
   if( EnableSmoothing || EnableAlignment )
   {
-    img$mean <- rMSI::AverageSpectrum(img)
+    for( i in 1:length(img_list))
+    {
+      img_list[[i]]$mean <- rMSI::AverageSpectrum(img_list[[i]]) 
+    }
   }
   
   #Do not count time while the user is in manual calibration window
@@ -143,12 +180,37 @@ ProcessImage <- function(img,
   #Manual calibration (user will be promp with calibration dialog)
   if( EnableCalibration )
   {
-    img$mass <- CalibrationWindow( img$mass, img$mean, CalibrationPeakWin ,img$name, CalibrationSpan = CalSpan )
-    if(is.null(img$mass))
+    cal_intensity_spc <- rep(0, dataInf$masschannels) 
+    for( i in 1:length(img_list))
     {
-      rMSI::DeleteRamdisk(img)
+      cal_intensity_spc <- cal_intensity_spc + img_list[[i]]$mean
+    }
+    cal_intensity_spc <- cal_intensity_spc/length(img_list)
+    
+    if(length(img_list) == 1)
+    {
+      str_cal_title <- img_list[[1]]$name
+    }
+    else
+    {
+      str_cal_title <- paste("Merged data of", length(img_list), "datasets")
+    }
+    
+    common_mass <- CalibrationWindow( img_list[[1]]$mass, cal_intensity_spc, CalibrationPeakWin , str_cal_title, CalibrationSpan = CalSpan )
+    if(is.null(common_mass))
+    {
+      for( i in 1:length(img_list))
+      {
+        rMSI::DeleteRamdisk(img_list[[i]])
+      }
       gc()
       stop("Aborted by user\n")
+    }
+    
+    #Store the common mass axis for all images
+    for( i in 1:length(img_list))
+    {
+      img_list[[i]]$mass <- common_mass
     }
   }
   
@@ -158,10 +220,10 @@ ProcessImage <- function(img,
   #Peak-Picking and binning
   if( EnablePeakPicking )
   {
+    #TODO it is crashing here in the peak-pickin C++ part when more than one image must be used merged
     cat("Running Peak Picking...\n")
-    pkMatrix <- FullImagePeakPicking(basePath = dataInf$basepath,
-                                     fileNames = dataInf$filenames,
-                                     mass = img$mass,  
+    pkMatrix <- FullImagePeakPicking(fileNames = dataInf$filenames,
+                                     mass =  img_list[[1]]$mass,  
                                      numRows = dataInf$nrows,
                                      dataType = dataInf$datatype, 
                                      numOfThreads = NumOfThreads, 
@@ -175,10 +237,9 @@ ProcessImage <- function(img,
     if(UseBinning)
     {
       cat("Replacing zero values in the binned peak matrix...\n")
-      pkMatrix <- ReplacePeakMatrixZerosC(pkMatrix, 
-                                          basePath = dataInf$basepath, 
+      pkMatrix <- ReplacePeakMatrixZeros(pkMatrix, 
                                           fileNames = dataInf$filenames, 
-                                          mass = img$mass, 
+                                          mass = img_list[[1]]$mass, 
                                           numRows = dataInf$nrows, 
                                           dataType = dataInf$datatype, 
                                           numOfThreads = NumOfThreads, 
@@ -195,52 +256,132 @@ ProcessImage <- function(img,
   #Calculate some normalizations
   if( EnableSpectraNormalization )
   {
+    mergedNormList <- list()
     if( EnableTICNorm )
     {
-      img <- rMSI::NormalizeTIC(img, remove_empty_pixels = T)
+      mergedNormList$TICne <- c()
     }
     if( EnableRMSNorm )
     {
-      img <- rMSI::NormalizeRMS(img, remove_empty_pixels = T)
+      mergedNormList$RMSne <- c()
     }
     if( EnableMAXNorm )
     {
-      img <- rMSI::NormalizeMAX(img, remove_empty_pixels = T)
+      mergedNormList$MAXne <- c()
     }
     if( EnableTICAcqNorm )
     {
-      img <- rMSI::NormalizeByAcqDegradation(img)
+      mergedNormList$AcqTic <- c()
     }
+    
+    for( i in 1:length(img_list))
+    {
+      cat(paste0("Normalizations for image ", i, "/", length(img_list), "\n"))
+      if( EnableTICNorm )
+      {
+        img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = T)
+        mergedNormList$TICne <- c(mergedNormList$TICne,  img_list[[i]]$normalizations$TICne)
+      }
+      if( EnableRMSNorm )
+      {
+        img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = T)
+        mergedNormList$RMSne <- c(mergedNormList$RMSne,  img_list[[i]]$normalizations$RMSne)
+      }
+      if( EnableMAXNorm )
+      {
+        img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = T)
+        mergedNormList$MAXne <- c(mergedNormList$MAXne,  img_list[[i]]$normalizations$MAXne)
+      }
+      if( EnableTICAcqNorm )
+      {
+        img_list[[i]] <- rMSI::NormalizeByAcqDegradation(img_list[[i]])
+        mergedNormList$AcqTic <- c(mergedNormList$AcqTic,  img_list[[i]]$normalizations$AcqTic)
+      }
+    }
+    
+    #Append normalizations to the peak matrix
+    if(!is.null(pkMatrix))
+    {
+      pkMatrix$normalizations <-  as.data.frame(mergedNormList)
+    }
+    rm(mergedNormList)
   }
   
   #Add a copy of img$pos to pkMatrix
   if( EnablePeakPicking && UseBinning)
   {
-    pkMatrix <- FormatPeakMatrix(pkMatrix, img$pos,  c(nrow(img$pos)), c(img$name))
+    mergedNames <- unlist(lapply(img_list, function(x){ return(x$name) }))
+    mergedNumPixels <- unlist(lapply(img_list, function(x){ return(nrow(x$pos)) }))
+    mergedPos <- matrix(ncol = 2, nrow = sum(mergedNumPixels))
+    mergedMotors <- matrix(ncol = 2, nrow = sum(mergedNumPixels))
+    colnames(mergedPos) <- c("x", "y")
+    colnames(mergedMotors) <- c("x", "y")
+    istart <- 1
+    for( i in 1:length(img_list))
+    {
+      istop <- istart + nrow(img_list[[i]]$pos) - 1
+      mergedPos[ istart:istop , "x"] <- img_list[[i]]$pos[, "x"]
+      mergedPos[ istart:istop , "y"] <- img_list[[i]]$pos[, "y"]
+      
+      if(!is.null(img_list[[i]]$posMotors))
+      {
+        mergedMotors[ istart:istop , "x"] <- img_list[[i]]$posMotors[, "x"]
+        mergedMotors[ istart:istop , "y"] <- img_list[[i]]$posMotors[, "y"]
+      }
+      else
+      {
+        mergedMotors[ istart:istop , "x"] <- img_list[[i]]$pos[, "x"]
+        mergedMotors[ istart:istop , "y"] <- img_list[[i]]$pos[, "y"]
+      }
+      istart <- istop + 1 
+    }
+    pkMatrix <- FormatPeakMatrix(pkMatrix, mergedPos,  mergedNumPixels, mergedNames, mergedMotors) 
   }
   
   elap_2nd_stage <- Sys.time() - pt
   cat("Total used processing time:\n")
   print(elap_1st_stage + elap_2nd_stage)
   
-  return ( list( procImg = img,   peakMat = pkMatrix, alignShifts = alngLags ))
+  return_list <- list()
+  if( bReturnAList )
+  {
+    return_list$procImg <- img_list
+  }
+  else
+  {
+    return_list$procImg <- img_list[[1]]
+  }
+  
+  return_list$peakMat <- pkMatrix
+  return_list$alignShifts <- alngLags
+  return ( return_list )
 }
 
 #' FormatPeakMatrix.
 #' Formats a C style peak matrix generated by MTPeakPicking::BinPeaks() to a rMSIprocPeakMatrix.
+#' If the original motors matrix posMotors is not provided, a copy of posMat will be used.
 #'
 #' @param cPeakMatrix a peak matrix with the same format as retured by MTPeakPicking::BinPeaks().
 #' @param posMat a rMSI image pos matrix.
 #' @param numPixels a vector including the number of pixels of each sample.
 #' @param names a vector of strings with the name of each sample.
+#' @param posMotors a rMSI image original motros coordinates matrix.
 #'
 #' @return the formated matrix.
 #'
-FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names)
+FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names, posMotors = NULL)
 {
   cPeakMatrix$pos <- posMat
   cPeakMatrix$numPixels <- numPixels
   cPeakMatrix$names <- names
+  if(!is.null(posMotors))
+  {
+    cPeakMatrix$posMotors <- posMotors
+  }
+  else
+  {
+    cPeakMatrix$posMotors <- posMat
+  }
   class(cPeakMatrix) <- "rMSIprocPeakMatrix"
   return(cPeakMatrix)
 }
@@ -253,11 +394,10 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names)
 #' @param PeakMatrixList A list of various peak matrix objexts produced using rMSIproc.
 #' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.
 #' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
-#' @param OffsetPosByX if true the pos matrices are concatenated by offseting in X direction, if false Y direction is used.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
 #'
-MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFilter = 0.01, OffsetPosByX = F  )
+MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFilter = 0.01  )
 {
   pt <- Sys.time()
   
@@ -296,6 +436,7 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFi
   #Concatenate pos arrays and normalizations arrays 
   numOfPixels <- sum(unlist(lapply(PeakMatrixList, function(x){ nrow(x$pos) })))
   pkMatrix$pos <- matrix(nrow = numOfPixels, ncol = 2 )
+  pkMatrix$posMotors <- matrix(nrow = numOfPixels, ncol = 2 )
   if( !is.null(normNames1) )
   {
     pkMatrix$normalizations <- data.frame( matrix( NA, nrow = numOfPixels, ncol = length(normNames1)) )
@@ -303,26 +444,23 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFi
   }
   
   colnames(pkMatrix$pos) <- c("x", "y")
+  colnames(pkMatrix$posMotors) <- c("x", "y")
   iStart <- 1 #Index of matrix row
-  MaxXant <- 0
-  MaxYant <- 0
   pkMatrix$numPixels <- c()
   sampleNames <- c()
   for( i in 1:length(PeakMatrixList))
   {
     iStop <- iStart + nrow(PeakMatrixList[[i]]$pos) - 1
     pkMatrix$pos[ (iStart:iStop ), ] <- PeakMatrixList[[i]]$pos
-    pkMatrix$numPixels <- c(pkMatrix$numPixels, nrow(PeakMatrixList[[i]]$pos))
-    if(OffsetPosByX)
+    if(is.null(PeakMatrixList[[i]]$posMotors))
     {
-      pkMatrix$pos[ (iStart:iStop ), "x"] <- pkMatrix$pos[ (iStart:iStop ), "x"] + MaxXant
+      pkMatrix$posMotors[ (iStart:iStop ), ] <- PeakMatrixList[[i]]$pos
     }
     else
     {
-      pkMatrix$pos[ (iStart:iStop ), "y"] <- pkMatrix$pos[ (iStart:iStop ), "y"] + MaxYant
+      pkMatrix$posMotors[ (iStart:iStop ), ] <- PeakMatrixList[[i]]$posMotors
     }
-    MaxXant <- max( pkMatrix$pos[ (iStart:iStop ), "x"]  )
-    MaxYant <- max( pkMatrix$pos[ (iStart:iStop ), "y"]  )
+    pkMatrix$numPixels <- c(pkMatrix$numPixels, nrow(PeakMatrixList[[i]]$pos))
     
     #Set normalizations
     if( !is.null(pkMatrix$normalizations) )
@@ -347,7 +485,7 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFi
   cat("Total used processing time:\n")
   print(elap)
   
-  return( FormatPeakMatrix(pkMatrix, pkMatrix$pos, pkMatrix$numPixels, sampleNames))
+  return( FormatPeakMatrix(pkMatrix, pkMatrix$pos, pkMatrix$numPixels, sampleNames, pkMatrix$posMotors))
 }
 
 #' ProcessWizard.
@@ -394,17 +532,30 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     NumOfImages <- length(procParams$data$source$datapath)
   }
   
+  #Depending on the dataset merge bit the whole processing will be executed differnt times
+  if(procParams$mergedatasets)
+  {
+    NumOfProcRuns <- 1
+    NumOfImages2Merge <- NumOfImages
+  }
+  else
+  {
+    NumOfProcRuns <- NumOfImages
+    NumOfImages2Merge <- 1
+  }
+  
+  #Create structured list with all of the data paths
+  dataPaths <- list()
   brukerCounter_ant <- 0
   selBrukerXML <- 1
   selBrukerClass <- 0
   for( i in 1:NumOfImages)
   {
-    cat(paste("Working on image", i, "of", NumOfImages, "\n"))
+    dataPaths[[i]] <- list()
     
-    #Load each image
     if( procParams$data$source$type == "xmass" )
     {
-      if (brukerXmlCounters[selBrukerXML] >= i - brukerCounter_ant)
+      if (brukerXmlCounters[selBrukerXML] >= loadImgIndex - brukerCounter_ant)
       {
         selBrukerClass <- selBrukerClass + 1
       }
@@ -414,15 +565,78 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         selBrukerXML <- selBrukerXML + 1
         selBrukerClass <- 1
       }
-      mImg <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, procParams$data$source$xmlpath[selBrukerXML], procParams$data$source$spectrumpath, selected_img = selBrukerClass )
+      dataPaths[[i]]$name <- paste(basename(procParams$data$source$xmlpath[selBrukerXML]), "_", rMSI::ParseBrukerXML(procParams$data$source$xmlpath[selBrukerXML], selBrukerClass, T) )
+      dataPaths[[i]]$filepath <- procParams$data$source$xmlpath[selBrukerXML]
+      dataPaths[[i]]$brukerclass <- selBrukerClass
     }
     else
     {
-      mImg <- rMSI::LoadMsiData( procParams$data$source$datapath[i], ff_overwrite = overwriteRamdisk )  
+      dataPaths[[i]]$name <- basename(procParams$data$source$datapath[i])
+      dataPaths[[i]]$filepath <-  procParams$data$source$datapath[i]
+    }
+  }
+  
+  #Ask the user for the XML's containing the ROI files
+  imgs_names <- unlist(lapply(dataPaths, function(x){ x$name }))
+  xmlRoiFiles <- XmlRoiSelectionDialog(imgs_names, init_dir = dirname(procParams$data$source$datapath) )
+  if(is.null(xmlRoiFiles))
+  {
+    #Process aborted by user
+    cat("Processing aborted\n")
+    return()
+  }
+  
+  for( i in 1:NumOfImages)
+  {
+    if(xmlRoiFiles[i] != "")
+    {
+      dataPaths[[i]]$xmlroi <- xmlRoiFiles[i]
+    }
+  }
+  rm(NumOfImages)
+  
+  pixelID_list <- list()
+  for( i in 1:NumOfProcRuns)
+  {
+    cat(paste("Processing execution", i, "of", NumOfProcRuns, "\n"))
+    
+    #Load each image
+    mImg_list <- list()
+    for( iimg in 1:NumOfImages2Merge)
+    {
+      if(procParams$mergedatasets)
+      {
+        loadImgIndex <- iimg
+      }
+      else
+      {
+        loadImgIndex <- i
+      }
+      
+      if( procParams$data$source$type == "xmass" )
+      {
+        mImg_list[[iimg]] <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize,  dataPaths[[loadImgIndex]]$filepath, procParams$data$source$spectrumpath, selected_img = dataPaths[[loadImgIndex]]$brukerclass )
+      }
+      else
+      {
+        mImg_list[[iimg]]  <- rMSI::LoadMsiData(dataPaths[[loadImgIndex]]$filepath, ff_overwrite = overwriteRamdisk )  
+      }
+      
+      if(!is.null( dataPaths[[loadImgIndex]]$xmlroi))
+      {
+        pixelID_list[[iimg]] <- unlist(lapply(rMSI::ReadBrukerRoiXML(mImg_list[[loadImgIndex]], dataPaths[[loadImgIndex]]$xmlroi), function(x){ x$id }))
+      }
+      else
+      {
+        pixelID_list[[iimg]] <- 0
+      }
     }
     
+    # Merge data and resample it if mass axis is different and ID pixel selection if xml are provided
+    mImg_list <- MergerMSIDataSets(mImg_list, procParams$data$outpath, pixel_id = pixelID_list ) 
+    
     #Process data
-    procData <- ProcessImage(img = mImg,
+    procData <- ProcessImage(img = mImg_list,
                              EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
                              EnableAlignment = procParams$alignment$enabled, AlignmentIterations = procParams$alignment$iterations, AlignmentMaxShiftppm = procParams$alignment$maxshift,
                              AlignmentBilinear = procParams$alignment$bilinear, AlignmentOversampling = procParams$alignment$oversampling,
@@ -436,34 +650,36 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     #Store MS image to a tar file
     if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"  )
     {
-      rm(mImg) #Now all is stored in procData
+      
+      for( iSave in 1:length(procData$procImg) )
+      {
+        imgName <- sub('\\..*$', '',procData$procImg[[iSave]]$name) #Remove extensions of image name
+        rMSI::SaveMsiData( procData$procImg[[iSave]], file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
+      
+          #Delete data 
+        if(deleteRamdisk)
+        {
+          rMSI::DeleteRamdisk(procData$procImg[[iSave]])
+        }
+      }
+      rm(mImg_list)
       gc()
-      imgName <- sub('\\..*$', '',procData$procImg$name) #Remove extensions of image name
-      rMSI::SaveMsiData( procData$procImg, file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
     }
-    else
-    {
-      imgName <- sub('\\..*$', '',mImg$name) #Remove extensions of image name
-    }
+    
 
     #Store peak matrix
     if( procParams$peakpicking$enabled )
     {
-      #Append normalizations to
-      if( !is.null( procData$procImg$normalizations) )
+      if(procParams$mergedatasets)
       {
-        procData$peakMat$normalizations <-  as.data.frame(procData$procImg$normalizations )
+        pkMatName <- "mergeddata"
       }
-
-      StorePeakMatrix( file.path(procParams$data$outpath,  paste(imgName,"-peaks.zip", sep ="")), procData$peakMat)
+      else
+      {
+        pkMatName <- sub('\\..*$', '',mImg_list[[i]]$name) #Remove extensions of image name
+      }
+      StorePeakMatrix( file.path(procParams$data$outpath,  paste(pkMatName,"-peaks.zip", sep ="")), procData$peakMat)
     }
-
-    #Delete data and clear memory
-    if(deleteRamdisk)
-    {
-      rMSI::DeleteRamdisk(procData$procImg)
-    }
-    gc()
   }
   
   #Store processing params
@@ -544,5 +760,107 @@ SaveProcessingParams <- function( procParams, filepath)
         writeLines(paste("Peak-picking binning tolerance = ", procParams$peakpicking$bintolerance, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking binning filter = ", procParams$peakpicking$binfilter, sep ="" ), con = fObj)
   }
+  
+  writeLines(paste("Merge datasets = ", procParams$mergedatasets, sep ="" ), con = fObj)
+  
   close(fObj)
+}
+
+#' MergerMSIDataSets.
+#' 
+#' Merges various rMSI objects in order to process all of them in the same run.
+#' For example, this is usefull to align data form diferent experiments together.
+#' In case that images don't share the same mass axis, all of them will be resampled and stored in a new ramdisk.
+#' If pixel_id is provided, a new ramdisk for each image will be created too.
+#'
+#' @param img_list a list of images to be merged.
+#' @param ramdisk_path a path where resampled data ramdisk will be stored.
+#' @param pixel_id a list containing a vector of ID's to retain for each img. If some img have to use all ID's 0 my be supplied. 
+#'
+#' @return a list with the merged images.
+#' @export
+#'
+MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
+{
+  # 1- If the img_list contains only one element, then is nothing to merge, just return the list itself
+  if( length(img_list) == 1 && is.null(pixel_id))
+  {
+    return( img_list )
+  }
+  if( length(img_list) == 1 && pixel_id[[1]] == 0)
+  {
+    return( img_list )
+  }
+  
+  # 2- Check if the mass axis is the same
+  common_mass <- img_list[[1]]$mass
+  identicalMassAxis <- TRUE
+  if( length(img_list) > 1)
+  {
+    for( i in 2:length(img_list))
+    {
+      identicalMassAxis <- identicalMassAxis & identical(common_mass, img_list[[i]]$mass)
+    }
+  }
+  
+  if(identicalMassAxis && is.null(pixel_id))
+  {
+    #No need to merge, all data sets can be used together because they share the same mass axis
+    return( img_list )
+  }
+  
+  if(identicalMassAxis &&  all( unlist(lapply(pixel_id, function(x){ x == 0}))))
+  {
+    #No need to merge, all data sets can be used together because they share the same mass axis and no ROI filtering used
+    return( img_list ) 
+  }
+  
+  # 3- Calculate the new common mass axis
+  # start obtaining the resolving power as the minimun mass distance in all the datasets
+  if(!identicalMassAxis)
+  {
+    resolvingPower <- rep(0, length(img_list))
+    common_mass <- c()
+    for( i in 1:length(img_list))
+    {
+      resolvingPower[i] <- min(abs(img_list[[i]]$mass[-1] - img_list[[i]]$mass[-length(img_list[[i]]$mass)]))
+      common_mass <- sort(unique( c(common_mass, img_list[[i]]$mass) ), decreasing = F)
+    }
+    resolvingPower <- min(resolvingPower)
+  
+  
+    # Apply the resolvingPower to the common_mass axis to avoid to many points
+    intraDistance <- common_mass[-1] - common_mass[-length(common_mass)]
+    ids2del <- which(intraDistance < resolvingPower)
+    common_mass <- common_mass[-ids2del]
+  }
+  else
+  {
+    common_mass <- img_list[[1]]$mass
+  }
+  
+  # 4- Apply the resampling and/or pixel id selection and create the new ramdisk 
+  for( i in 1:length(img_list))
+  {
+    # Get ID's for current image
+    if(is.null(pixel_id))
+    {
+      imgSelIDs <- 1:nrow(img_list[[i]]$pos)
+    }
+    else if (is.na( pixel_id[[i]]))
+    {
+      imgSelIDs <- 1:nrow(img_list[[i]]$pos)
+    }
+    else
+    {
+      imgSelIDs <-  pixel_id[[i]]
+    }
+
+    data_path <- file.path(ramdisk_path, paste0(img_list[[i]]$name, "_resam"))
+    imgAux <- rMSI::CreateSubDataset(img_list[[i]], imgSelIDs, data_path, common_mass)
+    rMSI::DeleteRamdisk(img_list[[i]])
+    img_list[[i]] <- imgAux
+  }
+  
+  return(img_list)
 }

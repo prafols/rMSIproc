@@ -22,7 +22,7 @@
 using namespace Rcpp;
 
 MTLabelFreeAlign::MTLabelFreeAlign(ImgProcDef imgRunInfo) : 
-  ThreadingMsiProc( imgRunInfo.numOfThreads, true, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+  ThreadingMsiProc( imgRunInfo.numOfThreads, true, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   alngObj = new LabelFreeAlign*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
@@ -79,7 +79,7 @@ void MTLabelFreeAlign::ProcessingFunction(int threadSlot)
 }
 
 // [[Rcpp::export]]
-List FullImageAlign( String basePath, StringVector fileNames, 
+List FullImageAlign( StringVector fileNames, 
                                 NumericVector refSpectrum, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
                                 bool AlignmentBilinear = false, int AlignmentIterations = 3, int AlignmentMaxShiftPpm = 200,
@@ -93,7 +93,6 @@ List FullImageAlign( String basePath, StringVector fileNames,
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   MTLabelFreeAlign::ImgProcDef myProcParams;
-  myProcParams.basePath = basePath;
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
   myProcParams.massChannels = refSpectrum.length();

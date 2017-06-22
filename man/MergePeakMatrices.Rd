@@ -5,7 +5,7 @@
 \title{MergePeakMatrices.}
 \usage{
 MergePeakMatrices(PeakMatrixList, binningTolerance = 100,
-  binningFilter = 0.01, OffsetPosByX = F)
+  binningFilter = 0.01)
 }
 \arguments{
 \item{PeakMatrixList}{A list of various peak matrix objexts produced using rMSIproc.}
@@ -13,8 +13,6 @@ MergePeakMatrices(PeakMatrixList, binningTolerance = 100,
 \item{binningTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.}
 
 \item{binningFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.}
-
-\item{OffsetPosByX}{if true the pos matrices are concatenated by offseting in X direction, if false Y direction is used.}
 }
 \value{
 a intensity matrix where each row corresponds to an spectrum.

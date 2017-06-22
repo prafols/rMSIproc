@@ -27,7 +27,7 @@
 printrMSIdataInfo <- function( img )
 {
   dataInf <- getrMSIdataInfo(img)
-  PrintrMSIObjectInfo( dataInf$basepath,  dataInf$filenames, dataInf$masschannels, dataInf$nrows, dataInf$datatype )  
+  PrintrMSIObjectInfo( dataInf$filenames, dataInf$masschannels, dataInf$nrows, dataInf$datatype )  
 }
 
 #' loadDataCube.
@@ -44,13 +44,13 @@ printrMSIdataInfo <- function( img )
 loadDataCube <- function( img, cubeSel )
 {
   dataInf <- getrMSIdataInfo(img)
-  return(LoadrMSIDataCube(dataInf$basepath,  dataInf$filenames, dataInf$masschannels, dataInf$nrows, dataInf$datatype, cubeSel - 1))
+  return(LoadrMSIDataCube( dataInf$filenames, dataInf$masschannels, dataInf$nrows, dataInf$datatype, cubeSel - 1))
 }
 
 
 #' getrMSIdataInfo.
 #' 
-#' Obtains all storing information of a rMSI objects and returns it as a list.
+#' Obtains all storing information of an rMSI object and returns it as a list.
 #'
 #' @param img an rMSI data object.
 #'
@@ -59,10 +59,55 @@ loadDataCube <- function( img, cubeSel )
 getrMSIdataInfo <- function( img )
 {
   ffData <- list()
-  ffData$basepath <- dirname(attr(attr(img$data[[1]], "physical"), "filename"))
-  ffData$filenames <- unlist(lapply(img$data, function(x){ basename(attr(attr(x, "physical"), "filename")) }))
+  ffData$filenames <- unlist(lapply(img$data, function(x){ path.expand(attr(attr(x, "physical"), "filename")) }))
   ffData$masschannels <- length(img$mass)
   ffData$nrows <- unlist(lapply(img$data, function(x) { attr(attr(x, "virtual"), "Dim")[1]}))
   ffData$datatype <- attr(attr(img$data[[1]], "physical"), "vmode") 
   return(ffData)
+}
+
+#' getrMSIdataInfoMultipleDataSets.
+#' 
+#' Obtains all storing information of various rMSI objects and returns them unified in a list.
+#' The supplied rMSI objects must have the same number of mass channels and the same data type.
+#' Otherwise an error will be raised.
+#' The returned list contains an extra file "datasets" to indecate at which dataset belongs each ramdisk.
+#'
+#' @param imgs_list a list of rMSI objects.
+#'
+#' @return a list containing all storing information unified. 
+#' 
+getrMSIdataInfoMultipleDataSets <- function( imgs_list )
+{
+  imgInfo <- getrMSIdataInfo(imgs_list[[1]])
+  imgInfo$dataset <- rep(1, length( imgInfo$filenames ))
+  
+  if( length(imgs_list) > 1)
+  {
+    for( i in 2:length(imgs_list))
+    {
+      aux <- getrMSIdataInfo(imgs_list[[i]])
+      
+      if( imgInfo$masschannels != aux$masschannels )
+      {
+        stop("Error: Number of mass channels of images are different\n")
+      }
+      
+      if( !identical(imgs_list[[1]]$mass, imgs_list[[1]]$mass) )
+      {
+        stop("Error: Mass axis of images are different\n")
+      }
+      
+      if( imgInfo$datatype != aux$datatype)
+      {
+        stop("Error: Data type of images are different\n")
+      }
+      
+      imgInfo$filenames <- c(imgInfo$filenames, aux$filenames)
+      imgInfo$nrows <- c( imgInfo$nrows,  aux$nrows)
+      imgInfo$dataset <- c( imgInfo$dataset, rep(i, length( aux$filenames )))
+    }
+  }
+  
+  return(imgInfo)
 }

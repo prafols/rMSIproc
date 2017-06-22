@@ -27,7 +27,7 @@ class ThreadingMsiProc
 {
   public:
     ThreadingMsiProc();
-    ThreadingMsiProc(int numberOfThreads, bool overWriteRamdisk, Rcpp::String basePath, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType );
+    ThreadingMsiProc(int numberOfThreads, bool overWriteRamdisk, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType );
     ~ThreadingMsiProc();
     
   protected:

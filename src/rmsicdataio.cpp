@@ -27,9 +27,8 @@ CrMSIDataIO::CrMSIDataIO()
   rowCounts = new int;
 }
 
-CrMSIDataIO::CrMSIDataIO( String basePath, StringVector fileNames, int massChannels, int *numRows, String dataType )
-:dataPath(basePath),
-ffFiles(fileNames),
+CrMSIDataIO::CrMSIDataIO(StringVector fileNames, int massChannels, int *numRows, String dataType )
+:ffFiles(fileNames),
 dataLength(massChannels),
 ffDataType(dataType)
 {
@@ -47,7 +46,6 @@ void CrMSIDataIO::printDataInfo()
   Rcout<<"===== rMSI Object ramdisk info =====\n";
   Rcout<<"Number of mass channels: "<< dataLength <<"\n";
   Rcout<<"Data type: "<< ffDataType.get_cstring() <<"\n";
-  Rcout<<"Data is stored in path: "<< dataPath.get_cstring()<<"\n";
   String fname;
   for( int i = 0; i < ffFiles.length(); i++)
   {
@@ -70,7 +68,8 @@ CrMSIDataIO::DataCube *CrMSIDataIO::loadDataCube( int iCube)
   }
   
   //Data reading
-  std::ifstream file(getFullPath(iCube).get_cstring(), std::ios::in|std::ios::binary);
+  String fname = ffFiles[iCube];
+  std::ifstream file(fname.get_cstring(), std::ios::in|std::ios::binary);
   if (file.is_open())
   {
     if(ffDataType == "integer")
@@ -147,7 +146,8 @@ void CrMSIDataIO::freeDataCube(DataCube *data_ptr)
 
 void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
 {
-  std::ofstream file(getFullPath(iCube).get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
+  String fname = ffFiles[iCube];
+  std::ofstream file(fname.get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
   if (file.is_open())
   {
     if(ffDataType == "integer")
@@ -218,15 +218,6 @@ void CrMSIDataIO::storeDataCube(int iCube, DataCube *data_ptr)
   }
 }
 
-String CrMSIDataIO::getFullPath(int cube_id)
-{
-  String fname = ffFiles[cube_id]; 
-  std::stringstream mPath;
-  mPath << dataPath.get_cstring() << "/" << fname.get_cstring();
-  fname = mPath.str();
-  return fname;
-}
-
 int CrMSIDataIO::getNumberOfCubes()
 {
   return ffFiles.length();
@@ -240,18 +231,18 @@ int CrMSIDataIO::getFirstSpectrumIdInCube(int cube_id)
 
 ////// Rcpp Exported methods //////////////////////////////////////////////////////////
 // [[Rcpp::export]]
-void PrintrMSIObjectInfo(String basePath, StringVector fileNames, int massChannels, IntegerVector numRows, String dataType )
+void PrintrMSIObjectInfo( StringVector fileNames, int massChannels, IntegerVector numRows, String dataType )
 {
-  CrMSIDataIO rMsiObj(basePath, fileNames, massChannels, numRows.begin(), dataType);
+  CrMSIDataIO rMsiObj(fileNames, massChannels, numRows.begin(), dataType);
   rMsiObj.printDataInfo();
 }
 
 //This method is just for testing convinience and should not be used because it copies a matrix indexed by rows to a
 //matrix indexed by columns so it performs very slowly.
 // [[Rcpp::export]]
-NumericMatrix LoadrMSIDataCube(String basePath, StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int cubeSel )
+NumericMatrix LoadrMSIDataCube( StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int cubeSel )
 {
-  CrMSIDataIO rMsiObj(basePath, fileNames, massChannels, numRows.begin(), dataType);
+  CrMSIDataIO rMsiObj( fileNames, massChannels, numRows.begin(), dataType);
   CrMSIDataIO::DataCube *dc = rMsiObj.loadDataCube(cubeSel);
   
   NumericMatrix dm( dc->nrows, dc->ncols );

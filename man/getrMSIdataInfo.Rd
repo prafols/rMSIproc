@@ -13,5 +13,5 @@ getrMSIdataInfo(img)
 a list containing all storing information.
 }
 \description{
-Obtains all storing information of a rMSI objects and returns it as a list.
+Obtains all storing information of an rMSI object and returns it as a list.
 }

@@ -16,7 +16,7 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   CalSpan = 0.75)
 }
 \arguments{
-\item{img}{an rMSI data object to process.}
+\item{img}{an rMSI data object to process or a list of rMSI objects if various datasets must merged for processing.}
 
 \item{EnableSmoothing}{a boolean declaring if smoothing alignment must be performed.}
 

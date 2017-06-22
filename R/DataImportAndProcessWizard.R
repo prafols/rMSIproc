@@ -272,6 +272,9 @@ ImportWizardGui <- function()
     #Number of threads
     this$procParamList$nthreads <- as.integer( gWidgets2::svalue( this$spin_nThreads ))
     
+    #If datasets must be merged or not
+    this$procParamList$mergedatasets <- gWidgets2::svalue(this$check_datamerge)
+    
     gWidgets2::dispose(h$obj)
   }
   
@@ -366,7 +369,7 @@ ImportWizardGui <- function()
   check_calibration <- gWidgets2::gcheckbox("Enable calibration", checked = T, container = box_calibration, handler = this$ChkBoxCalibrationChanged)
   
   #Spectra Normalization params
-  frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc1, spacing = 10)
+  frm_spectraNorm <- gWidgets2::gframe("Spectra intensity normalization", container = box_proc2, spacing = 10)
   box_spectraNorm <- gWidgets2::ggroup(horizontal = T, container = frm_spectraNorm)
   box_spectraNormL <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
   box_spectraNormR <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
@@ -394,7 +397,10 @@ ImportWizardGui <- function()
   frm_dataOutput <- gWidgets2::gframe( "Data Output", container = box_mainV, expand = T, fill = T)
   browseOut <- FileBrowseWidget( frm_dataOutput, sLabel = "Output directory:", dirSel = T, fFilter = "txt", setdir_fun = SetWorkingDir, getdir_fun = GetWorkingDir )
   
-  ##Run button
+  #Data merge
+  check_datamerge <- gWidgets2::gcheckbox("Merged processing", checked = T, container = box_proc2)
+  
+  #Run button
   btn_run <- gWidgets2::gbutton("Process Data", handler = this$RunClicked, container = box_proc2)
   
   gWidgets2::visible(mainWin) <- T
@@ -417,3 +423,97 @@ ImportWizardGui <- function()
   #Return a structured list with all input data
   return( procParamList )
 }
+
+XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
+{
+  oldWarning<-options()$warn
+  options(warn = -1)
+  
+  this <- environment()
+  initial_dir <- init_dir
+  abort_process <- T
+  xml_list <- rep("", length(img_names))
+  
+  browseButtonClicked <- function (evt, ...)
+  {
+    mPath <- gWidgets2::gfile( text = "Select a ROI XML file",
+                               type = "open", 
+                               multi = F,
+                               filter = list("XML file"  = list(patterns = c("*xml", "*XML"))), 
+                               initial.dir = this$initial_dir)
+    if( length( mPath) > 0)
+    {
+      RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action]]), basename(mPath))
+      this$initial_dir <- dirname(mPath)
+      this$xml_list[evt$action] <- mPath
+    }
+  }
+  
+  imgRoiBrowseWidget <- function( text, parent_widget, index )
+  {
+    frm <- gWidgets2::gframe( container = parent_widget)
+    hbox <- gWidgets2::ggroup(horizontal = T, container = frm, expand = T)
+    lbl <- gWidgets2::glabel(paste0(text, " ROI's:"), container = hbox)
+    gWidgets2::addSpring(hbox)
+    entry <- gWidgets2::gedit( container = hbox, width = 25 )
+    btn <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = index, container = hbox)
+    return(entry)
+  }
+  
+  OkButtonClicked <- function (h, ...)
+  {
+    this$abort_process <- F
+    gWidgets2::dispose(h$obj)
+  }
+  
+  AbortButtonClicked <- function (h, ...)
+  {
+    gWidgets2::dispose(h$obj)
+  }
+  
+  dlgMain <- gWidgets2::gwindow("Select ROI's for each image (optional)")
+  gWidgets2::size(dlgMain) <- c(800, 480)
+  main_vBox <- gWidgets2::ggroup(horizontal = F, container = dlgMain)
+  
+  #An informative label
+  lbl_info <- gWidgets2::glabel( "Add a Bruker ROI XML file for each image.\nOr just click Ok to proced without ROI filtering.", container = main_vBox)
+  
+  #Fill the list of image
+  xml_vBox <- gWidgets2::ggroup(horizontal = F, use.scrollwindow = T, container = main_vBox, expand=T)
+  selFilesEntry_list <- list()
+  for( i in 1:length(img_names))
+  {
+    selFilesEntry_list[[i]]<-imgRoiBrowseWidget(img_names[i], xml_vBox, i)
+  }
+  
+  #The buttons
+  btn_hBox <- gWidgets2::ggroup(horizontal = T, container = main_vBox)
+  gWidgets2::addSpring(btn_hBox)
+  btn_Ok <- gWidgets2::gbutton("Ok", handler = this$OkButtonClicked, container = btn_hBox)
+  btn_Abort <- gWidgets2::gbutton("Abort", handler = this$AbortButtonClicked, container = btn_hBox)
+  
+  gWidgets2::visible(dlgMain) <- T
+  
+  ## Set the name for the class
+  class(this) <- append(class(this),"RoiSelWindow")
+  gc()
+  
+  #Do not return until this window is disposed...
+  while(gWidgets2::isExtant(this$dlgMain ))
+  {
+    Sys.sleep(0.1)
+  }
+
+  #Restore warnings level
+  options(warn = oldWarning)
+  rm(oldWarning)
+  
+  if(this$abort_process)
+  {
+    #Process aborted by user
+    return(NULL)
+  }
+  return(this$xml_list)
+}
+
+

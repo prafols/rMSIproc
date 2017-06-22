@@ -34,10 +34,10 @@ ThreadingMsiProc::ThreadingMsiProc()
   bDataOverWrite = false;
 }
 
-ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, Rcpp::String basePath, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType )
+ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, Rcpp::StringVector fileNames, int massChannels, int *numRows, Rcpp::String dataType )
 {
   numOfThreadsDouble = 2*numberOfThreads;
-  ioObj = new CrMSIDataIO( basePath, fileNames, massChannels, numRows, dataType );
+  ioObj = new CrMSIDataIO( fileNames, massChannels, numRows, dataType );
   CubeNumRows = numRows[0];
   cubes = new CrMSIDataIO::DataCube*[numOfThreadsDouble];
   iCube = new int[numOfThreadsDouble];

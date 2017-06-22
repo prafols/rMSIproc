@@ -34,7 +34,7 @@ MTPeakPicking::MTPeakPicking():
 }
 
 MTPeakPicking::MTPeakPicking(ImgProcDef imgRunInfo) : 
-  ThreadingMsiProc( imgRunInfo.numOfThreads, false, imgRunInfo.basePath, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
+  ThreadingMsiProc( imgRunInfo.numOfThreads, false, imgRunInfo.fileNames, imgRunInfo.massChannels, imgRunInfo.numRows, imgRunInfo.dataType )
 {
   peakObj = new PeakPicking*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
@@ -332,7 +332,7 @@ void MTPeakPicking::ProcessingFunction(int threadSlot)
 }
 
 // [[Rcpp::export]]
-List FullImagePeakPicking (String basePath, StringVector fileNames, 
+List FullImagePeakPicking ( StringVector fileNames, 
                                 NumericVector mass, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
                                 double SNR = 5, int WinSize = 10, int InterpolationUpSampling = 10, 
@@ -345,7 +345,6 @@ List FullImagePeakPicking (String basePath, StringVector fileNames,
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   MTPeakPicking::ImgProcDef myProcParams;
-  myProcParams.basePath = basePath;
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
   myProcParams.massAxis = massC;

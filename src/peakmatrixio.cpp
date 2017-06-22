@@ -46,6 +46,7 @@ path(dir_path)
     areaMat = new NumericMatrix(totalRows, ncol);
     massVec = new NumericVector(ncol);
     posMat = new IntegerMatrix(totalRows, 2);
+    motorMat = new IntegerMatrix(totalRows, 2);
     sNames = new StringVector(nimg);
     
     //Reading names.txt
@@ -86,6 +87,7 @@ PeakMatrixIO::~PeakMatrixIO()
   delete areaMat;
   delete massVec;
   delete posMat;
+  delete motorMat;
   delete nRows;
   delete sNames;
 }
@@ -101,12 +103,23 @@ List PeakMatrixIO::LoadPeakMatrix()
   Rcout <<"Loading mass vector\n";
   LoadMass();
   Rcout << "Loading pixel positions\n";
-  LoadPos();
+  LoadPos(pos);
   
   
   List retList = List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
                                  Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames );
   
+  // check if motorpos.mat and load motor coords if so
+  String motorTxtFile = path;
+  motorTxtFile += "/motorpos.mat";
+  std::ifstream fileMotorsTxt(motorTxtFile.get_cstring());
+  if (fileMotorsTxt.is_open())
+  {
+    Rcout << "Loading motors coordinates matrix\n";
+    LoadPos(motors);
+    retList["posMotors"] = *motorMat;
+    fileMotorsTxt.close();
+  }
   
   // check if norms.txt and load normalizations if so
   String normsTxtFile = path;
@@ -133,6 +146,7 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   areaMat = new NumericMatrix(nrow, ncol);
   massVec = new NumericVector(ncol);
   posMat = new IntegerMatrix(nrow, 2);
+  motorMat = new IntegerMatrix(nrow, 2);
   nRows = new IntegerVector(nImg);
   sNames = new StringVector(nImg);
   
@@ -141,6 +155,14 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   *areaMat = as<NumericMatrix>(lpeak["area"]);
   *massVec = as<NumericVector>(lpeak["mass"]);
   *posMat = as<IntegerMatrix>(lpeak["pos"]);
+  if( lpeak.containsElementNamed("posMotors"))
+  {
+    *motorMat = as<IntegerMatrix>(lpeak["posMotors"]);
+  }
+  else
+  {
+    *motorMat = as<IntegerMatrix>(lpeak["pos"]);
+  }
   *nRows = as<IntegerVector>(lpeak["numPixels"]);
   *sNames = as<StringVector>(lpeak["names"]);
   
@@ -153,7 +175,9 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   Rcout <<"Storing mass vector\n";
   StoreMass();
   Rcout <<"Storing pixel positions\n";
-  StorePos();
+  StorePos(pos);
+  Rcout <<"Storing motor coordinates\n";
+  StorePos(motors);
   
   Rcout <<"Storing definition file\n";
   String defFile = path;
@@ -285,19 +309,20 @@ void PeakMatrixIO::LoadMass()
   }
 }
 
-void PeakMatrixIO::StorePos()
+void PeakMatrixIO::StorePos(DataType mt)
 {
-  int buffer[posMat->cols()]; //Writing  buffer
-  std::ofstream file(getFileName(pos).get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
+  IntegerMatrix *ptrMat = setPosPointer(mt);
+  int buffer[ptrMat->cols()]; //Writing  buffer
+  std::ofstream file(getFileName(mt).get_cstring(), std::ios::out|std::ios::binary|std::ios::trunc);
   if (file.is_open())
   {
-    for(int i = 0; i < posMat->rows(); i ++)
+    for(int i = 0; i < ptrMat->rows(); i ++)
     {
-      for(int j = 0; j < posMat->cols(); j++)
+      for(int j = 0; j < ptrMat->cols(); j++)
       {
-        buffer[j] = (*posMat)(i, j);
+        buffer[j] = (*ptrMat)(i, j);
       }
-      file.write((char*)buffer, sizeof(int)*posMat->cols()); 
+      file.write((char*)buffer, sizeof(int)*ptrMat->cols()); 
     }
     file.close();
   }
@@ -307,18 +332,19 @@ void PeakMatrixIO::StorePos()
   } 
 }
 
-void PeakMatrixIO::LoadPos()
+void PeakMatrixIO::LoadPos(DataType mt)
 {
-  char buffer[sizeof(int)*posMat->cols()]; //Reading  buffer
-  std::ifstream file(getFileName(pos).get_cstring(), std::ios::in|std::ios::binary);
+  IntegerMatrix *ptrMat = setPosPointer(mt);
+  char buffer[sizeof(int)*ptrMat->cols()]; //Reading  buffer
+  std::ifstream file(getFileName(mt).get_cstring(), std::ios::in|std::ios::binary);
   if (file.is_open())
   {
-    for(int i = 0; i < posMat->rows(); i ++)
+    for(int i = 0; i < ptrMat->rows(); i ++)
     {
-      file.read(buffer, sizeof(int)*posMat->cols());  
-      for(int j = 0; j < posMat->cols(); j++)
+      file.read(buffer, sizeof(int)*ptrMat->cols());  
+      for(int j = 0; j < ptrMat->cols(); j++)
       {
-        (*posMat)(i, j) = *((int*)( buffer + j*sizeof(int) ));;
+        (*ptrMat)(i, j) = *((int*)( buffer + j*sizeof(int) ));;
       }
     }
     file.close();
@@ -349,6 +375,9 @@ String PeakMatrixIO::getFileName(DataType mt)
   case pos:
     fname += "/pixelpos.mat";
     break;
+  case motors:
+    fname += "/motorpos.mat";
+    break;
   default:
     stop("Error: Invalid MatType mode.\n");
   }
@@ -368,6 +397,23 @@ NumericMatrix *PeakMatrixIO::setMatPointer(DataType mt)
     break;
   case area:
     mat = this->areaMat;
+    break;
+  default:
+    stop("Error: invalid DataType.\n");
+  }
+  return mat;
+}
+
+IntegerMatrix *PeakMatrixIO::setPosPointer(DataType mt)
+{
+  IntegerMatrix *mat;
+  switch(mt)
+  {
+  case pos:
+    mat = this->posMat;
+    break;
+  case motors:
+    mat = this->motorMat;
     break;
   default:
     stop("Error: invalid DataType.\n");

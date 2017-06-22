@@ -24,6 +24,12 @@ LoadPeakMatrix <- function( data_path )
   unlink(file.path(dirname(data_path), "tmp"), recursive = T)
   class(ldata) <- "rMSIprocPeakMatrix"
   
+  colnames(ldata$pos) <- c("x", "y")
+  if(!is.null(ldata$posMotors))
+  {
+    colnames(ldata$posMotors) <- c("x", "y")
+  }
+  
   cat("Done\n")
   return(ldata)
 }

@@ -5,24 +5,24 @@ AlignSpectrumToReference <- function(ref, x, bilinear = FALSE, lagRefLow = 0.1, 
     .Call('rMSIproc_AlignSpectrumToReference', PACKAGE = 'rMSIproc', ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling)
 }
 
-FullImageAlign <- function(basePath, fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear = FALSE, AlignmentIterations = 3L, AlignmentMaxShiftPpm = 200L, RefLow = 0.0, RefMid = 0.5, RefHigh = 1.0, OverSampling = 2L) {
-    .Call('rMSIproc_FullImageAlign', PACKAGE = 'rMSIproc', basePath, fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling)
+FullImageAlign <- function(fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear = FALSE, AlignmentIterations = 3L, AlignmentMaxShiftPpm = 200L, RefLow = 0.0, RefMid = 0.5, RefHigh = 1.0, OverSampling = 2L) {
+    .Call('rMSIproc_FullImageAlign', PACKAGE = 'rMSIproc', fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling)
 }
 
-FullImagePeakPicking <- function(basePath, fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 0.05, binningFilter = 0.9) {
-    .Call('rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', basePath, fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter)
+FullImagePeakPicking <- function(fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 0.05, binningFilter = 0.9) {
+    .Call('rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter)
 }
 
 MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 0.05, binningFilter = 0.01) {
     .Call('rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
 }
 
-ReplacePeakMatrixZerosC <- function(PeakMatrix, basePath, fileNames, mass, numRows, dataType, numOfThreads, WinSize = 10L, InterpolationUpSampling = 10L) {
-    .Call('rMSIproc_ReplacePeakMatrixZerosC', PACKAGE = 'rMSIproc', PeakMatrix, basePath, fileNames, mass, numRows, dataType, numOfThreads, WinSize, InterpolationUpSampling)
+ReplacePeakMatrixZeros <- function(PeakMatrix, fileNames, mass, numRows, dataType, numOfThreads, WinSize = 10L, InterpolationUpSampling = 10L) {
+    .Call('rMSIproc_ReplacePeakMatrixZeros', PACKAGE = 'rMSIproc', PeakMatrix, fileNames, mass, numRows, dataType, numOfThreads, WinSize, InterpolationUpSampling)
 }
 
-FullImageSmoothing <- function(basePath, fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize = 5L) {
-    invisible(.Call('rMSIproc_FullImageSmoothing', PACKAGE = 'rMSIproc', basePath, fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize))
+FullImageSmoothing <- function(fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize = 5L) {
+    invisible(.Call('rMSIproc_FullImageSmoothing', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType, numOfThreads, SmoothingKernelSize))
 }
 
 #' NoiseEstimationFFTCosWin.
@@ -156,12 +156,12 @@ TestAreaWindow <- function(mass, WinSize = 20L, UpSampling = 10L) {
     .Call('rMSIproc_TestAreaWindow', PACKAGE = 'rMSIproc', mass, WinSize, UpSampling)
 }
 
-PrintrMSIObjectInfo <- function(basePath, fileNames, massChannels, numRows, dataType) {
-    invisible(.Call('rMSIproc_PrintrMSIObjectInfo', PACKAGE = 'rMSIproc', basePath, fileNames, massChannels, numRows, dataType))
+PrintrMSIObjectInfo <- function(fileNames, massChannels, numRows, dataType) {
+    invisible(.Call('rMSIproc_PrintrMSIObjectInfo', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType))
 }
 
-LoadrMSIDataCube <- function(basePath, fileNames, massChannels, numRows, dataType, cubeSel) {
-    .Call('rMSIproc_LoadrMSIDataCube', PACKAGE = 'rMSIproc', basePath, fileNames, massChannels, numRows, dataType, cubeSel)
+LoadrMSIDataCube <- function(fileNames, massChannels, numRows, dataType, cubeSel) {
+    .Call('rMSIproc_LoadrMSIDataCube', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType, cubeSel)
 }
 
 #' Smoothing_SavitzkyGolay.
