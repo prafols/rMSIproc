@@ -48,6 +48,7 @@ path(dir_path)
     posMat = new IntegerMatrix(totalRows, 2);
     motorMat = new IntegerMatrix(totalRows, 2);
     sNames = new StringVector(nimg);
+    sUUID = new StringVector(nimg);
     
     //Reading names.txt
     String nameFile = path;
@@ -77,6 +78,34 @@ path(dir_path)
         (*sNames)[i] = "unknown sample";
       }
     }
+    
+    //Reading uuid.txt
+    String uuidFile = path;
+    uuidFile += "/uuid.txt";
+    std::ifstream fileUUIDs(uuidFile.get_cstring(), std::ios::in);
+    if (fileUUIDs.is_open())
+    {
+      int ip = 0;
+      while (std::getline(fileUUIDs, str))
+      {
+        // Process str that contains each line of names.txt 
+        (*sUUID)[ip] = str;
+        ip++;
+      }
+      fileUUIDs.close();
+      if( ip != nimg)
+      {
+        stop("Fatal Error: number of samples names in uuid.txt does not match to number of images in peak matrix. Aborting...\n");
+      }
+    }
+    else
+    {
+      Rcout <<"Warning: No uuid.txt file found creating empty UUID's...\n"; 
+      for( int i = 0; i < nimg; i++)
+      {
+        (*sUUID)[i] = "";
+      }
+    }
   }
 }
 
@@ -90,6 +119,7 @@ PeakMatrixIO::~PeakMatrixIO()
   delete motorMat;
   delete nRows;
   delete sNames;
+  delete sUUID;
 }
 
 List PeakMatrixIO::LoadPeakMatrix()
@@ -107,7 +137,7 @@ List PeakMatrixIO::LoadPeakMatrix()
   
   
   List retList = List::create( Named("mass") = *massVec, Named("intensity") = *intMat, Named("SNR") = *snrMat, Named("area") = *areaMat,
-                                 Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames );
+                                 Named("pos") = *posMat, Named("numPixels") = *nRows, Named("names") = *sNames, Named("uuid") = *sUUID );
   
   // check if motorpos.mat and load motor coords if so
   String motorTxtFile = path;
@@ -149,6 +179,7 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   motorMat = new IntegerMatrix(nrow, 2);
   nRows = new IntegerVector(nImg);
   sNames = new StringVector(nImg);
+  sUUID = new StringVector(nImg);
   
   *intMat = as<NumericMatrix>(lpeak["intensity"]);
   *snrMat = as<NumericMatrix>(lpeak["SNR"]);
@@ -165,6 +196,14 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   }
   *nRows = as<IntegerVector>(lpeak["numPixels"]);
   *sNames = as<StringVector>(lpeak["names"]);
+  if( lpeak.containsElementNamed("uuid"))
+  {
+    *sUUID = as<StringVector>(lpeak["uuid"]);
+  }
+  else
+  {
+    *sUUID = StringVector(sNames->length()); //No found ID fields so init with empty uuid's
+  }
   
   Rcout <<"Storing intensity matrix\n";
   StoreMat(intensity);
@@ -215,6 +254,23 @@ void PeakMatrixIO::StorePeakMatrix(List lpeak)
   else
   {
     stop("C Writing error: Names file can not be opened.\n");
+  } 
+  
+  //Writing the uuid.txt file
+  String uuidFile = path;
+  uuidFile += "/uuid.txt";
+  std::ofstream fileUUIDs(uuidFile.get_cstring(), std::ios::out|std::ios::trunc);
+  if(fileUUIDs.is_open())
+  {
+    for(int i = 0; i < nImg; i++)
+    {
+      fileUUIDs <<  ((*sUUID)[i]) << "\n";
+    }
+    fileUUIDs.close();
+  }
+  else
+  {
+    stop("C Writing error: UUID's file can not be opened.\n");
   } 
   
   //Check if there ara also normalizations to store

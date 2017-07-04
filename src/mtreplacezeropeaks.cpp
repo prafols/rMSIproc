@@ -103,7 +103,7 @@ void MTReplaceZeroPeaks::ProcessingFunction(int threadSlot)
   int cube_row = 0;
 
   //Look for zeros on current cube corresponding peak matrix rows
-  for( int i = CubeNumRows*iCube[threadSlot]; i < (CubeNumRows*iCube[threadSlot] + cubes[threadSlot]->nrows); i++)
+  for( int i = CubeFirstRowID[iCube[threadSlot]]; i < (CubeFirstRowID[iCube[threadSlot]] + cubes[threadSlot]->nrows); i++)
   {
     for( int j = 0; j < (*pkMatintensity).ncol(); j ++)
     {

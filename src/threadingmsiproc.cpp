@@ -25,7 +25,8 @@ ThreadingMsiProc::ThreadingMsiProc()
 {
   numOfThreadsDouble = 0;
   ioObj = new CrMSIDataIO();
-  CubeNumRows = 0;
+  CubeFirstRowID = new int[1];
+  CubeFirstRowID[0] = 0;
   cubes = new CrMSIDataIO::DataCube*[numOfThreadsDouble];
   iCube = new int[numOfThreadsDouble];
   bDataReady = new bool[numOfThreadsDouble];
@@ -38,7 +39,12 @@ ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, 
 {
   numOfThreadsDouble = 2*numberOfThreads;
   ioObj = new CrMSIDataIO( fileNames, massChannels, numRows, dataType );
-  CubeNumRows = numRows[0];
+  CubeFirstRowID = new int[fileNames.length()];
+  CubeFirstRowID[0] = 0;
+  for(int i = 1; i < fileNames.length(); i++)
+  {
+    CubeFirstRowID[i] = numRows[i-1] + CubeFirstRowID[i-1];
+  }
   cubes = new CrMSIDataIO::DataCube*[numOfThreadsDouble];
   iCube = new int[numOfThreadsDouble];
   bDataReady = new bool[numOfThreadsDouble];
@@ -51,6 +57,7 @@ ThreadingMsiProc::~ThreadingMsiProc()
 {
   delete[] cubes;
   delete[] iCube;
+  delete[] CubeFirstRowID;
   delete[] bDataReady;
   delete[] bRunningThread;
   delete[] tworkers; 

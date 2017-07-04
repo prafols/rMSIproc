@@ -41,6 +41,7 @@ class PeakMatrixIO
     Rcpp::IntegerMatrix *motorMat;
     Rcpp::IntegerVector *nRows;
     Rcpp::StringVector *sNames;
+    Rcpp::StringVector *sUUID;
   
     void StoreMat(DataType mt);
     void LoadMat(DataType mt);

@@ -20,5 +20,7 @@ a list with the merged images.
 Merges various rMSI objects in order to process all of them in the same run.
 For example, this is usefull to align data form diferent experiments together.
 In case that images don't share the same mass axis, all of them will be resampled and stored in a new ramdisk.
-If pixel_id is provided, a new ramdisk for each image will be created too.
+If pixel_id is provided, a new ramdisk for each image will be created to filter out non specified pixel ID's.
+Discarding pixels of a dataset may result interesting to avoid artifacts in alignment and peak binning if some
+regions are not well-correlated to the rest of tissue.
 }

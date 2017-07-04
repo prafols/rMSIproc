@@ -80,9 +80,15 @@ FileBrowseWidget <- function( parent_widget, sLabel = "File:", dirSel = F, multi
     }
     if(!is.null(this$SetWorkDir))
     {
-      this$SetWorkDir( dirname(gWidgets2::svalue(this$entry_dir)) )
+      if(dir.exists(gWidgets2::svalue(this$entry_dir)))
+      {
+        this$SetWorkDir( gWidgets2::svalue(this$entry_dir)) #It is already a dir so not using the dirname funciton
+      }
+      else
+      {
+        this$SetWorkDir( dirname(gWidgets2::svalue(this$entry_dir)) )
+      }
     }
-    
   }
   
   ##Public Methods

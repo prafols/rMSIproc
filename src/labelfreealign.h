@@ -61,6 +61,7 @@ class LabelFreeAlign
     void TimeWindow(double *data, int spectrumPart);
     int FourierBestCor(double *data, double *ref);
     void FourierLinerScaleShift(double *data, double scaling, double shift);
+    void MovingAverage3Samples(double *data);
   
     int dataLength; //Number of points used in each spectrum
     int WinLength; //Number of points of spectrum retained in hanning window

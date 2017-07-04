@@ -70,7 +70,7 @@ List MTLabelFreeAlign::Run()
 void MTLabelFreeAlign::ProcessingFunction(int threadSlot)
 {
   //Perform alignment of each spectrum in the current loaded cube
-  int is = CubeNumRows*iCube[threadSlot];
+  int is = CubeFirstRowID[iCube[threadSlot]];
   for( int j = 0; j < cubes[threadSlot]->nrows; j++)
   {
     mLags[is] = alngObj[threadSlot]->AlignSpectrum( cubes[threadSlot]->data[j] );

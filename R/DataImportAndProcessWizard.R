@@ -432,7 +432,10 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   this <- environment()
   initial_dir <- init_dir
   abort_process <- T
+  summaryEnabled <- F
+  summaryNorm <- ""
   xml_list <- rep("", length(img_names))
+  bAllImgesHaveXMLRoi <-F
   
   browseButtonClicked <- function (evt, ...)
   {
@@ -447,6 +450,18 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
       this$initial_dir <- dirname(mPath)
       this$xml_list[evt$action] <- mPath
     }
+    this$checkIfAllImagesHaveAROI()
+  }
+  
+  checkIfAllImagesHaveAROI <- function()
+  {
+    this$bAllImgesHaveXMLRoi <- T
+    for( i in 1:length(this$xml_list))
+    {
+      this$bAllImgesHaveXMLRoi <- all(this$xml_list[i] != "", this$bAllImgesHaveXMLRoi)
+    }
+    
+    gWidgets2::enabled(this$frm_summary) <- this$bAllImgesHaveXMLRoi
   }
   
   imgRoiBrowseWidget <- function( text, parent_widget, index )
@@ -462,6 +477,12 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   
   OkButtonClicked <- function (h, ...)
   {
+    this$summaryEnabled <- gWidgets2::svalue(this$chk_sum)
+    this$summaryNorm <- paste0(as.character(gWidgets2::svalue(this$combo_norm)), "ne") 
+    if(this$summaryNorm == "RAWne")
+    {
+      this$summaryNorm <- "RAW"
+    }
     this$abort_process <- F
     gWidgets2::dispose(h$obj)
   }
@@ -476,7 +497,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   main_vBox <- gWidgets2::ggroup(horizontal = F, container = dlgMain)
   
   #An informative label
-  lbl_info <- gWidgets2::glabel( "Add a Bruker ROI XML file for each image.\nOr just click Ok to proced without ROI filtering.", container = main_vBox)
+  lbl_info <- gWidgets2::glabel( "Add a Bruker ROI XML file for each image. Or just click Ok to proced without ROI filtering.", container = main_vBox)
   
   #Fill the list of image
   xml_vBox <- gWidgets2::ggroup(horizontal = F, use.scrollwindow = T, container = main_vBox, expand=T)
@@ -485,6 +506,15 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   {
     selFilesEntry_list[[i]]<-imgRoiBrowseWidget(img_names[i], xml_vBox, i)
   }
+  
+  #The summary
+  frm_summary <- gWidgets2::gframe("ROI Summary", container = main_vBox)
+  vBox_sum <- gWidgets2::ggroup(horizontal = F, container = frm_summary)
+  chk_sum <- gWidgets2::gcheckbox("Enable ROI summary export", checked = F, container = vBox_sum)
+  hBox_sum <- gWidgets2::ggroup(horizontal = T, container = vBox_sum)
+  lbl_norm <- gWidgets2::glabel("Normalization:", container = hBox_sum)
+  combo_norm <- gWidgets2::gcombobox(c("RAW","TIC", "RMS", "AcqTic", "MAX"), container = hBox_sum, expand = T, fill = T)
+  gWidgets2::enabled(this$frm_summary) <- F
   
   #The buttons
   btn_hBox <- gWidgets2::ggroup(horizontal = T, container = main_vBox)
@@ -513,7 +543,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
     #Process aborted by user
     return(NULL)
   }
-  return(this$xml_list)
+  return( list( xml=this$xml_list, summary_export = this$summaryEnabled & this$bAllImgesHaveXMLRoi, summary_norm = this$summaryNorm))
 }
 
 

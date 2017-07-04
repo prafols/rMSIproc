@@ -278,6 +278,9 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
     }
   }
   
+  //Apply a 3 samples moving average to compensate for FFT artifacts
+  MovingAverage3Samples(data);
+  
   delete[] topWin_data;
   delete[] botWin_data;
   delete[] midWin_data;
@@ -423,6 +426,19 @@ int LabelFreeAlign::FourierBestCor(double *data, double *ref)
   }
   
   return lag;
+}
+
+void LabelFreeAlign::MovingAverage3Samples(double *data)
+{
+  double curr;
+  double ant = data[0];
+  for( int i = 1; i < (dataLength - 1); i++)
+  {
+    curr = data[i]; //Current sample backup
+    data[i] += data[i+1] + ant;
+    data[i] /= 3.0;
+    ant = curr;
+  }
 }
 
 NumericVector LabelFreeAlign::getHannWindow()

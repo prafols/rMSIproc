@@ -73,7 +73,7 @@ List MTPeakPicking::Run()
 {
   //Run peak-picking in mutli-threading
   runMSIProcessingCpp();
-
+  
   //Binning
   if(bDoBinning)
   {
@@ -323,7 +323,8 @@ void MTPeakPicking::ProcessingFunction(int threadSlot)
   }
   
   //Perform peak-picking of each spectrum in the current loaded cube
-  int is = CubeNumRows*iCube[threadSlot];
+  int is = CubeFirstRowID[iCube[threadSlot]];
+  //The same will happen for Alignment
   for( int j = 0; j < cubes[threadSlot]->nrows; j++)
   {
     mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], snrThreshold ); 

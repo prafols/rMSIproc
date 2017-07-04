@@ -40,7 +40,7 @@ class ThreadingMsiProc
     int *iCube; //This vector will porvide which cube ID is processing each thread
     CrMSIDataIO::DataCube **cubes; //Array of data cubes pointer, the length of this array will be the number of processing threads.
     CrMSIDataIO *ioObj; //Data access object
-    int CubeNumRows;
+    int *CubeFirstRowID;
     int numOfThreadsDouble; //The double of used number of threads
     
   private:  
