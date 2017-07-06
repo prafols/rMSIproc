@@ -4,12 +4,17 @@
 \alias{SaveProcessingParams}
 \title{SaveProcessingParams.}
 \usage{
-SaveProcessingParams(procParams, filepath)
+SaveProcessingParams(procParams, filepath, xmlRoiFiles = NULL,
+  RoiNormalization = NULL)
 }
 \arguments{
 \item{procParams}{a list of parameters.}
 
 \item{filepath}{a full path where params will be stored}
+
+\item{xmlRoiFiles}{a vector with the used ROI XML files, NULL if no ROI was used.}
+
+\item{RoiNormalization}{a string with the name of normalization used to export the data summary.}
 }
 \description{
 Save all parameters in a list of processing params generated using ImportWizardGui() function.

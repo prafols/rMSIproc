@@ -278,9 +278,6 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
     }
   }
   
-  //Apply a 3 samples moving average to compensate for FFT artifacts
-  MovingAverage3Samples(data);
-  
   delete[] topWin_data;
   delete[] botWin_data;
   delete[] midWin_data;
@@ -353,14 +350,21 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
   double maxEnd = 0.0;
   int lastiUp = -FFTScaleShiftOverSampling/2;
   int iup = 0;
+  double *arg_curr = new double[dataLength];
+  double arg_aux;
   for( int i = 0; i < dataLength; i++)
   {
     data[i] = 0.0;
+    arg_curr[i] = 0.0;
     while( iup <  ( lastiUp + FFTScaleShiftOverSampling ))
     {
-      data[i] += sqrt(fft_odd_out[iup][0]*fft_odd_out[iup][0] + fft_odd_out[iup][1]*fft_odd_out[iup][1]); //Module
+      arg_aux = fabs(atan2(fft_odd_out[iup][1],fft_odd_out[iup][0])); //Abs of phase
+      arg_curr[i] = arg_aux >  arg_curr[i] ? arg_aux : arg_curr[i]; //Keep the more intense
+      data[i] += sqrt(fft_odd_out[iup][0]*fft_odd_out[iup][0] + fft_odd_out[iup][1]*fft_odd_out[iup][1]); //Modul
       iup++;
     }
+
+    //Prepare lastiUp for next samples
     lastiUp = iup;
     
     //It is not necessary to divide data[i] by FFTScaleShiftOverSampling since I'll compensate for the max.
@@ -368,11 +372,24 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
   }
   
   //Compensate gain
+  double argAverage3 = 0.0;
+  int iWinC;
   if( maxEnd > 0.0 && maxInit > 0.0 )
   {
     for(int i = 0; i < dataLength; i++)
     {
-      data[i] /= maxEnd/maxInit;
+      iWinC = i == 0 ? 1 : i;
+      iWinC = i == (dataLength - 1)  ? (dataLength - 2) : i;
+      argAverage3 =  arg_curr[iWinC - 1] +  arg_curr[iWinC] +  arg_curr[iWinC + 1];
+      argAverage3 /= 3.0; 
+      if(argAverage3 < M_PI/3.0 )
+      {
+        data[i] /= maxEnd/maxInit;
+      }
+      else
+      {
+        data[i] = 0.0;
+      }
     }
   }
   
@@ -381,6 +398,7 @@ void LabelFreeAlign::FourierLinerScaleShift(double *data, double scaling, double
   fftw_free(fft_odd_in);
   fftw_free(fft_odd_out);
   fftwMtx->unlock();
+  delete[] arg_curr;
 }
 
 int LabelFreeAlign::FourierBestCor(double *data, double *ref)
@@ -426,19 +444,6 @@ int LabelFreeAlign::FourierBestCor(double *data, double *ref)
   }
   
   return lag;
-}
-
-void LabelFreeAlign::MovingAverage3Samples(double *data)
-{
-  double curr;
-  double ant = data[0];
-  for( int i = 1; i < (dataLength - 1); i++)
-  {
-    curr = data[i]; //Current sample backup
-    data[i] += data[i+1] + ant;
-    data[i] /= 3.0;
-    ant = curr;
-  }
 }
 
 NumericVector LabelFreeAlign::getHannWindow()

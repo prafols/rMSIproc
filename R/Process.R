@@ -638,6 +638,31 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     # Merge data and resample it if mass axis is different and ID pixel selection if xml are provided
     mImg_list <- MergerMSIDataSets(mImg_list, procParams$data$outpath, pixel_id = pixelID_list ) 
     
+    #Independently of the selected norms, set also the one used for data summary export
+    if(xmlRoiFiles$summary_export)
+    {
+      if(xmlRoiFiles$summary_norm == "TICne")
+      {
+        procParams$spectraNormalization$TIC <- T
+      }
+      else if(xmlRoiFiles$summary_norm == "MAXne")
+      {
+        procParams$spectraNormalization$MAX <- T
+      }
+      else if(xmlRoiFiles$summary_norm == "RMSne")
+      {
+        procParams$spectraNormalization$RMS <- T
+      }
+      else if(xmlRoiFiles$summary_norm == "AcqTic")
+      {
+        procParams$spectraNormalization$AcqTIC <- T
+      }
+      procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
+                                                      procParams$spectraNormalization$MAX,
+                                                      procParams$spectraNormalization$RMS,
+                                                      procParams$spectraNormalization$AcqTIC)
+    }
+    
     #Process data
     procData <- ProcessImage(img = mImg_list,
                              EnableSmoothing = procParams$smoothing$enabled, SmoothingKernelSize = procParams$smoothing$sgkernsize,
@@ -668,6 +693,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         #Use the current XML
         xmlList<-xmlRoiFiles$xml[i]
       }
+      
       ExportROIAveragesMultiple(procData$procImg, xmlList, procData$peakMat, procParams$data$outpath, xmlRoiFiles$summary_norm)
     }
     
@@ -706,7 +732,9 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   }
   
   #Store processing params
-  SaveProcessingParams( procParams, file.path(procParams$data$outpath, "processing_parameters.txt"  ))
+  SaveProcessingParams( procParams, 
+                        file.path(procParams$data$outpath, "processing_parameters.txt"),
+                        xmlRoiFiles = xmlRoiFiles$xml, RoiNormalization = xmlRoiFiles$summary_norm)
   
   cat("All images were successfully processed\n")
 }
@@ -718,8 +746,10 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
 #'
 #' @param procParams a list of parameters.
 #' @param filepath a full path where params will be stored
+#' @param xmlRoiFiles a vector with the used ROI XML files, NULL if no ROI was used.
+#' @param RoiNormalization a string with the name of normalization used to export the data summary.
 #'
-SaveProcessingParams <- function( procParams, filepath)
+SaveProcessingParams <- function( procParams, filepath, xmlRoiFiles = NULL, RoiNormalization = NULL)
 {
   fObj <- file(description = filepath, open = "w" )
   writeLines("Processing parameters", con = fObj)
@@ -785,6 +815,20 @@ SaveProcessingParams <- function( procParams, filepath)
   }
   
   writeLines(paste("Merge datasets = ", procParams$mergedatasets, sep ="" ), con = fObj)
+  
+  if(!is.null(xmlRoiFiles))
+  {
+    writeLines("Used ROI files:", con = fObj)
+    for(i in 1:length(xmlRoiFiles))
+    {
+      writeLines(paste0("ROI", i, ": ", xmlRoiFiles[i] ), con = fObj)
+    }
+  }
+  
+  if(!is.null(RoiNormalization))
+  {
+    writeLines(paste0("Data summary normalization: ", RoiNormalization ), con = fObj)
+  }
   
   close(fObj)
 }

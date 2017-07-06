@@ -257,6 +257,13 @@ ImportWizardGui <- function()
       this$procParamList$spectraNormalization$MAX <- gWidgets2::svalue(this$check_MAXnorm)
       this$procParamList$spectraNormalization$AcqTIC <- gWidgets2::svalue(this$check_TicACQnorm)
     }
+    else
+    {
+      this$procParamList$spectraNormalization$TIC <- F
+      this$procParamList$spectraNormalization$RMS <- F
+      this$procParamList$spectraNormalization$MAX <- F
+      this$procParamList$spectraNormalization$AcqTIC <-F
+    }
     
     #Peak picking list
     this$procParamList$peakpicking$enabled <- gWidgets2::svalue(this$check_peakpicking)
@@ -483,6 +490,11 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
     {
       this$summaryNorm <- "RAW"
     }
+    if(this$summaryNorm == "AcqTICne")
+    {
+      this$summaryNorm <- "AcqTic"
+    }
+    
     this$abort_process <- F
     gWidgets2::dispose(h$obj)
   }
@@ -513,7 +525,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   chk_sum <- gWidgets2::gcheckbox("Enable ROI summary export", checked = F, container = vBox_sum)
   hBox_sum <- gWidgets2::ggroup(horizontal = T, container = vBox_sum)
   lbl_norm <- gWidgets2::glabel("Normalization:", container = hBox_sum)
-  combo_norm <- gWidgets2::gcombobox(c("RAW","TIC", "RMS", "AcqTic", "MAX"), container = hBox_sum, expand = T, fill = T)
+  combo_norm <- gWidgets2::gcombobox(c("RAW","TIC", "RMS", "AcqTIC", "MAX"), container = hBox_sum, expand = T, fill = T)
   gWidgets2::enabled(this$frm_summary) <- F
   
   #The buttons

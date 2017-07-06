@@ -54,14 +54,13 @@ class LabelFreeAlign
     //The used High and Low lags are returned as a TLags structure.
     TLags AlignSpectrum(double *data );
 
- private:
+  private:
     void ComputeRef(double *data_ref, int spectrumPart);
     void ZeroPadding(double *data,bool reverse, int targetSize, int dataSize);
     void CopyData2Window(double *data_int, double *data_out,  int spectrumPart);
     void TimeWindow(double *data, int spectrumPart);
     int FourierBestCor(double *data, double *ref);
     void FourierLinerScaleShift(double *data, double scaling, double shift);
-    void MovingAverage3Samples(double *data);
   
     int dataLength; //Number of points used in each spectrum
     int WinLength; //Number of points of spectrum retained in hanning window
