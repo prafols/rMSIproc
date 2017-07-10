@@ -441,7 +441,8 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   abort_process <- T
   summaryEnabled <- F
   summaryNorm <- ""
-  xml_list <- rep("", length(img_names))
+  xmlList_include <- rep("", length(img_names))
+  xmlList_exclude <- rep("", length(img_names))
   bAllImgesHaveXMLRoi <-F
   
   browseButtonClicked <- function (evt, ...)
@@ -453,9 +454,19 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
                                initial.dir = this$initial_dir)
     if( length( mPath) > 0)
     {
-      RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action]]), basename(mPath))
+      if(evt$action$include)
+      {
+        #Setting the include widget
+        RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action$img]]$include), basename(mPath)) 
+        this$xmlList_include[evt$action$img] <- mPath
+      }
+      else
+      {
+        #Setting the exclude widget
+        RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action$img]]$exclude), basename(mPath)) 
+        this$xmlList_exclude[evt$action$img] <- mPath
+      }
       this$initial_dir <- dirname(mPath)
-      this$xml_list[evt$action] <- mPath
     }
     this$checkIfAllImagesHaveAROI()
   }
@@ -463,9 +474,9 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   checkIfAllImagesHaveAROI <- function()
   {
     this$bAllImgesHaveXMLRoi <- T
-    for( i in 1:length(this$xml_list))
+    for( i in 1:length(this$xmlList_include))
     {
-      this$bAllImgesHaveXMLRoi <- all(this$xml_list[i] != "", this$bAllImgesHaveXMLRoi)
+      this$bAllImgesHaveXMLRoi <- all(this$xmlList_include[i] != "", this$bAllImgesHaveXMLRoi)
     }
     
     gWidgets2::enabled(this$frm_summary) <- this$bAllImgesHaveXMLRoi
@@ -474,12 +485,21 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   imgRoiBrowseWidget <- function( text, parent_widget, index )
   {
     frm <- gWidgets2::gframe( container = parent_widget)
-    hbox <- gWidgets2::ggroup(horizontal = T, container = frm, expand = T)
-    lbl <- gWidgets2::glabel(paste0(text, " ROI's:"), container = hbox)
-    gWidgets2::addSpring(hbox)
-    entry <- gWidgets2::gedit( container = hbox, width = 25 )
-    btn <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = index, container = hbox)
-    return(entry)
+    vbox <- gWidgets2::ggroup(horizontal = F, container = frm)
+    
+    hboxInc <- gWidgets2::ggroup(horizontal = T, container = vbox, expand = T)
+    lblInc <- gWidgets2::glabel(paste0(text, " ROI's include:"), container = hboxInc)
+    gWidgets2::addSpring(hboxInc)
+    entryInc <- gWidgets2::gedit( container = hboxInc, width = 30 )
+    btnInc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, include = T), container = hboxInc)
+    
+    hboxExc <- gWidgets2::ggroup(horizontal = T, container = vbox, expand = T)
+    lblExc <- gWidgets2::glabel(paste0(text, " ROI's exclude:"), container = hboxExc)
+    gWidgets2::addSpring(hboxExc)
+    entryExc <- gWidgets2::gedit( container = hboxExc, width = 30 )
+    btnExc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, include = F), container = hboxExc)
+    
+    return(list(include = entryInc, exclude = entryExc))
   }
   
   OkButtonClicked <- function (h, ...)
@@ -555,7 +575,8 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
     #Process aborted by user
     return(NULL)
   }
-  return( list( xml=this$xml_list, summary_export = this$summaryEnabled & this$bAllImgesHaveXMLRoi, summary_norm = this$summaryNorm))
+  
+  return( list( xml_include=this$xmlList_include, xml_exclude=this$xmlList_exclude, summary_export = this$summaryEnabled & this$bAllImgesHaveXMLRoi, summary_norm = this$summaryNorm))
 }
 
 

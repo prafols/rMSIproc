@@ -4,15 +4,17 @@
 \alias{SaveProcessingParams}
 \title{SaveProcessingParams.}
 \usage{
-SaveProcessingParams(procParams, filepath, xmlRoiFiles = NULL,
-  RoiNormalization = NULL)
+SaveProcessingParams(procParams, filepath, xmlRoiFilesInclude = NULL,
+  xmlRoiFilesExclude = NULL, RoiNormalization = NULL)
 }
 \arguments{
 \item{procParams}{a list of parameters.}
 
 \item{filepath}{a full path where params will be stored}
 
-\item{xmlRoiFiles}{a vector with the used ROI XML files, NULL if no ROI was used.}
+\item{xmlRoiFilesInclude}{a vector with the used ROI XML files for ID inclusion, NULL if no ROI was used.}
+
+\item{xmlRoiFilesExclude}{a vector with the used ROI XML files for ID exclusion, NULL if no ROI was used.}
 
 \item{RoiNormalization}{a string with the name of normalization used to export the data summary.}
 }

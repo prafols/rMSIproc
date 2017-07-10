@@ -591,9 +591,14 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   
   for( i in 1:NumOfImages)
   {
-    if(xmlRoiFiles$xml[i] != "")
+    if(xmlRoiFiles$xml_include[i] != "")
     {
-      dataPaths[[i]]$xmlroi <- xmlRoiFiles$xml[i]
+      dataPaths[[i]]$xmlroiInclude <- xmlRoiFiles$xml_include[i]
+    }
+    
+    if(xmlRoiFiles$xml_exclude[i] != "")
+    {
+      dataPaths[[i]]$xmlroiExclude <- xmlRoiFiles$xml_exclude[i]
     }
   }
   rm(NumOfImages)
@@ -625,13 +630,42 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         mImg_list[[iimg]]  <- rMSI::LoadMsiData(dataPaths[[loadImgIndex]]$filepath, ff_overwrite = overwriteRamdisk )  
       }
       
-      if(!is.null( dataPaths[[loadImgIndex]]$xmlroi))
+      #Include ID's in include ROI's
+      if(!is.null( dataPaths[[loadImgIndex]]$xmlroiInclude))
       {
-        pixelID_list[[iimg]] <- unlist(lapply(rMSI::ReadBrukerRoiXML(mImg_list[[loadImgIndex]], dataPaths[[loadImgIndex]]$xmlroi), function(x){ x$id }))
+        #Id's are sorted for better performance
+        pixelID_list[[iimg]] <- sort(unique(unlist(lapply(rMSI::ReadBrukerRoiXML(mImg_list[[loadImgIndex]], dataPaths[[loadImgIndex]]$xmlroiInclude), function(x){ x$id }))))
       }
       else
       {
         pixelID_list[[iimg]] <- 0
+      }
+      
+      #Excude ID's in exclude ROI's
+      if(!is.null( dataPaths[[loadImgIndex]]$xmlroiExclude))
+      {
+        #Id's are sorted for better performance
+        excudeIds <- sort(unique(unlist(lapply(rMSI::ReadBrukerRoiXML(mImg_list[[loadImgIndex]], dataPaths[[loadImgIndex]]$xmlroiExclude), function(x){ x$id }))))
+        
+        if( pixelID_list[[iimg]] == 0 )
+        {
+          pixelID_list[[iimg]] <- 1:nrow(mImg_list[[loadImgIndex]]$pos) #Pre-load all Id's in case that no include ROI is specified
+        }
+        
+        excludeIdsLocations <- c()
+        for( idExcluded in excudeIds )
+        {
+          exIdloc <- which(pixelID_list[[iimg]] == idExcluded)
+          if(length(exIdloc) > 0)
+          {
+            excludeIdsLocations <- c(excludeIdsLocations, exIdloc)
+          }
+        }
+        
+        if(length(excludeIdsLocations) > 0)
+        {
+          pixelID_list[[iimg]] <- pixelID_list[[iimg]][-excludeIdsLocations]
+        }
       }
     }
     
@@ -686,12 +720,12 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       if(procParams$mergedatasets)
       {
         #Use the full XML file list
-        xmlList<-xmlRoiFiles$xml
+        xmlList<-xmlRoiFiles$xml_include
       }
       else
       {
         #Use the current XML
-        xmlList<-xmlRoiFiles$xml[i]
+        xmlList<-xmlRoiFiles$xml_include[i]
       }
       
       ExportROIAveragesMultiple(procData$procImg, xmlList, procData$peakMat, procParams$data$outpath, xmlRoiFiles$summary_norm)
@@ -734,9 +768,10 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   #Store processing params
   SaveProcessingParams( procParams, 
                         file.path(procParams$data$outpath, "processing_parameters.txt"),
-                        xmlRoiFiles = xmlRoiFiles$xml, RoiNormalization = xmlRoiFiles$summary_norm)
+                        xmlRoiFilesInclude = xmlRoiFiles$xml_include, xmlRoiFilesExclude = xmlRoiFiles$xml_exclude,
+                        RoiNormalization = xmlRoiFiles$summary_norm)
   
-  cat("All images were successfully processed\n")
+  cat(paste0("All data processing was completed at ", format(Sys.time(), "%Y-%m-%d %H:%M:%S") ,"\n"))
 }
 
 #' SaveProcessingParams.
@@ -746,10 +781,11 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
 #'
 #' @param procParams a list of parameters.
 #' @param filepath a full path where params will be stored
-#' @param xmlRoiFiles a vector with the used ROI XML files, NULL if no ROI was used.
+#' @param xmlRoiFilesInclude a vector with the used ROI XML files for ID inclusion, NULL if no ROI was used.
+#' @param xmlRoiFilesExclude a vector with the used ROI XML files for ID exclusion, NULL if no ROI was used.
 #' @param RoiNormalization a string with the name of normalization used to export the data summary.
 #'
-SaveProcessingParams <- function( procParams, filepath, xmlRoiFiles = NULL, RoiNormalization = NULL)
+SaveProcessingParams <- function( procParams, filepath, xmlRoiFilesInclude = NULL, xmlRoiFilesExclude = NULL, RoiNormalization = NULL)
 {
   fObj <- file(description = filepath, open = "w" )
   writeLines("Processing parameters", con = fObj)
@@ -816,13 +852,24 @@ SaveProcessingParams <- function( procParams, filepath, xmlRoiFiles = NULL, RoiN
   
   writeLines(paste("Merge datasets = ", procParams$mergedatasets, sep ="" ), con = fObj)
   
-  if(!is.null(xmlRoiFiles))
+  if(!is.null(xmlRoiFilesInclude))
   {
-    writeLines("Used ROI files:", con = fObj)
-    for(i in 1:length(xmlRoiFiles))
+    writeLines("\nUsed ROI Include files:", con = fObj)
+    for(i in 1:length(xmlRoiFilesInclude))
     {
-      writeLines(paste0("ROI", i, ": ", xmlRoiFiles[i] ), con = fObj)
+      writeLines(paste0("ROI", i, ": ", xmlRoiFilesInclude[i] ), con = fObj)
     }
+    writeLines("\n", con = fObj)
+  }
+  
+  if(!is.null(xmlRoiFilesExclude))
+  {
+    writeLines("\nUsed ROI Exclude files:", con = fObj)
+    for(i in 1:length(xmlRoiFilesExclude))
+    {
+      writeLines(paste0("ROI", i, ": ", xmlRoiFilesExclude[i] ), con = fObj)
+    }
+    writeLines("\n", con = fObj)
   }
   
   if(!is.null(RoiNormalization))

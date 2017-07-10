@@ -50,7 +50,7 @@ ExportROIAverages <- function( roi_xml_file, img, out_path = getwd(), normalizat
   }
   
   #Prepara the output paths
-  asciiSpcPath <- file.path(out_path, "roi_spectra")
+  asciiSpcPath <- file.path(out_path, "roi_spectra", img$name)
   dir.create(asciiSpcPath, showWarnings = F, recursive = T)
   
   # Get the rois listing IDs  
@@ -61,19 +61,36 @@ ExportROIAverages <- function( roi_xml_file, img, out_path = getwd(), normalizat
   {
     #Calculate average spectrum
     cat(paste0("Exporting average spectrum of roi ", i, "/", length(id_list), "\n"))
-    cubes <- rMSI::getCubeRowFromIds(img, id_list[[i]]$id) 
-    averageSpc <- rep(0, length(img$mass))
-    for( ic in 1:length(cubes))
+    
+    if(length(id_list[[i]]$id) > 1)
     {
-      dm <- img$data[[cubes[[ic]]$cube]][cubes[[ic]]$row, ]
-      dm <- dm/norm_factors[cubes[[ic]]$id] #Apply normalization
-      averageSpc <- averageSpc + colSums(dm)
+      cubes <- rMSI::getCubeRowFromIds(img, id_list[[i]]$id) 
+      averageSpc <- rep(0, length(img$mass))
+      for( ic in 1:length(cubes))
+      {
+        dm <- img$data[[cubes[[ic]]$cube]][cubes[[ic]]$row, ]
+        dm <- dm/norm_factors[cubes[[ic]]$id] #Apply normalization
+        if(class(dm) == "matrix")
+        {
+          averageSpc <- averageSpc + colSums(dm)
+        }
+        else
+        {
+          #To handle the case of matrix with only one row, thus this is a vector
+          averageSpc <- averageSpc + dm
+        }
+      }
+      averageSpc <- averageSpc / length( id_list[[i]]$id) #Div to total number of pixels in ROI
     }
-    averageSpc <- averageSpc / length( id_list[[i]]$id) #Div to total number of pixels in ROI
+    else
+    {
+      #Only one spectrum in this roi, so the average is just one spectrum
+      averageSpc <- rMSI::loadImgChunkFromIds(img, id_list[[i]]$id)[1, ]
+    }
     
     #Store the average spectrum to a ASCII file
     write.table(matrix(data = c(img$mass, averageSpc),  ncol = 2, nrow = length(averageSpc)), 
-                file = file.path(asciiSpcPath, paste0(img$name, "_", id_list[[i]]$name, ".txt")), 
+                file = file.path(asciiSpcPath, paste0(id_list[[i]]$name, ".txt")), 
                 append = F, row.names = F, col.names = F, sep = "\t", eol = "\r\n")
   }
   
