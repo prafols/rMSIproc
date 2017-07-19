@@ -505,16 +505,11 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   OkButtonClicked <- function (h, ...)
   {
     this$summaryEnabled <- gWidgets2::svalue(this$chk_sum)
-    this$summaryNorm <- paste0(as.character(gWidgets2::svalue(this$combo_norm)), "ne") 
-    if(this$summaryNorm == "RAWne")
-    {
-      this$summaryNorm <- "RAW"
-    }
-    if(this$summaryNorm == "AcqTICne")
+    this$summaryNorm <- as.character(gWidgets2::svalue(this$combo_norm))
+    if(this$summaryNorm == "TICAcq")
     {
       this$summaryNorm <- "AcqTic"
     }
-    
     this$abort_process <- F
     gWidgets2::dispose(h$obj)
   }
@@ -545,7 +540,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   chk_sum <- gWidgets2::gcheckbox("Enable ROI summary export", checked = F, container = vBox_sum)
   hBox_sum <- gWidgets2::ggroup(horizontal = T, container = vBox_sum)
   lbl_norm <- gWidgets2::glabel("Normalization:", container = hBox_sum)
-  combo_norm <- gWidgets2::gcombobox(c("RAW","TIC", "RMS", "AcqTIC", "MAX"), container = hBox_sum, expand = T, fill = T)
+  combo_norm <- gWidgets2::gcombobox(c("RAW","TIC", "RMS", "TICAcq", "MAX"), container = hBox_sum, expand = T, fill = T)
   gWidgets2::enabled(this$frm_summary) <- F
   
   #The buttons

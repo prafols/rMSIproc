@@ -190,12 +190,12 @@ ExportROIPeaks <- function(pkmat, idlist, out_path = getwd(), normalization = NU
     baseFname <- pkmat$names[1]
   }
   
-  write.table(dfintAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_intensity_average.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";" )
-  write.table(dfAreaAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_area_average.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";")
-  write.table(dfSNRAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_snr_average.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";")
-  write.table(dfintSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_intensity_sdev.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";")
-  write.table(dfAreaSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_area_sdev.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";")
-  write.table(dfSNRSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_snr_sdev.csv")), eol = "\r\n", row.names = F, col.names = F, dec = ".", sep = ";")
+  write.table(dfintAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_intensity_average.csv")), row.names = F, col.names = F, dec = ".", sep = ";" )
+  write.table(dfAreaAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_area_average.csv")), row.names = F, col.names = F, dec = ".", sep = ";")
+  write.table(dfSNRAvg, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_snr_average.csv")), row.names = F, col.names = F, dec = ".", sep = ";")
+  write.table(dfintSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_intensity_sdev.csv")), row.names = F, col.names = F, dec = ".", sep = ";")
+  write.table(dfAreaSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_area_sdev.csv")), row.names = F, col.names = F, dec = ".", sep = ";")
+  write.table(dfSNRSD, file = file.path(out_path, "roi_peaks", paste0(baseFname, "_snr_sdev.csv")), row.names = F, col.names = F, dec = ".", sep = ";")
 }
 
 #' ExportROIAveragesMultiple.

@@ -258,15 +258,15 @@ ProcessImage <- function(img,
     mergedNormList <- list()
     if( EnableTICNorm )
     {
-      mergedNormList$TICne <- c()
+      mergedNormList$TIC <- c()
     }
     if( EnableRMSNorm )
     {
-      mergedNormList$RMSne <- c()
+      mergedNormList$RMS <- c()
     }
     if( EnableMAXNorm )
     {
-      mergedNormList$MAXne <- c()
+      mergedNormList$MAX <- c()
     }
     if( EnableTICAcqNorm )
     {
@@ -278,18 +278,18 @@ ProcessImage <- function(img,
       cat(paste0("Normalizations for image ", i, "/", length(img_list), "\n"))
       if( EnableTICNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = T)
-        mergedNormList$TICne <- c(mergedNormList$TICne,  img_list[[i]]$normalizations$TICne)
+        img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = F)
+        mergedNormList$TIC <- c(mergedNormList$TIC,  img_list[[i]]$normalizations$TIC)
       }
       if( EnableRMSNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = T)
-        mergedNormList$RMSne <- c(mergedNormList$RMSne,  img_list[[i]]$normalizations$RMSne)
+        img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = F)
+        mergedNormList$RMS <- c(mergedNormList$RMS,  img_list[[i]]$normalizations$RMS)
       }
       if( EnableMAXNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = T)
-        mergedNormList$MAXne <- c(mergedNormList$MAXne,  img_list[[i]]$normalizations$MAXne)
+        img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = F)
+        mergedNormList$MAX <- c(mergedNormList$MAX,  img_list[[i]]$normalizations$MAX)
       }
       if( EnableTICAcqNorm )
       {
@@ -647,7 +647,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         #Id's are sorted for better performance
         excudeIds <- sort(unique(unlist(lapply(rMSI::ReadBrukerRoiXML(mImg_list[[loadImgIndex]], dataPaths[[loadImgIndex]]$xmlroiExclude), function(x){ x$id }))))
         
-        if( pixelID_list[[iimg]] == 0 )
+        if( pixelID_list[[iimg]][1] == 0 )
         {
           pixelID_list[[iimg]] <- 1:nrow(mImg_list[[loadImgIndex]]$pos) #Pre-load all Id's in case that no include ROI is specified
         }
@@ -675,15 +675,15 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     #Independently of the selected norms, set also the one used for data summary export
     if(xmlRoiFiles$summary_export)
     {
-      if(xmlRoiFiles$summary_norm == "TICne")
+      if(xmlRoiFiles$summary_norm == "TIC")
       {
         procParams$spectraNormalization$TIC <- T
       }
-      else if(xmlRoiFiles$summary_norm == "MAXne")
+      else if(xmlRoiFiles$summary_norm == "MAX")
       {
         procParams$spectraNormalization$MAX <- T
       }
-      else if(xmlRoiFiles$summary_norm == "RMSne")
+      else if(xmlRoiFiles$summary_norm == "RMS")
       {
         procParams$spectraNormalization$RMS <- T
       }
