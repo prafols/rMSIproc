@@ -558,7 +558,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     
     if( procParams$data$source$type == "xmass" )
     {
-      if (brukerXmlCounters[selBrukerXML] >= loadImgIndex - brukerCounter_ant)
+      if (brukerXmlCounters[selBrukerXML] >= i - brukerCounter_ant)
       {
         selBrukerClass <- selBrukerClass + 1
       }
@@ -568,7 +568,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         selBrukerXML <- selBrukerXML + 1
         selBrukerClass <- 1
       }
-      dataPaths[[i]]$name <- paste(basename(procParams$data$source$xmlpath[selBrukerXML]), "_", rMSI::ParseBrukerXML(procParams$data$source$xmlpath[selBrukerXML], selBrukerClass, T) )
+      dataPaths[[i]]$name <- paste(basename(procParams$data$source$xmlpath[selBrukerXML]), "_", rMSI::ParseBrukerXML(procParams$data$source$xmlpath[selBrukerXML], selBrukerClass, T)$name )
       dataPaths[[i]]$filepath <- procParams$data$source$xmlpath[selBrukerXML]
       dataPaths[[i]]$brukerclass <- selBrukerClass
     }
