@@ -18,7 +18,7 @@ DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 10L)
 \item{UpSampling}{the oversampling used for acurate mass detection and area integration.}
 }
 \value{
-a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
+a NumerixMatrix of 5 rows corresponding to: mass, intensity of the peak, SNR, area and binSize.
 }
 \description{
 Detect peaks from a Rcpp::NumericVector object and returns data in a R matrix.

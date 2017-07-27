@@ -47,8 +47,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FullImagePeakPicking
-List FullImagePeakPicking(StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+List FullImagePeakPicking(StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter, bool binningIn_ppm);
+RcppExport SEXP rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP, SEXP binningIn_ppmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -63,7 +63,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type doBinning(doBinningSEXP);
     Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImagePeakPicking(fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter));
+    Rcpp::traits::input_parameter< bool >::type binningIn_ppm(binningIn_ppmSEXP);
+    rcpp_result_gen = Rcpp::wrap(FullImagePeakPicking(fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm));
     return rcpp_result_gen;
 END_RCPP
 }

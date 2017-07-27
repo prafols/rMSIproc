@@ -29,6 +29,7 @@ MTPeakPicking::MTPeakPicking():
   //Just init dummy objects to allow the desctructor to work properly
   numOfThreadsDouble = 0;
   numOfPixels = 0;
+  binSizeInppm = true;
   peakObj = new PeakPicking*[1];
   mPeaks =  new PeakPicking::Peaks*[1];
 }
@@ -44,6 +45,7 @@ MTPeakPicking::MTPeakPicking(ImgProcDef imgRunInfo) :
   
   minSNR = imgRunInfo.SNR;
   binSize = imgRunInfo.tolerance;
+  binSizeInppm = imgRunInfo.tolerance_in_ppm;
   binFilter = imgRunInfo.filter;
   numOfPixels = 0;
   for( int i = 0; i < imgRunInfo.fileNames.length(); i++)
@@ -73,7 +75,7 @@ List MTPeakPicking::Run()
 {
   //Run peak-picking in mutli-threading
   runMSIProcessingCpp();
-  
+
   //Binning
   if(bDoBinning)
   {
@@ -82,7 +84,7 @@ List MTPeakPicking::Run()
   else
   {
     List pkLst(numOfPixels);
-    NumericVector pkMass, pkIntensity, pkSNR, pkArea;
+    NumericVector pkMass, pkIntensity, pkSNR, pkArea, pkBinSize;
     for(int i = 0; i < numOfPixels; i++)
     {
       Rcout<<"Copying peaks "<< (i+1) <<" of "<< numOfPixels <<"\n";
@@ -90,11 +92,13 @@ List MTPeakPicking::Run()
       pkIntensity = NumericVector(mPeaks[i]->intensity.size());
       pkSNR = NumericVector(mPeaks[i]->SNR.size());
       pkArea = NumericVector(mPeaks[i]->area.size());
+      pkBinSize = NumericVector(mPeaks[i]->binSize.size());
       memcpy(pkMass.begin(), mPeaks[i]->mass.data(), sizeof(double)*mPeaks[i]->mass.size());
       memcpy(pkIntensity.begin(), mPeaks[i]->intensity.data(), sizeof(double)*mPeaks[i]->intensity.size());
       memcpy(pkSNR.begin(), mPeaks[i]->SNR.data(), sizeof(double)*mPeaks[i]->SNR.size());
       memcpy(pkArea.begin(), mPeaks[i]->area.data(), sizeof(double)*mPeaks[i]->area.size());
-      pkLst[i] = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR, Named("area") = pkArea);
+      memcpy(pkBinSize.begin(), mPeaks[i]->binSize.data(), sizeof(double)*mPeaks[i]->binSize.size());
+      pkLst[i] = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR, Named("area") = pkArea, Named("binSize") = pkBinSize);
     }
     return pkLst;
   }
@@ -151,8 +155,10 @@ List MTPeakPicking::BinPeaks()
   int iMax;
   std::vector<std::vector<TBin> > binMat; //A matrix containing binning values
   NumericVector binMass; //The mass name for each matrix column
+  NumericVector binSizeVec; //The raw spectra bin size for each matrix column
   Rcout<<"Binning...\n";
   int iCount = 0;
+
   while(true)
   {
     Rcout<<iCount<<"/"<<numOfPixels<<"\n";
@@ -176,10 +182,11 @@ List MTPeakPicking::BinPeaks()
     }
     
     Tic[iMax] = -1.0; //Mark current spectrum as processed by deleting its TIC
-    
+  
     for( unsigned int ip = 0; ip <  mPeaks[iMax]->mass.size(); ip ++)
     {
       binMass.push_back(mPeaks[iMax]->mass[ip]); //Append element to the mass vector (names of bin Matrix)
+      binSizeVec.push_back(mPeaks[iMax]->binSize[ip]); //Append element to the binSize vector (names of bin Matrix)
       binMat.resize(binMat.size() + 1); //Append new column
       binMat[binMat.size() - 1].resize(numOfPixels); //Extenend all new column elements
       binMat[binMat.size() - 1][iMax].intensity = mPeaks[iMax]->intensity[ip]; 
@@ -194,27 +201,43 @@ List MTPeakPicking::BinPeaks()
         {
           //Find the nearest peak, the nearest peak postion is reatined in iPos var
           double dist = 0.0;
-          double dist_ant = 1e50;
+          double dist_ppm;
+          double dist_ant;
+          double dist_ant_ppm = 1e50;
           int iPos = 0;
           for( unsigned int imass = 0; imass <  mPeaks[j]->mass.size(); imass++)
           {
             iPos = imass;
             dist = binMass[binMass.size() - 1] - mPeaks[j]->mass[imass];
-            dist = 1e6*dist/binMass[binMass.size() - 1]; //Translation to ppm
-            if(dist <= 0)
+            dist_ppm = 1e6*dist/binMass[binMass.size() - 1]; //Translation to ppm
+            if(dist_ppm <= 0)
             {
-              if(std::abs(dist_ant) < std::abs(dist))
+              if(std::abs(dist_ant_ppm) < std::abs(dist_ppm))
               {
                 iPos = imass - 1;
+                dist_ppm = dist_ant_ppm;
                 dist = dist_ant;
               }
               break; //avoid all the loop
             }
+            dist_ant_ppm = dist_ppm;
             dist_ant = dist;
           }
           
+          //Select the kind of binning tolerance
+          double compTolerance;
+          if(binSizeInppm)
+          {
+            dist = dist_ppm;
+            compTolerance = binSize;
+          }
+          else
+          {
+            compTolerance = binSize * binSizeVec[binSizeVec.size() - 1];
+          } 
+          
           //Check if is in the same mass bin and fill the matrix value accordingly
-          if(std::abs(dist) <= binSize && mPeaks[j]->mass.size() > 0)
+          if(std::abs(dist) <= compTolerance && mPeaks[j]->mass.size() > 0)
           {
             binMat[binMat.size() - 1][j].intensity = mPeaks[j]->intensity[iPos];
             binMat[binMat.size() - 1][j].SNR = mPeaks[j]->SNR[iPos];
@@ -227,15 +250,19 @@ List MTPeakPicking::BinPeaks()
             
             //Recompute mass centroid using a continuous average
             binMass[binMass.size() - 1] *= numMasses; 
+            binSizeVec[binSizeVec.size() - 1] *= numMasses;
             binMass[binMass.size() - 1] +=  mPeaks[j]->mass[iPos];
+            binSizeVec[binSizeVec.size() - 1] +=  mPeaks[j]->binSize[iPos];
             numMasses++;
             binMass[binMass.size() - 1] /= numMasses; 
+            binSizeVec[binSizeVec.size() - 1] /= numMasses;
             
             //Delete datapoint from current peaks
             mPeaks[j]->mass.erase(mPeaks[j]->mass.begin() + iPos);
             mPeaks[j]->intensity.erase(mPeaks[j]->intensity.begin() + iPos);
             mPeaks[j]->SNR.erase(mPeaks[j]->SNR.begin() + iPos);
             mPeaks[j]->area.erase(mPeaks[j]->area.begin() + iPos);
+            mPeaks[j]->binSize.erase(mPeaks[j]->binSize.begin() + iPos);
           }
           else
           {
@@ -337,7 +364,7 @@ List FullImagePeakPicking ( StringVector fileNames,
                                 NumericVector mass, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
                                 double SNR = 5, int WinSize = 10, int InterpolationUpSampling = 10, 
-                                bool doBinning = true, double binningTolerance = 0.05, double binningFilter = 0.9)
+                                bool doBinning = true, double binningTolerance = 100, double binningFilter = 0.9, bool binningIn_ppm = true)
 {
   //Copy R data to C arrays
   double *massC = new double[mass.length()];
@@ -358,6 +385,7 @@ List FullImagePeakPicking ( StringVector fileNames,
   myProcParams.tolerance = binningTolerance;
   myProcParams.filter = binningFilter;
   myProcParams.performBinning = doBinning;
+  myProcParams.tolerance_in_ppm = binningIn_ppm;
   
   MTPeakPicking myPeakPicking(myProcParams);
   delete[] massC;
@@ -366,7 +394,7 @@ List FullImagePeakPicking ( StringVector fileNames,
 }
 
 // [[Rcpp::export]]
-List MergePeakMatricesC( List PeakMatrices, double binningTolerance = 0.05, double binningFilter = 0.01 )
+List MergePeakMatricesC( List PeakMatrices, double binningTolerance = 100, double binningFilter = 0.01 )
 {
   MTPeakPicking myPeakPicking;
   for( int i = 0; i < PeakMatrices.length(); i++)

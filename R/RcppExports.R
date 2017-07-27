@@ -9,11 +9,11 @@ FullImageAlign <- function(fileNames, refSpectrum, numRows, dataType, numOfThrea
     .Call('rMSIproc_FullImageAlign', PACKAGE = 'rMSIproc', fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling)
 }
 
-FullImagePeakPicking <- function(fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 0.05, binningFilter = 0.9) {
-    .Call('rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter)
+FullImagePeakPicking <- function(fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 100, binningFilter = 0.9, binningIn_ppm = TRUE) {
+    .Call('rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm)
 }
 
-MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 0.05, binningFilter = 0.01) {
+MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 100, binningFilter = 0.01) {
     .Call('rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
 }
 
@@ -107,7 +107,7 @@ StorePeakMatrixC <- function(path, mat) {
 #' @param WinSize The windows used to detect peaks and caculate noise.
 #' @param UpSampling the oversampling used for acurate mass detection and area integration.
 #' 
-#' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
+#' @return a NumerixMatrix of 5 rows corresponding to: mass, intensity of the peak, SNR, area and binSize.
 #' 
 DetectPeaks_C <- function(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 10L) {
     .Call('rMSIproc_DetectPeaks_C', PACKAGE = 'rMSIproc', mass, intensity, SNR, WinSize, UpSampling)

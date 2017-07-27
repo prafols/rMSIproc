@@ -18,7 +18,7 @@ DetectPeaks(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 \item{OverSampling}{the used oversampling value for interpolating the peak shape and improve mass and area calculation.}
 }
 \value{
-a list containing mass, intensity, SNR and area fields of detected peaks.
+a list containing mass, intensity, SNR, area and the binSize arround peak fields of detected peaks.
 }
 \description{
 DetectPeaks'

@@ -273,6 +273,15 @@ ImportWizardGui <- function()
       this$procParamList$peakpicking$winsize <- as.integer(gWidgets2::svalue(this$spin_peakWin))
       this$procParamList$peakpicking$oversample <- as.integer(gWidgets2::svalue(this$spin_peakOversample))
       this$procParamList$peakpicking$bintolerance <- as.double(gWidgets2::svalue(this$spin_binTolerance))
+      
+      if(gWidgets2::svalue(this$ratio_binningUnits) == "[ppm]")
+      {
+        this$procParamList$peakpicking$binUsingPPM <- T
+      }
+      else
+      {
+        this$procParamList$peakpicking$binUsingPPM <- F
+      }
       this$procParamList$peakpicking$binfilter <- as.double(gWidgets2::svalue(this$spin_binFilter)/100)
     }
     
@@ -392,7 +401,9 @@ ImportWizardGui <- function()
   spin_SNR <- drawLabelSpin(box_peakpick, "SNR Threshold:", 1, 100, 5)
   spin_peakWin <- drawLabelSpin(box_peakpick, "Detector window size:", 5, 200, 20)
   spin_peakOversample <- drawLabelSpin(box_peakpick, "Peak shape over-sampling:", 1, 50, 10)
-  spin_binTolerance <- drawLabelSpin(box_peakpick, "Peak-Bin Tolerance [ppm]:", 1, 1000, 100, decPlaces = 0)
+  spin_binTolerance <- drawLabelSpin(box_peakpick, "Peak-Bin Tolerance:", 1, 1000, 100, decPlaces = 0)
+  frm_binUnits <- gWidgets2::gframe("Binning Tolerance Units:", container = box_peakpick)
+  ratio_binningUnits <- gWidgets2::gradio(c("[ppm]", "[scans]"), container = frm_binUnits, horizontal = T)
   spin_binFilter <- drawLabelSpin(box_peakpick, "Peak Filter [%]:", 1, 100, 5)
   
   #Number of processing threads

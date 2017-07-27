@@ -139,6 +139,7 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
         m_peaks->intensity.push_back(spectrum[i]);
         m_peaks->SNR.push_back(spectrum[i]/noise_mean); 
         m_peaks->area.push_back(predictPeakArea(spectrum, i)); //Normalized to non-FFT sapce
+        m_peaks->binSize.push_back( fabs(mass[i + 1] - mass[i]) );
       }
     }
     slope_ant = slope;
@@ -364,7 +365,7 @@ NumericVector PeakPicking::getAreaWindow()
 //' @param WinSize The windows used to detect peaks and caculate noise.
 //' @param UpSampling the oversampling used for acurate mass detection and area integration.
 //' 
-//' @return a NumerixMatrix of 4 rows corresponding to: mass, intensity of the peak,SNR and area.
+//' @return a NumerixMatrix of 5 rows corresponding to: mass, intensity of the peak, SNR, area and binSize.
 //' 
 // [[Rcpp::export]]
 NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR = 5, int WinSize = 20, int UpSampling = 10)
@@ -386,19 +387,20 @@ NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double 
   PeakPicking::Peaks *peaks = ppObj.peakPicking(spectrum, SNR);
   
   //Convert peaks to R matrix like object
-  NumericMatrix mp(4, peaks->intensity.size());
+  NumericMatrix mp(5, peaks->intensity.size());
   for(int i = 0; i < peaks->mass.size(); i++)
   {
     mp(0, i) = peaks->mass[i];
     mp(1, i) = peaks->intensity[i];
     mp(2, i) = peaks->SNR[i];
     mp(3, i) = peaks->area[i];
+    mp(4, i) = peaks->binSize[i];
   }
   
   delete peaks;
   delete[] massC;
   delete[] spectrum;
-  rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR", "area");
+  rownames(mp) =  CharacterVector::create("mass", "intensity", "SNR", "area", "binSize");
   return mp;
 }
 //' TestPeakInterpolation_C.

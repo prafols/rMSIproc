@@ -64,7 +64,7 @@ ProcessImage <- function(img,
                          AlignmentRefLow = 0, AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         UseBinning = T, BinTolerance = 100, BinFilter = 0.05,
+                         UseBinning = T, BinTolerance = 100, BinFilter = 0.05, BinToleranceUsingPPM = T,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
                          NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
 {
@@ -231,7 +231,8 @@ ProcessImage <- function(img,
                                      InterpolationUpSampling = peakUpSampling, 
                                      doBinning = UseBinning, 
                                      binningTolerance = BinTolerance, 
-                                     binningFilter = BinFilter)
+                                     binningFilter = BinFilter,
+                                     binningIn_ppm = BinToleranceUsingPPM)
     
     if(UseBinning)
     {
@@ -514,6 +515,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
 {
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
+  
   if(is.null(procParams))
   {
     cat("Processing aborted\n")
@@ -705,7 +707,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
                              AlignmentRefLow = procParams$alignment$reflow, AlignmentRefMid = procParams$alignment$refmid, AlignmentRefHigh = procParams$alignment$refhigh,
                              EnableCalibration = procParams$calibration$enabled, CalibrationPeakWin = procParams$calibration$winsize,
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
-                             UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter,
+                             UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, BinToleranceUsingPPM = procParams$peakpicking$binUsingPPM,
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableRMSNorm = procParams$spectraNormalization$RMS, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
                              NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
 
@@ -846,7 +848,15 @@ SaveProcessingParams <- function( procParams, filepath, xmlRoiFilesInclude = NUL
     writeLines(paste("Peak-picking SNR threshold = ", procParams$peakpicking$snr, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking detector window = ", procParams$peakpicking$winsize, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking oversampling = ", procParams$peakpicking$oversample, sep ="" ), con = fObj)
-        writeLines(paste("Peak-picking binning tolerance = ", procParams$peakpicking$bintolerance, sep ="" ), con = fObj)
+    if(procParams$peakpicking$binUsingPPM)
+    {
+      writeLines("Peak-picking binning tolerance is in ppm", con = fObj)  
+    }
+    else
+    {
+      writeLines("Peak-picking binning tolerance is in scans", con = fObj)  
+    }
+    writeLines(paste("Peak-picking binning tolerance = ", procParams$peakpicking$bintolerance, sep ="" ), con = fObj)
     writeLines(paste("Peak-picking binning filter = ", procParams$peakpicking$binfilter, sep ="" ), con = fObj)
   }
   

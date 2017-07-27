@@ -37,6 +37,7 @@ class MTPeakPicking : public ThreadingMsiProc
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type
       double tolerance;
+      bool tolerance_in_ppm; //If true the binning tolerance is specified in  ppm, if false then the number of datapoints per peak is used instead
       double filter;
       bool performBinning;
       int numOfThreads;
@@ -63,6 +64,7 @@ class MTPeakPicking : public ThreadingMsiProc
     int numOfPixels;
     double minSNR;
     double binSize;
+    bool binSizeInppm;
     double binFilter;
     PeakPicking::Peaks **mPeaks; //A place to store peaks objects outside threaded space
     bool bDoBinning;

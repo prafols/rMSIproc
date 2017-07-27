@@ -24,7 +24,7 @@
 #' @param WinSize the used windows size for peak detection
 #' @param OverSampling the used oversampling value for interpolating the peak shape and improve mass and area calculation.
 #'
-#' @return a list containing mass, intensity, SNR and area fields of detected peaks.
+#' @return a list containing mass, intensity, SNR, area and the binSize arround peak fields of detected peaks.
 #'
 DetectPeaks <- function(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 {
@@ -34,5 +34,6 @@ DetectPeaks <- function(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 1
   peaks$intensity <- pm["intensity", ]
   peaks$SNR <- pm["SNR", ]
   peaks$area <- pm["area", ]
+  peaks$binSize <- pm["binSize", ]
   return(peaks)
 }
