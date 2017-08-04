@@ -97,7 +97,7 @@ getImgIdsFromPeakMatrixRows <- function(pkMat, rows)
   rows <- sort(unique(rows), decreasing = F)
   
   id_lst <- list()
-  allIds <- buildImgIdVector(pkMat)
+  allIds <- buildImgIdVectorFromPeakMatrix(pkMat)
   iRowStart <- 1
   for( i in 1:length(pkMat$names))
   {

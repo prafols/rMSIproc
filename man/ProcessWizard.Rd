@@ -5,7 +5,7 @@
 \title{ProcessWizard.}
 \usage{
 ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F,
-  calibrationSpan = 0.75)
+  calibrationSpan = 0.75, store_binsize_txt_file = F)
 }
 \arguments{
 \item{deleteRamdisk}{if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).}
@@ -13,6 +13,8 @@ ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F,
 \item{overwriteRamdisk}{if the current ramdisk must be overwrited.}
 
 \item{calibrationSpan}{the used span in the loess fitting for mass calibration.}
+
+\item{store_binsize_txt_file}{if the binSize used in each binning column must be soterd in a text file.}
 }
 \description{
 Imports and process MSI data using a friendly GUI.

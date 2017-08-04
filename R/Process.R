@@ -88,7 +88,7 @@ ProcessImage <- function(img,
     {
       if( class(img_list[[i]]) != "rMSIObj" )
       {
-        stop("Error: Found an object that is not class of rMSIObj, aboring...\n")
+        stop("Error: Found an object that is not an rMSIObj class, aborting...\n")
       }
     }
     dataInf <- getrMSIdataInfoMultipleDataSets(img_list)
@@ -234,6 +234,9 @@ ProcessImage <- function(img,
                                      binningFilter = BinFilter,
                                      binningIn_ppm = BinToleranceUsingPPM)
     
+    #Keep track of used binSize in the binning stage
+    usedBinSize <- pkMatrix$binsize
+    
     if(UseBinning)
     {
       cat("Replacing zero values in the binned peak matrix...\n")
@@ -251,6 +254,7 @@ ProcessImage <- function(img,
   else
   {
     pkMatrix <- NULL
+    usedBinSize <- NULL
   }
   
   #Calculate some normalizations
@@ -277,24 +281,58 @@ ProcessImage <- function(img,
     for( i in 1:length(img_list))
     {
       cat(paste0("Normalizations for image ", i, "/", length(img_list), "\n"))
+      
+      if(is.null(img_list[[i]]$normalizations))
+      {
+        img_list[[i]]$normalizations <- list()
+      }
+      
       if( EnableTICNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = F)
+        if(is.null(img_list[[i]]$normalizations$TIC))
+        {
+          img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = F)
+        }
+        else
+        {
+          cat(paste0("TIC normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
+        }
         mergedNormList$TIC <- c(mergedNormList$TIC,  img_list[[i]]$normalizations$TIC)
       }
       if( EnableRMSNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = F)
+        if(is.null(img_list[[i]]$normalizations$RMS))
+        {
+          img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = F)
+        }
+        else
+        {
+          cat(paste0("RMS normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
+        }
         mergedNormList$RMS <- c(mergedNormList$RMS,  img_list[[i]]$normalizations$RMS)
       }
       if( EnableMAXNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = F)
+        if(is.null(img_list[[i]]$normalizations$MAX))
+        {
+          img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = F)
+        }
+        else
+        {
+          cat(paste0("MAX normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
+        }
         mergedNormList$MAX <- c(mergedNormList$MAX,  img_list[[i]]$normalizations$MAX)
       }
       if( EnableTICAcqNorm )
       {
-        img_list[[i]] <- rMSI::NormalizeByAcqDegradation(img_list[[i]])
+        if(is.null(img_list[[i]]$normalizations$AcqTic))
+        {
+          img_list[[i]] <- rMSI::NormalizeByAcqDegradation(img_list[[i]])
+        }
+        else
+        {
+          cat(paste0("TICAcq normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
+        }
         mergedNormList$AcqTic <- c(mergedNormList$AcqTic,  img_list[[i]]$normalizations$AcqTic)
       }
     }
@@ -355,6 +393,7 @@ ProcessImage <- function(img,
   
   return_list$peakMat <- pkMatrix
   return_list$alignShifts <- alngLags
+  return_list$binSizes <- usedBinSize
   return ( return_list )
 }
 
@@ -510,11 +549,15 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFi
 #' @param deleteRamdisk if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).
 #' @param overwriteRamdisk if the current ramdisk must be overwrited.
 #' @param calibrationSpan the used span in the loess fitting for mass calibration.
+#' @param store_binsize_txt_file if the binSize used in each binning column must be soterd in a text file.
 #'
-ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationSpan = 0.75 )
+ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationSpan = 0.75, store_binsize_txt_file = F )
 {
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
+  
+  #Decide from the begining if tar data must be saved or not. I'm doing it that way because some of this paramters my change during processing.
+  MSIDataMustBeSavedInTARFormat <- procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"
   
   if(is.null(procParams))
   {
@@ -696,7 +739,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
                                                       procParams$spectraNormalization$MAX,
                                                       procParams$spectraNormalization$RMS,
-                                                      procParams$spectraNormalization$AcqTIC)
+                                                      procParams$spectraNormalization$AcqTIC )
     }
     
     #Process data
@@ -729,7 +772,6 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         #Use the current XML
         xmlList<-xmlRoiFiles$xml_include[i]
       }
-      
       ExportROIAveragesMultiple(procData$procImg, xmlList, procData$peakMat, procParams$data$outpath, xmlRoiFiles$summary_norm)
     }
     
@@ -745,10 +787,15 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         pkMatName <- sub('\\..*$', '',procData$procImg[[1]]$name) #Remove extensions of image name
       }
       StorePeakMatrix( file.path(procParams$data$outpath,  paste(pkMatName,"-peaks.zip", sep ="")), procData$peakMat)
+      
+      if( !is.null(procData$binSizes) && store_binsize_txt_file )
+      {
+        write.table(procData$binSizes, file = file.path(procParams$data$outpath,  paste(pkMatName,"-binSize.txt", sep ="")), append = F, row.names = F, col.names = F, dec = ".")
+      }
     }
     
     #Store MS image to a tar file
-    if( procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"  )
+    if( MSIDataMustBeSavedInTARFormat  )
     {
       
       for( iSave in 1:length(procData$procImg) )
@@ -901,7 +948,7 @@ SaveProcessingParams <- function( procParams, filepath, xmlRoiFilesInclude = NUL
 #'
 #' @param img_list a list of images to be merged.
 #' @param ramdisk_path a path where resampled data ramdisk will be stored.
-#' @param pixel_id a list containing a vector of ID's to retain for each img. If some img have to use all ID's 0 my be supplied. 
+#' @param pixel_id a list containing a vector of ID's to retain for each img. If some img have to use all ID's 0 may be supplied. Th ID's must be sorted in ascending order.
 #'
 #' @return a list with the merged images.
 #'
@@ -968,11 +1015,15 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
     {
       imgSelIDs <-  pixel_id[[i]]
     }
-
-    data_path <- file.path(ramdisk_path, paste0(img_list[[i]]$name, "_resam"))
-    imgAux <- rMSI::CreateSubDataset(img_list[[i]], imgSelIDs, data_path, common_mass)
-    rMSI::DeleteRamdisk(img_list[[i]])
-    img_list[[i]] <- imgAux
+    
+    if( !identical(imgSelIDs, 1:nrow(img_list[[i]]$pos)) || !identicalMassAxis )
+    {
+      #Only create a new sub-dataset if the mass axis is not common through all data or the selected ID of some images are a subset of ID's
+      data_path <- file.path(ramdisk_path, paste0(img_list[[i]]$name, "_resam"))
+      imgAux <- rMSI::CreateSubDataset(img_list[[i]], imgSelIDs, data_path, common_mass)
+      rMSI::DeleteRamdisk(img_list[[i]])
+      img_list[[i]] <- imgAux
+    }
   }
   
   return(img_list)

@@ -11,7 +11,7 @@ MergerMSIDataSets(img_list, ramdisk_path, pixel_id = NULL)
 
 \item{ramdisk_path}{a path where resampled data ramdisk will be stored.}
 
-\item{pixel_id}{a list containing a vector of ID's to retain for each img. If some img have to use all ID's 0 my be supplied.}
+\item{pixel_id}{a list containing a vector of ID's to retain for each img. If some img have to use all ID's 0 may be supplied. Th ID's must be sorted in ascending order.}
 }
 \value{
 a list with the merged images.

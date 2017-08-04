@@ -277,6 +277,7 @@ List MTPeakPicking::BinPeaks()
       if(countPeaks < (int)(numOfPixels * binFilter))
       {
         binMass.erase(binMass.begin() + binMass.size() - 1);
+        binSizeVec.erase(binSizeVec.begin() + binSizeVec.size() - 1);
         binMat.erase(binMat.begin() + binMat.size() - 1);
       }
       
@@ -293,6 +294,7 @@ List MTPeakPicking::BinPeaks()
   //Sort columns by mass
   Rcout<<"Sorting columns by mass...\n";
   NumericVector massSorting(binMass.size());
+  NumericVector binsizeSorting(binSizeVec.size());
   memcpy(massSorting.begin(), binMass.begin(), sizeof(double)*binMass.size());
   int sortedInds[binMass.size()];
   double minVal;
@@ -314,6 +316,7 @@ List MTPeakPicking::BinPeaks()
   for(int i = 0; i < binMass.size(); i++)
   {
     massSorting[i] = binMass[sortedInds[i]];
+    binsizeSorting[i] = binSizeVec[sortedInds[i]];
   }
   
   //Copy the matrix sorting it
@@ -327,7 +330,7 @@ List MTPeakPicking::BinPeaks()
     }
   }
   
-  return List::create( Named("mass") = massSorting, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea );
+  return List::create( Named("mass") = massSorting, Named("intensity") = binMatIntensity, Named("SNR") = binMatSNR, Named("area") = binMatArea, Named("binsize") = binsizeSorting );
 }
 
 void MTPeakPicking::SetBinSize(double value)
@@ -342,19 +345,12 @@ void MTPeakPicking::SetBinFilter(double value)
 
 void MTPeakPicking::ProcessingFunction(int threadSlot)
 {
-  double snrThreshold = minSNR;
-  if(bDoBinning)
-  {
-    //Using the half of SNR to reatain near-to-min peaks
-    snrThreshold *= 0.5;
-  }
-  
   //Perform peak-picking of each spectrum in the current loaded cube
   int is = CubeFirstRowID[iCube[threadSlot]];
   //The same will happen for Alignment
   for( int j = 0; j < cubes[threadSlot]->nrows; j++)
   {
-    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], snrThreshold ); 
+    mPeaks[is] = peakObj[threadSlot]->peakPicking( cubes[threadSlot]->data[j], minSNR ); 
     is++;
   }
 }

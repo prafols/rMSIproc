@@ -144,6 +144,7 @@ ExportROIPeaks <- function(pkmat, idlist, out_path = getwd(), normalization = NU
   dfSNRSD <- data.frame( ROI = roiNames , emtyAuxMat)
   rm(emtyAuxMat)
   
+  cat("Exporting roi's peak matrices csv files...\n")
   pb <- txtProgressBar(min=0, max=numOfRois, style = 3)
   currentROi <- 0
   for( img in 1:length(idlist))
