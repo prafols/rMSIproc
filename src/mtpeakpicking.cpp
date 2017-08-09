@@ -156,9 +156,11 @@ List MTPeakPicking::BinPeaks()
   std::vector<std::vector<TBin> > binMat; //A matrix containing binning values
   NumericVector binMass; //The mass name for each matrix column
   NumericVector binSizeVec; //The raw spectra bin size for each matrix column
+  NumericVector binAvgInt; //The average spectra intensity of each bin
   Rcout<<"Binning...\n";
   int iCount = 0;
 
+  double alpha = 0; //Use to calculate bin mass related to peak intensity
   while(true)
   {
     Rcout<<iCount<<"/"<<numOfPixels<<"\n";
@@ -182,16 +184,25 @@ List MTPeakPicking::BinPeaks()
     }
     
     Tic[iMax] = -1.0; //Mark current spectrum as processed by deleting its TIC
-  
-    for( unsigned int ip = 0; ip <  mPeaks[iMax]->mass.size(); ip ++)
+
+    while( mPeaks[iMax]->mass.size() > 0 )
     {
-      binMass.push_back(mPeaks[iMax]->mass[ip]); //Append element to the mass vector (names of bin Matrix)
-      binSizeVec.push_back(mPeaks[iMax]->binSize[ip]); //Append element to the binSize vector (names of bin Matrix)
+      binMass.push_back(mPeaks[iMax]->mass[0]); //Append element to the mass vector (names of bin Matrix)
+      binSizeVec.push_back(mPeaks[iMax]->binSize[0]); //Append element to the binSize vector (names of bin Matrix)
+      binAvgInt.push_back(mPeaks[iMax]->intensity[0]); //Append element to intensity bin
       binMat.resize(binMat.size() + 1); //Append new column
       binMat[binMat.size() - 1].resize(numOfPixels); //Extenend all new column elements
-      binMat[binMat.size() - 1][iMax].intensity = mPeaks[iMax]->intensity[ip]; 
-      binMat[binMat.size() - 1][iMax].SNR = mPeaks[iMax]->SNR[ip];
-      binMat[binMat.size() - 1][iMax].area = mPeaks[iMax]->area[ip];
+      binMat[binMat.size() - 1][iMax].intensity = mPeaks[iMax]->intensity[0]; 
+      binMat[binMat.size() - 1][iMax].SNR = mPeaks[iMax]->SNR[0];
+      binMat[binMat.size() - 1][iMax].area = mPeaks[iMax]->area[0];
+      
+      //Delete current peak
+      mPeaks[iMax]->mass.erase(mPeaks[iMax]->mass.begin());
+      mPeaks[iMax]->intensity.erase(mPeaks[iMax]->intensity.begin());
+      mPeaks[iMax]->SNR.erase(mPeaks[iMax]->SNR.begin());
+      mPeaks[iMax]->area.erase(mPeaks[iMax]->area.begin());
+      mPeaks[iMax]->binSize.erase(mPeaks[iMax]->binSize.begin());
+      
       double numMasses = 1.0; //number of peak masses used to compute each mass centroid
       int countPeaks = 1; //Number of peaks in current column
       
@@ -249,13 +260,15 @@ List MTPeakPicking::BinPeaks()
             }
             
             //Recompute mass centroid using a continuous average
-            binMass[binMass.size() - 1] *= numMasses; 
+            alpha =  binAvgInt[binAvgInt.size() - 1] / ( binAvgInt[binAvgInt.size() - 1] + mPeaks[j]->intensity[iPos]);
+            binMass[binMass.size() - 1] = alpha * binMass[binMass.size() - 1] +  (1.0 - alpha) * mPeaks[j]->mass[iPos];
             binSizeVec[binSizeVec.size() - 1] *= numMasses;
-            binMass[binMass.size() - 1] +=  mPeaks[j]->mass[iPos];
+            binAvgInt[binAvgInt.size() - 1] *= numMasses;
             binSizeVec[binSizeVec.size() - 1] +=  mPeaks[j]->binSize[iPos];
+            binAvgInt[binAvgInt.size() - 1] += mPeaks[j]->intensity[iPos];
             numMasses++;
-            binMass[binMass.size() - 1] /= numMasses; 
             binSizeVec[binSizeVec.size() - 1] /= numMasses;
+            binAvgInt[binAvgInt.size() - 1] /= numMasses;
             
             //Delete datapoint from current peaks
             mPeaks[j]->mass.erase(mPeaks[j]->mass.begin() + iPos);
@@ -278,6 +291,7 @@ List MTPeakPicking::BinPeaks()
       {
         binMass.erase(binMass.begin() + binMass.size() - 1);
         binSizeVec.erase(binSizeVec.begin() + binSizeVec.size() - 1);
+        binAvgInt.erase(binAvgInt.begin() + binAvgInt.size() - 1);
         binMat.erase(binMat.begin() + binMat.size() - 1);
       }
       

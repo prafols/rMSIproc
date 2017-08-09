@@ -105,11 +105,11 @@ getImgIdsFromPeakMatrixRows <- function(pkMat, rows)
     iSubRows<- which(rows %in% iRowStart:iRowStop )
     if( length(iSubRows) > 0)
     {
-      id_lst[[i]] <- list( name = pkMat$names[i], id = allIds[rows[iSubRows]] , pkMatRow = rows[iSubRows])
+      id_lst[[i]] <- list( name = pkMat$names[i], uuid = pkMat$uuid[i], id = allIds[rows[iSubRows]] , pkMatRow = rows[iSubRows])
     }
     else
     {
-      id_lst[[i]] <- list( name = pkMat$names[i], id = c() , pkMatRow = c())
+      id_lst[[i]] <- list( name = pkMat$names[i], uuid = pkMat$uuid[i], id = c() , pkMatRow = c())
     }
     iRowStart <- iRowStop + 1
   }

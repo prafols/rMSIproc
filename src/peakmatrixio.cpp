@@ -60,6 +60,12 @@ path(dir_path)
       int ip = 0;
       while (std::getline(fileNames, str))
       {
+        //Simple trick to deal with files using \r\n (windows) in linux
+        if(str[str.length() - 1] == '\r')
+        {
+          str.erase(str.length() - 1);
+        }
+        
         // Process str that contains each line of names.txt 
         (*sNames)[ip] = str;
         ip++;
@@ -88,6 +94,12 @@ path(dir_path)
       int ip = 0;
       while (std::getline(fileUUIDs, str))
       {
+        //Simple trick to deal with files using \r\n (windows) in linux
+        if(str[str.length() - 1] == '\r')
+        {
+          str.erase(str.length() - 1);
+        }
+        
         // Process str that contains each line of names.txt 
         (*sUUID)[ip] = str;
         ip++;
@@ -489,6 +501,11 @@ DataFrame PeakMatrixIO::LoadNormalizationMatrix()
   {
     while (std::getline(fileNormNames, str))
     {
+      //Simple trick to deal with files using \r\n (windows) in linux
+      if(str[str.length() - 1] == '\r')
+      {
+        str.erase(str.length() - 1);
+      }
       normNames.push_back(str);
     }
     fileNormNames.close();
