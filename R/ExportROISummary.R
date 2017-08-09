@@ -94,7 +94,7 @@ ExportROIAverages <- function( roi_xml_file, img, out_path = getwd(), normalizat
                 append = F, row.names = F, col.names = F, sep = "\t", eol = "\r\n")
   }
   
-  return( list( img_uuid = img$uuid, idlist = id_list ))
+  return( list( img_name = img$name, img_uuid = img$uuid, idlist = id_list ))
 }
 
 #' ExportROIPeaks.
@@ -130,7 +130,7 @@ ExportROIPeaks <- function(pkmat, idlist, out_path = getwd(), normalization = NU
   }
   
   #Count total number of rows in final data.frame to track a progress bar and prepare the data.frame
-  roiNames <- unlist(lapply(idlist, function(x){ unlist(lapply(x$idlist, function(y){ y$name} )) }))
+  roiNames <- unlist(lapply(idlist, function(x){  paste0( x$img_name,"_",unlist(lapply(x$idlist, function(y){ y$name} ))) }))
   numOfRois <- length(roiNames)
   roiNames <- c("ROI", roiNames) #The first row of the data.frame is the column names
   emtyAuxMat <- matrix(ncol = length(pkmat$mass), nrow = numOfRois + 1) #+1 because the first row will be used for mass axis in numeric format
