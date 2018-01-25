@@ -6,11 +6,12 @@
 using namespace Rcpp;
 
 // AlignSpectrumToReference
-NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x, bool bilinear, double lagRefLow, double lagRefMid, double lagRefHigh, int iterations, double lagLimitppm, int fftOverSampling);
-RcppExport SEXP rMSIproc_AlignSpectrumToReference(SEXP refSEXP, SEXP xSEXP, SEXP bilinearSEXP, SEXP lagRefLowSEXP, SEXP lagRefMidSEXP, SEXP lagRefHighSEXP, SEXP iterationsSEXP, SEXP lagLimitppmSEXP, SEXP fftOverSamplingSEXP) {
+NumericVector AlignSpectrumToReference(NumericVector mass, NumericVector ref, NumericVector x, bool bilinear, double lagRefLow, double lagRefMid, double lagRefHigh, int iterations, double lagLimitppm, int fftOverSampling);
+RcppExport SEXP _rMSIproc_AlignSpectrumToReference(SEXP massSEXP, SEXP refSEXP, SEXP xSEXP, SEXP bilinearSEXP, SEXP lagRefLowSEXP, SEXP lagRefMidSEXP, SEXP lagRefHighSEXP, SEXP iterationsSEXP, SEXP lagLimitppmSEXP, SEXP fftOverSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type ref(refSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< bool >::type bilinear(bilinearSEXP);
@@ -20,17 +21,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
     Rcpp::traits::input_parameter< double >::type lagLimitppm(lagLimitppmSEXP);
     Rcpp::traits::input_parameter< int >::type fftOverSampling(fftOverSamplingSEXP);
-    rcpp_result_gen = Rcpp::wrap(AlignSpectrumToReference(ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling));
+    rcpp_result_gen = Rcpp::wrap(AlignSpectrumToReference(mass, ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling));
     return rcpp_result_gen;
 END_RCPP
 }
 // FullImageAlign
-List FullImageAlign(StringVector fileNames, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool AlignmentBilinear, int AlignmentIterations, int AlignmentMaxShiftPpm, double RefLow, double RefMid, double RefHigh, int OverSampling);
-RcppExport SEXP rMSIproc_FullImageAlign(SEXP fileNamesSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentBilinearSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP, SEXP RefLowSEXP, SEXP RefMidSEXP, SEXP RefHighSEXP, SEXP OverSamplingSEXP) {
+List FullImageAlign(StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool AlignmentBilinear, int AlignmentIterations, int AlignmentMaxShiftPpm, double RefLow, double RefMid, double RefHigh, int OverSampling);
+RcppExport SEXP _rMSIproc_FullImageAlign(SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentBilinearSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP, SEXP RefLowSEXP, SEXP RefMidSEXP, SEXP RefHighSEXP, SEXP OverSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mass(massSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type refSpectrum(refSpectrumSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
     Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
@@ -42,13 +44,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type RefMid(RefMidSEXP);
     Rcpp::traits::input_parameter< double >::type RefHigh(RefHighSEXP);
     Rcpp::traits::input_parameter< int >::type OverSampling(OverSamplingSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImageAlign(fileNames, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling));
+    rcpp_result_gen = Rcpp::wrap(FullImageAlign(fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling));
     return rcpp_result_gen;
 END_RCPP
 }
 // FullImagePeakPicking
 List FullImagePeakPicking(StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter, bool binningIn_ppm);
-RcppExport SEXP rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP, SEXP binningIn_ppmSEXP) {
+RcppExport SEXP _rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP, SEXP binningIn_ppmSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -70,7 +72,7 @@ END_RCPP
 }
 // MergePeakMatricesC
 List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
-RcppExport SEXP rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+RcppExport SEXP _rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -83,7 +85,7 @@ END_RCPP
 }
 // ReplacePeakMatrixZeros
 List ReplacePeakMatrixZeros(List PeakMatrix, StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, int WinSize, int InterpolationUpSampling);
-RcppExport SEXP rMSIproc_ReplacePeakMatrixZeros(SEXP PeakMatrixSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP) {
+RcppExport SEXP _rMSIproc_ReplacePeakMatrixZeros(SEXP PeakMatrixSEXP, SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -101,7 +103,7 @@ END_RCPP
 }
 // FullImageSmoothing
 void FullImageSmoothing(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads, int SmoothingKernelSize);
-RcppExport SEXP rMSIproc_FullImageSmoothing(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SmoothingKernelSizeSEXP) {
+RcppExport SEXP _rMSIproc_FullImageSmoothing(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SmoothingKernelSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
@@ -116,7 +118,7 @@ END_RCPP
 }
 // NoiseEstimationFFTCosWin
 NumericVector NoiseEstimationFFTCosWin(NumericVector x, int filWinSize);
-RcppExport SEXP rMSIproc_NoiseEstimationFFTCosWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
+RcppExport SEXP _rMSIproc_NoiseEstimationFFTCosWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -128,7 +130,7 @@ END_RCPP
 }
 // NoiseEstimationFFTExpWin
 NumericVector NoiseEstimationFFTExpWin(NumericVector x, int filWinSize);
-RcppExport SEXP rMSIproc_NoiseEstimationFFTExpWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
+RcppExport SEXP _rMSIproc_NoiseEstimationFFTExpWin(SEXP xSEXP, SEXP filWinSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -140,7 +142,7 @@ END_RCPP
 }
 // NoiseEstimationFFTCosWinMat
 NumericMatrix NoiseEstimationFFTCosWinMat(NumericMatrix x, int filWinSize);
-RcppExport SEXP rMSIproc_NoiseEstimationFFTCosWinMat(SEXP xSEXP, SEXP filWinSizeSEXP) {
+RcppExport SEXP _rMSIproc_NoiseEstimationFFTCosWinMat(SEXP xSEXP, SEXP filWinSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -152,7 +154,7 @@ END_RCPP
 }
 // NoiseEstimationFFTExpWinMat
 NumericMatrix NoiseEstimationFFTExpWinMat(NumericMatrix x, int filWinSize);
-RcppExport SEXP rMSIproc_NoiseEstimationFFTExpWinMat(SEXP xSEXP, SEXP filWinSizeSEXP) {
+RcppExport SEXP _rMSIproc_NoiseEstimationFFTExpWinMat(SEXP xSEXP, SEXP filWinSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -164,7 +166,7 @@ END_RCPP
 }
 // LoadPeakMatrixC
 List LoadPeakMatrixC(String path);
-RcppExport SEXP rMSIproc_LoadPeakMatrixC(SEXP pathSEXP) {
+RcppExport SEXP _rMSIproc_LoadPeakMatrixC(SEXP pathSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -175,7 +177,7 @@ END_RCPP
 }
 // StorePeakMatrixC
 void StorePeakMatrixC(String path, List mat);
-RcppExport SEXP rMSIproc_StorePeakMatrixC(SEXP pathSEXP, SEXP matSEXP) {
+RcppExport SEXP _rMSIproc_StorePeakMatrixC(SEXP pathSEXP, SEXP matSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< String >::type path(pathSEXP);
@@ -186,7 +188,7 @@ END_RCPP
 }
 // DetectPeaks_C
 NumericMatrix DetectPeaks_C(NumericVector mass, NumericVector intensity, double SNR, int WinSize, int UpSampling);
-RcppExport SEXP rMSIproc_DetectPeaks_C(SEXP massSEXP, SEXP intensitySEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
+RcppExport SEXP _rMSIproc_DetectPeaks_C(SEXP massSEXP, SEXP intensitySEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -201,7 +203,7 @@ END_RCPP
 }
 // TestPeakInterpolation_C
 NumericVector TestPeakInterpolation_C(NumericVector mass, NumericVector intensity, int peakIndex, int WinSize, int UpSampling, bool useHanning, int Iterations);
-RcppExport SEXP rMSIproc_TestPeakInterpolation_C(SEXP massSEXP, SEXP intensitySEXP, SEXP peakIndexSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP, SEXP useHanningSEXP, SEXP IterationsSEXP) {
+RcppExport SEXP _rMSIproc_TestPeakInterpolation_C(SEXP massSEXP, SEXP intensitySEXP, SEXP peakIndexSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP, SEXP useHanningSEXP, SEXP IterationsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -218,7 +220,7 @@ END_RCPP
 }
 // TestHanningWindow
 NumericVector TestHanningWindow(NumericVector mass, int WinSize, int UpSampling);
-RcppExport SEXP rMSIproc_TestHanningWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
+RcppExport SEXP _rMSIproc_TestHanningWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -231,7 +233,7 @@ END_RCPP
 }
 // TestAreaWindow
 NumericVector TestAreaWindow(NumericVector mass, int WinSize, int UpSampling);
-RcppExport SEXP rMSIproc_TestAreaWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
+RcppExport SEXP _rMSIproc_TestAreaWindow(SEXP massSEXP, SEXP WinSizeSEXP, SEXP UpSamplingSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -244,7 +246,7 @@ END_RCPP
 }
 // PrintrMSIObjectInfo
 void PrintrMSIObjectInfo(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType);
-RcppExport SEXP rMSIproc_PrintrMSIObjectInfo(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP) {
+RcppExport SEXP _rMSIproc_PrintrMSIObjectInfo(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
@@ -257,7 +259,7 @@ END_RCPP
 }
 // LoadrMSIDataCube
 NumericMatrix LoadrMSIDataCube(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int cubeSel);
-RcppExport SEXP rMSIproc_LoadrMSIDataCube(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP cubeSelSEXP) {
+RcppExport SEXP _rMSIproc_LoadrMSIDataCube(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP cubeSelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -272,7 +274,7 @@ END_RCPP
 }
 // Smoothing_SavitzkyGolay
 NumericVector Smoothing_SavitzkyGolay(NumericVector x, int sgSize);
-RcppExport SEXP rMSIproc_Smoothing_SavitzkyGolay(SEXP xSEXP, SEXP sgSizeSEXP) {
+RcppExport SEXP _rMSIproc_Smoothing_SavitzkyGolay(SEXP xSEXP, SEXP sgSizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -281,4 +283,32 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(Smoothing_SavitzkyGolay(x, sgSize));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
+    {"_rMSIproc_FullImageAlign", (DL_FUNC) &_rMSIproc_FullImageAlign, 13},
+    {"_rMSIproc_FullImagePeakPicking", (DL_FUNC) &_rMSIproc_FullImagePeakPicking, 12},
+    {"_rMSIproc_MergePeakMatricesC", (DL_FUNC) &_rMSIproc_MergePeakMatricesC, 3},
+    {"_rMSIproc_ReplacePeakMatrixZeros", (DL_FUNC) &_rMSIproc_ReplacePeakMatrixZeros, 8},
+    {"_rMSIproc_FullImageSmoothing", (DL_FUNC) &_rMSIproc_FullImageSmoothing, 6},
+    {"_rMSIproc_NoiseEstimationFFTCosWin", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTCosWin, 2},
+    {"_rMSIproc_NoiseEstimationFFTExpWin", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTExpWin, 2},
+    {"_rMSIproc_NoiseEstimationFFTCosWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTCosWinMat, 2},
+    {"_rMSIproc_NoiseEstimationFFTExpWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTExpWinMat, 2},
+    {"_rMSIproc_LoadPeakMatrixC", (DL_FUNC) &_rMSIproc_LoadPeakMatrixC, 1},
+    {"_rMSIproc_StorePeakMatrixC", (DL_FUNC) &_rMSIproc_StorePeakMatrixC, 2},
+    {"_rMSIproc_DetectPeaks_C", (DL_FUNC) &_rMSIproc_DetectPeaks_C, 5},
+    {"_rMSIproc_TestPeakInterpolation_C", (DL_FUNC) &_rMSIproc_TestPeakInterpolation_C, 7},
+    {"_rMSIproc_TestHanningWindow", (DL_FUNC) &_rMSIproc_TestHanningWindow, 3},
+    {"_rMSIproc_TestAreaWindow", (DL_FUNC) &_rMSIproc_TestAreaWindow, 3},
+    {"_rMSIproc_PrintrMSIObjectInfo", (DL_FUNC) &_rMSIproc_PrintrMSIObjectInfo, 4},
+    {"_rMSIproc_LoadrMSIDataCube", (DL_FUNC) &_rMSIproc_LoadrMSIDataCube, 5},
+    {"_rMSIproc_Smoothing_SavitzkyGolay", (DL_FUNC) &_rMSIproc_Smoothing_SavitzkyGolay, 2},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_rMSIproc(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

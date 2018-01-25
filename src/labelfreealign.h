@@ -31,7 +31,7 @@ class LabelFreeAlign
 {
   public:
     //spectraSplit the low/high part of spectra to keep (the resting points to unit will be removed).
-    LabelFreeAlign(double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations = 3, 
+    LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations = 3, 
                    double lagRefLow = 0.1, double lagRefMid = 0.5, double lagRefHigh = 0.9,
                    double lagLimitppm = 200, int fftOverSampling = 2, double winSizeRelative = 0.6);
     ~LabelFreeAlign();
@@ -82,7 +82,9 @@ class LabelFreeAlign
     double *fft_ref_high;
     double *HannWindow;
     double *HannWindowCenter;
-    double lagMax;
+    double lagMaxLow;
+    double lagMaxMid;
+    double lagMaxHigh;
     bool bBilinear;
     int AlignIterations;
     double RefLagLow;

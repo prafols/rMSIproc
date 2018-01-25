@@ -27,7 +27,7 @@ MTLabelFreeAlign::MTLabelFreeAlign(ImgProcDef imgRunInfo) :
   alngObj = new LabelFreeAlign*[numOfThreadsDouble];
   for(int i = 0; i < numOfThreadsDouble; i++)
   {
-    alngObj[i] = new LabelFreeAlign(imgRunInfo.ref_spectrum, imgRunInfo.massChannels, imgRunInfo.bilinearMode, 
+    alngObj[i] = new LabelFreeAlign(imgRunInfo.mass, imgRunInfo.ref_spectrum, imgRunInfo.massChannels, imgRunInfo.bilinearMode, 
                                     &fftSharedMutex, imgRunInfo.AlignmentIterations, 
                                     imgRunInfo.RefLow, imgRunInfo.RefMid, imgRunInfo.RefHigh,
                                     imgRunInfo.AlignmentMaxShift,  imgRunInfo.OverSampling);
@@ -80,19 +80,22 @@ void MTLabelFreeAlign::ProcessingFunction(int threadSlot)
 
 // [[Rcpp::export]]
 List FullImageAlign( StringVector fileNames, 
-                                NumericVector refSpectrum, IntegerVector numRows,
+                                NumericVector mass, NumericVector refSpectrum, IntegerVector numRows,
                                 String dataType, int numOfThreads, 
                                 bool AlignmentBilinear = false, int AlignmentIterations = 3, int AlignmentMaxShiftPpm = 200,
                                 double RefLow = 0.0, double RefMid = 0.5, double RefHigh = 1.0, int OverSampling = 2 )
 {
   
   //Copy R data to C arrays
+  double *massC = new double[mass.length()];
   double *refC = new double[refSpectrum.length()];
   int numRowsC[fileNames.length()];
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   memcpy(refC, refSpectrum.begin(), sizeof(double)*refSpectrum.length());
   memcpy(numRowsC, numRows.begin(), sizeof(int)*fileNames.length());
   
   MTLabelFreeAlign::ImgProcDef myProcParams;
+  myProcParams.mass = massC;
   myProcParams.dataType = dataType;
   myProcParams.fileNames = fileNames;
   myProcParams.massChannels = refSpectrum.length();
@@ -108,6 +111,7 @@ List FullImageAlign( StringVector fileNames,
   myProcParams.OverSampling = OverSampling;
   
   MTLabelFreeAlign myAlignment(myProcParams);
+  delete[] massC;
   delete[] refC;
   return myAlignment.Run();
 }

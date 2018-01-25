@@ -30,6 +30,7 @@ class MTLabelFreeAlign : public ThreadingMsiProc
     //Data structur used to completly define the processing pipeline
     typedef struct
     {
+      double *mass; //pointer to the global mass axis
       double *ref_spectrum; //Reference spectrum used for alignment
       int massChannels; //Number of points in the mass axis array
       bool bilinearMode; //If the alignment must be performed linear or bilinear

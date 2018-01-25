@@ -23,7 +23,7 @@
 
 using namespace Rcpp;
 
-LabelFreeAlign::LabelFreeAlign(double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations, 
+LabelFreeAlign::LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations, 
                                double lagRefLow, double lagRefMid, double lagRefHigh,
                                double lagLimitppm, int fftOverSampling, double winSizeRelative ):
 dataLength(numOfPoints),
@@ -67,8 +67,102 @@ FFTScaleShiftOverSampling(fftOverSampling)
   ComputeRef(ref_spectrum, CENTER_SPECTRUM);
   ComputeRef(ref_spectrum, TOP_SPECTRUM);
 
-  //Lag limits relative to number of points
-  lagMax = (lagLimitppm/1.0e6)*(double)dataLength;
+  //Lag limits realtive to mass references
+  int iMassRefLow = (int)round(RefLagLow * (double)dataLength);
+  int iMassRefMid = (int)round(RefLagMid * (double)dataLength);
+  int iMassRefHigh = (int)round(RefLagHigh * (double)dataLength);
+  
+  iMassRefLow = iMassRefLow < 0 ? 0 : iMassRefLow;
+  iMassRefLow = iMassRefLow > (dataLength - 1) ? (dataLength - 1) : iMassRefLow;
+  
+  iMassRefMid = iMassRefMid < 0 ? 0 : iMassRefMid;
+  iMassRefMid = iMassRefMid > (dataLength - 1) ? (dataLength - 1) : iMassRefMid;
+  
+  iMassRefHigh = iMassRefHigh < 0 ? 0 : iMassRefHigh;
+  iMassRefHigh = iMassRefHigh > (dataLength - 1) ? (dataLength - 1) : iMassRefHigh;
+  
+  double massShifLow = (mass[iMassRefLow]*lagLimitppm)/1.0e6;
+  double massShifMid = (mass[iMassRefMid]*lagLimitppm)/1.0e6;
+  double massShifHigh = (mass[iMassRefHigh]*lagLimitppm)/1.0e6;
+
+  double massLowTarget =  mass[iMassRefLow] + massShifLow;
+  double massMidTarget =  mass[iMassRefMid] + massShifMid;
+  double massHighTarget =  mass[iMassRefHigh] - massShifHigh;
+  
+  int iLowTarget = 0;
+  int iMidTarget = 0;
+  int iHighTarget = 0;
+  double diffLow, diffLow_ant;
+  double diffMid, diffMid_ant;
+  double diffHigh, diffHigh_ant;
+  bool LowNotFound = true;
+  bool MidNotFound = true;
+  bool HighNotFound = true;
+  for( int i = 0; i < dataLength; i++)
+  {
+    //Search the lagLow position
+    diffLow = mass[i] - massLowTarget;
+    if( diffLow >= 0 && LowNotFound)
+    {
+      if( abs(diffLow) < abs(diffLow_ant))
+      {
+        iLowTarget = i;
+      }
+      else
+      {
+        iLowTarget = i-1;
+      }
+      LowNotFound = false;
+    }
+    diffLow_ant = diffLow;
+    
+    //Search the lagMid position
+    diffMid = mass[i] - massMidTarget;
+    if( diffMid >= 0 && MidNotFound)
+    {
+      if( abs(diffMid) < abs(diffMid_ant))
+      {
+        iMidTarget = i;
+      }
+      else
+      {
+        iMidTarget = i-1;
+      }
+      MidNotFound = false;
+    }
+    diffMid_ant = diffMid;
+    
+    //Search the lagMid position
+    diffHigh = mass[i] - massHighTarget;
+    if( diffHigh >= 0 && HighNotFound)
+    {
+      if( abs(diffHigh) < abs(diffHigh_ant))
+      {
+        iHighTarget = i;
+      }
+      else
+      {
+        iHighTarget = i-1;
+      }
+      HighNotFound = false;
+    }
+    diffHigh_ant = diffHigh;
+  }
+  
+  //Trim targets from 0 to dataLenght
+  iLowTarget = iLowTarget < 0 ? 0 : iLowTarget;
+  iLowTarget = iLowTarget > (dataLength - 1) ? (dataLength - 1) : iLowTarget;
+  
+  iMidTarget = iMidTarget < 0 ? 0 : iMidTarget;
+  iMidTarget = iMidTarget > (dataLength - 1) ? (dataLength - 1) : iMidTarget;
+  
+  iHighTarget = iHighTarget < 0 ? 0 : iHighTarget;
+  iHighTarget = iHighTarget > (dataLength - 1) ? (dataLength - 1) : iHighTarget;
+  
+
+  lagMaxLow = (double)( iLowTarget - iMassRefLow );
+  lagMaxMid = (double)( iMidTarget - iMassRefMid );
+  lagMaxHigh = (double)( iMassRefHigh - iHighTarget );
   
   //The mutext shared for all threads
   fftwMtx = sharedMutex;
@@ -232,9 +326,9 @@ LabelFreeAlign::TLags LabelFreeAlign::AlignSpectrum(double *data )
     lags.lagHigh = (double)FourierBestCor(topWin_data, fft_ref_high);
     
     //Limit lags
-    lags.lagLow = abs(lags.lagLow) > lagMax ? 0.0 : lags.lagLow;
-    lags.lagMid = abs(lags.lagMid) > lagMax ? 0.0 : lags.lagMid;
-    lags.lagHigh = abs(lags.lagHigh) > lagMax ? 0.0 : lags.lagHigh; 
+    lags.lagLow = abs(lags.lagLow) > lagMaxLow ? 0.0 : lags.lagLow;
+    lags.lagMid = abs(lags.lagMid) > lagMaxMid ? 0.0 : lags.lagMid;
+    lags.lagHigh = abs(lags.lagHigh) > lagMaxHigh ? 0.0 : lags.lagHigh; 
     if(i == 0)
     {
       firstLag = lags;
@@ -577,18 +671,20 @@ double TestFourierBestCor(NumericVector ref, NumericVector x, bool bRefLow)
 
 //To run for debug purposes
 // [[Rcpp::export]]
-NumericVector AlignSpectrumToReference(NumericVector ref, NumericVector x, bool bilinear = false, 
+NumericVector AlignSpectrumToReference( NumericVector mass, NumericVector ref, NumericVector x, bool bilinear = false, 
                                        double lagRefLow = 0.1, double lagRefMid = 0.5, double lagRefHigh = 0.9,
                                        int iterations = 1, double lagLimitppm = 200, int fftOverSampling = 2 )
 {
+  double *massC = new double[mass.length()];
   double *refC = new double[ref.length()];
   double *xC = new double[x.length()];
   
   boost::mutex mtx;
+  memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   memcpy(refC, ref.begin(), sizeof(double)*ref.length());
   memcpy(xC, x.begin(), sizeof(double)*x.length());
  
-  LabelFreeAlign alngObj(refC, ref.length(), bilinear, &mtx, iterations, lagRefLow, lagRefMid, lagRefHigh, lagLimitppm, fftOverSampling);
+  LabelFreeAlign alngObj(massC, refC, ref.length(), bilinear, &mtx, iterations, lagRefLow, lagRefMid, lagRefHigh, lagLimitppm, fftOverSampling);
   LabelFreeAlign::TLags lags = alngObj.AlignSpectrum(xC);
 
   Rcout<<"Lag low = "<<lags.lagLow<<" Lag center = "<<lags.lagMid<<" Lag high = "<<lags.lagHigh<<"\n";

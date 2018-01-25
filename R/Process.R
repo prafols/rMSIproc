@@ -142,6 +142,7 @@ ProcessImage <- function(img,
     }
     
     alngLags <- FullImageAlign(fileNames = dataInf$filenames, 
+                               mass = img_list[[1]]$mass,
                                refSpectrum = refSpc, 
                                numRows = dataInf$nrows,
                                dataType = dataInf$datatype, 

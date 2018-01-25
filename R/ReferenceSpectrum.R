@@ -50,6 +50,11 @@ InternalReferenceSpectrum <- function(img, reference = img$mean)
       id <- id + 1
     }
   }
+  
+  # TODO: Afegir agun control, si maxCor == 0 vol dir que tens correlacions negatives i per tant no pots alinear.
+  # Aixo pot ser degut a un espectre mig que no es representatiu del dataset. Per exemple, nomes soroll pq hi ha mes pixels de substrat k d teixit.
+  # Ho hem descobert amb un dataset d l'Alex on tenia mol poca intensitat i practicament tot venia del substrat.
+  
   close(pb)
   return( list(spectrum = rMSI::loadImgChunkFromIds(img, maxId)[1,], correlation = maxCor ))
 }
