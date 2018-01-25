@@ -568,11 +568,13 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   
   #Get number of images
   brukerXmlCounters <- rep(0, length(procParams$data$source$xmlpath))
+  brukerXmlRois <- list()
   if( procParams$data$source$type == "xmass" )
   {
     for( i in 1:length(procParams$data$source$xmlpath))
     {
-      brukerXmlCounters[i] <- rMSI:::CountImagesInBrukerXml(procParams$data$source$xmlpath[i])
+      brukerXmlRois[[i]] <- rMSI::ParseBrukerXML(procParams$data$source$xmlpath[i])
+      brukerXmlCounters[i] <- length(brukerXmlRois[[i]])
     }
     NumOfImages <- sum(brukerXmlCounters)
   }
@@ -614,7 +616,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         selBrukerXML <- selBrukerXML + 1
         selBrukerClass <- 1
       }
-      dataPaths[[i]]$name <- paste(basename(procParams$data$source$xmlpath[selBrukerXML]), "_", rMSI::ParseBrukerXML(procParams$data$source$xmlpath[selBrukerXML], selBrukerClass, T)$name )
+      dataPaths[[i]]$name <- paste(basename(procParams$data$source$xmlpath[selBrukerXML]), "_", brukerXmlRois[[selBrukerXML]][[selBrukerClass]]$name )
       dataPaths[[i]]$filepath <- procParams$data$source$xmlpath[selBrukerXML]
       dataPaths[[i]]$brukerclass <- selBrukerClass
     }
@@ -669,7 +671,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       
       if( procParams$data$source$type == "xmass" )
       {
-        mImg_list[[iimg]] <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize,  dataPaths[[loadImgIndex]]$filepath, procParams$data$source$spectrumpath, selected_img = dataPaths[[loadImgIndex]]$brukerclass )
+        mImg_list[[iimg]] <- rMSI::importBrukerXmassImg( procParams$data$source$datapath, procParams$data$pixelsize, brukerXmlRois[[loadImgIndex]], procParams$data$source$spectrumpath, selected_img = dataPaths[[loadImgIndex]]$brukerclass )
       }
       else
       {
