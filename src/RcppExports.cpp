@@ -25,6 +25,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FullImageBitDepthReduction
+void FullImageBitDepthReduction(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads, int NoiseWinSize);
+RcppExport SEXP _rMSIproc_FullImageBitDepthReduction(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP NoiseWinSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< int >::type massChannels(massChannelsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    Rcpp::traits::input_parameter< int >::type NoiseWinSize(NoiseWinSizeSEXP);
+    FullImageBitDepthReduction(fileNames, massChannels, numRows, dataType, numOfThreads, NoiseWinSize);
+    return R_NilValue;
+END_RCPP
+}
+// SpectrumBitDepthReduction
+NumericVector SpectrumBitDepthReduction(NumericVector data, int NoiseWinSize);
+RcppExport SEXP _rMSIproc_SpectrumBitDepthReduction(SEXP dataSEXP, SEXP NoiseWinSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< int >::type NoiseWinSize(NoiseWinSizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(SpectrumBitDepthReduction(data, NoiseWinSize));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FullImageAlign
 List FullImageAlign(StringVector fileNames, NumericVector mass, NumericVector refSpectrum, IntegerVector numRows, String dataType, int numOfThreads, bool AlignmentBilinear, int AlignmentIterations, int AlignmentMaxShiftPpm, double RefLow, double RefMid, double RefHigh, int OverSampling);
 RcppExport SEXP _rMSIproc_FullImageAlign(SEXP fileNamesSEXP, SEXP massSEXP, SEXP refSpectrumSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP AlignmentBilinearSEXP, SEXP AlignmentIterationsSEXP, SEXP AlignmentMaxShiftPpmSEXP, SEXP RefLowSEXP, SEXP RefMidSEXP, SEXP RefHighSEXP, SEXP OverSamplingSEXP) {
@@ -287,6 +314,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
+    {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
+    {"_rMSIproc_SpectrumBitDepthReduction", (DL_FUNC) &_rMSIproc_SpectrumBitDepthReduction, 2},
     {"_rMSIproc_FullImageAlign", (DL_FUNC) &_rMSIproc_FullImageAlign, 13},
     {"_rMSIproc_FullImagePeakPicking", (DL_FUNC) &_rMSIproc_FullImagePeakPicking, 12},
     {"_rMSIproc_MergePeakMatricesC", (DL_FUNC) &_rMSIproc_MergePeakMatricesC, 3},
