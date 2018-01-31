@@ -166,9 +166,17 @@ ProcessImage <- function(img,
     alngLags <- NULL
   }
   
-  #Recalculate mean spectrum
+  #Recalculate mean spectrum and apply bit depth reduction
   if( EnableSmoothing || EnableAlignment )
   {
+    cat("Running Bit depth reduction...\n")
+    FullImageBitDepthReduction( fileNames = dataInf$filenames, 
+                                massChannels = dataInf$masschannels, 
+                                numRows = dataInf$nrows, 
+                                dataType = dataInf$datatype, 
+                                numOfThreads = NumOfThreads, 
+                                NoiseWinSize = 16 )
+    
     for( i in 1:length(img_list))
     {
       img_list[[i]]$mean <- rMSI::AverageSpectrum(img_list[[i]]) 
