@@ -37,12 +37,12 @@ OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T)
     if(horizontal)
     {
       offsetPosMat[istart:istop, "x"] <- offsetPosMat[istart:istop, "x"] + offset
-      offset <- offsetPosMat[istop, "x"]
+      offset <- max(offsetPosMat[istart:istop, "x"])
     }
     else
     {
       offsetPosMat[istart:istop, "y"] <- offsetPosMat[istart:istop, "y"] + offset
-      offset <- offsetPosMat[istop, "y"]
+      offset <- max(offsetPosMat[istart:istop, "y"])
     }
     istart <- istop + 1
   }
@@ -60,10 +60,11 @@ OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T)
 #' @param column the column of the peak matrix to plot.
 #' @param offset_horizontal if true images will be laydout horizontally.
 #' @param matrix the name of the peak matrix to plot.
+#' @param normalization the name of normalization to use.
 #' @param rotate the rotation in degrees.
 #' @param pixel_size_um the pixel resolution in um.
 #'
-plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizontal = T, matrix = "intensity", rotate = 0, pixel_size_um = 100)
+plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizontal = T, matrix = "intensity", normalization = NULL, rotate = 0, pixel_size_um = 100)
 {
   if(is.null(peakMatrix[[matrix]]))
   {
@@ -80,8 +81,26 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizonta
     column <- which.min(abs(peakMatrix$mass - mz))
   }
   
+  if( !is.null(normalization))
+  {
+    if( is.null(peakMatrix$normalizations))
+    {
+      stop("No normalizations avaliable for the supplied peak matrix")
+    }
+    
+    normVals <- peakMatrix$normalizations[[normalization]]
+    if(is.null(normVals))
+    {
+      stop(paste0("No normalization found with the name:", normalization))
+    }
+  }
+  else
+  {
+    normVals <- rep(1, nrow(peakMatrix$pos))
+  }
+  
   offsetPosMat <- OffsetRasterPosMats(peakMatrix$pos, peakMatrix$numPixels, offset_horizontal)
-  rMSI::PlotValues(offsetPosMat, peakMatrix[[matrix]][,column], rotate = rotate, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um)
+  rMSI::PlotValues(offsetPosMat, peakMatrix[[matrix]][,column]/normVals, rotate = rotate, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um)
 }
 
 #' plotClusterImage.
