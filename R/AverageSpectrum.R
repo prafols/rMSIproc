@@ -21,8 +21,8 @@
 #' Calculates the dataset average spectrum.
 #' The average spectrum is the spectrum produced by weighting all the dataset spectra.
 #'
-#' @param img an rMSI objects.
-#' @param NumOfThreads an rMSI objects.
+#' @param img An rMSI objects.
+#' @param NumOfThreads Number of threads.The Default value is the number of cores of the machine. 
 #'
 #' @return The average spectrum.
 #' 
@@ -31,7 +31,6 @@ AverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
   dataInf <- getrMSIdataInfo(img) #Info from the img
 
   AvgSptr <- NULL
-  #Format del rMSI objecte
   AvgSptr<-AverageSpectrumC(dataInf$filenames, dataInf$masschannels, dataInf$nrows, dataInf$datatype, NumOfThreads)
   
   return(AvgSptr)
