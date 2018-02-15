@@ -26,7 +26,7 @@
 #'
 #' @return The average spectrum.
 #' 
-AverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
+MTAverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
 {
   dataInf <- getrMSIdataInfo(img) #Info from the img
 
