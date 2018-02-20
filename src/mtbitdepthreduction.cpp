@@ -68,11 +68,12 @@ void MTBitDepthReduction::ProcessingFunction(int threadSlot)
 
 void MTBitDepthReduction::BitDepthReduction(double *data, int dataLength, int noiseModelThreadSlot)
 {
+  
   int resolution_bits;
   double *noise_floor = new double[dataLength];
   memcpy(noise_floor, data, sizeof(double)*dataLength);
   noiseModel[noiseModelThreadSlot]->NoiseEstimationFFTExpWin(noise_floor, dataLength, NoiseWinSize);
-  
+ 
   double m, n;
   unsigned long long *ptr;
   for( int i = 0; i < dataLength; i++)
@@ -89,8 +90,11 @@ void MTBitDepthReduction::BitDepthReduction(double *data, int dataLength, int no
     //Apply the mask to double's mantissa
     ptr = (unsigned long long*) (data + i);
     *ptr &= maskLUT_double[resolution_bits-1];  
+    
   }
+
   delete[] noise_floor;
+   
 }
 
 // [[Rcpp::export]]
