@@ -190,6 +190,7 @@ ProcessImage <- function(img,
       lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
     }
     
+    cat("Calculating average spectrum...\n")
     for( i in 1:length(img_list))
     {
       img_list[[i]]$mean <- AverageSpectrum(img_list[[i]]) 
