@@ -80,7 +80,7 @@ NumericVector MTAverage::Run()
   
   for (int j = 0; j < massCh; j++)
   {
-    avg[j] /= numPixels;    //TODO dividir per el nombre total de pixels.
+    avg[j] /= numPixels;    //Dividir per el nombre total de pixels.
   }
   
   return avg;

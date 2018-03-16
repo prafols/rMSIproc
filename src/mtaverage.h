@@ -37,7 +37,7 @@ class MTAverage : public ThreadingMsiProc
     MTAverage(AvrgDef imgRunInfo);
     ~MTAverage();
     
-    //Exectur a full imatge processing using threaded methods
+    //Execute a full imatge processing using threaded methods
     Rcpp::NumericVector Run();
     
   private:

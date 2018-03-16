@@ -21,12 +21,12 @@
 #' Calculates the dataset average spectrum.
 #' The average spectrum is the spectrum produced by weighting all the dataset spectra.
 #'
-#' @param img An rMSI objects.
+#' @param img An rMSI object.
 #' @param NumOfThreads Number of threads.The Default value is the number of cores of the machine. 
 #'
 #' @return The average spectrum.
 #' 
-MTAverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
+AverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
 {
   dataInf <- getrMSIdataInfo(img) #Info from the img
 

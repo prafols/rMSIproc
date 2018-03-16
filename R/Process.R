@@ -192,7 +192,7 @@ ProcessImage <- function(img,
     
     for( i in 1:length(img_list))
     {
-      img_list[[i]]$mean <- MTAverageSpectrum(img_list[[i]]) 
+      img_list[[i]]$mean <- AverageSpectrum(img_list[[i]]) 
     }
   }
   
