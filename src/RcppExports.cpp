@@ -25,6 +25,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// AverageSpectrumC
+NumericVector AverageSpectrumC(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads);
+RcppExport SEXP _rMSIproc_AverageSpectrumC(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< StringVector >::type fileNames(fileNamesSEXP);
+    Rcpp::traits::input_parameter< int >::type massChannels(massChannelsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type numRows(numRowsSEXP);
+    Rcpp::traits::input_parameter< String >::type dataType(dataTypeSEXP);
+    Rcpp::traits::input_parameter< int >::type numOfThreads(numOfThreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(AverageSpectrumC(fileNames, massChannels, numRows, dataType, numOfThreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // FullImageBitDepthReduction
 void FullImageBitDepthReduction(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads, int NoiseWinSize);
 RcppExport SEXP _rMSIproc_FullImageBitDepthReduction(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP NoiseWinSizeSEXP) {
@@ -314,6 +329,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
+    {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
     {"_rMSIproc_SpectrumBitDepthReduction", (DL_FUNC) &_rMSIproc_SpectrumBitDepthReduction, 2},
     {"_rMSIproc_FullImageAlign", (DL_FUNC) &_rMSIproc_FullImageAlign, 13},

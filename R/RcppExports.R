@@ -5,6 +5,10 @@ AlignSpectrumToReference <- function(mass, ref, x, bilinear = FALSE, lagRefLow =
     .Call('_rMSIproc_AlignSpectrumToReference', PACKAGE = 'rMSIproc', mass, ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling)
 }
 
+AverageSpectrumC <- function(fileNames, massChannels, numRows, dataType, numOfThreads) {
+    .Call('_rMSIproc_AverageSpectrumC', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType, numOfThreads)
+}
+
 FullImageBitDepthReduction <- function(fileNames, massChannels, numRows, dataType, numOfThreads, NoiseWinSize = 16L) {
     invisible(.Call('_rMSIproc_FullImageBitDepthReduction', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType, numOfThreads, NoiseWinSize))
 }

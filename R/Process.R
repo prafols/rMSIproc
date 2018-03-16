@@ -169,7 +169,14 @@ ProcessImage <- function(img,
   #Recalculate mean spectrum and apply bit depth reduction
   if( EnableSmoothing || EnableAlignment )
   {
+    
     cat("Running Bit depth reduction...\n")
+    
+    #The ff file must be closed befor running the Cpp code
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+    }
     FullImageBitDepthReduction( fileNames = dataInf$filenames, 
                                 massChannels = dataInf$masschannels, 
                                 numRows = dataInf$nrows, 
@@ -177,9 +184,16 @@ ProcessImage <- function(img,
                                 numOfThreads = NumOfThreads, 
                                 NoiseWinSize = 16 )
     
+    #The ff file must be re-open to continue
     for( i in 1:length(img_list))
     {
-      img_list[[i]]$mean <- rMSI::AverageSpectrum(img_list[[i]]) 
+      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+    }
+    
+    cat("Calculating average spectrum...\n")
+    for( i in 1:length(img_list))
+    {
+      img_list[[i]]$mean <- AverageSpectrum(img_list[[i]]) 
     }
   }
   
