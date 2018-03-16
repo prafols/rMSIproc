@@ -23,10 +23,11 @@
 #' @param posMatrix the pos matrix of an rMSIproc peak matrix object.
 #' @param numPixels a vector with the number of pixels of each image.
 #' @param horizontal if must be laydout horizontally or vertically.
+#' @param margin number in pixels to separe images.
 #' 
 #' @return a pos Matrix with proper offsets to allow multi dataset visualization
 #'
-OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T)
+OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T, margin = 0)
 {
   offsetPosMat <-  posMatrix
   istart <- 1
@@ -36,12 +37,12 @@ OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T)
     istop <- istart + numPixels[i] - 1
     if(horizontal)
     {
-      offsetPosMat[istart:istop, "x"] <- offsetPosMat[istart:istop, "x"] + offset
+      offsetPosMat[istart:istop, "x"] <- offsetPosMat[istart:istop, "x"] + offset + margin
       offset <- max(offsetPosMat[istart:istop, "x"])
     }
     else
     {
-      offsetPosMat[istart:istop, "y"] <- offsetPosMat[istart:istop, "y"] + offset
+      offsetPosMat[istart:istop, "y"] <- offsetPosMat[istart:istop, "y"] + offset + margin
       offset <- max(offsetPosMat[istart:istop, "y"])
     }
     istart <- istop + 1
