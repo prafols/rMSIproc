@@ -1,8 +1,8 @@
 Package: rMSIproc
 Type: Package
 Title: MSI Processing in C++
-Version: 0.1
-Date: 2016-02-10
+Version: 0.2
+Date: 2018-03-16
 Author: Pere Rafols Soler
 Maintainer: Pere Rafols Soler<pere.rafols@urv.cat>
 Description: Processing methods for MSI using rMSI data format and C++ methods
