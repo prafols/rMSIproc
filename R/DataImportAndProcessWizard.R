@@ -442,7 +442,7 @@ ImportWizardGui <- function()
   return( procParamList )
 }
 
-XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
+XmlRoiSelectionDialog <- function( img_names, init_dir = getwd(), is_imzML = T )
 {
   oldWarning<-options()$warn
   options(warn = -1)
@@ -452,6 +452,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   abort_process <- T
   summaryEnabled <- F
   summaryNorm <- ""
+  xmlList_subimg <- rep("", length(img_names))
   xmlList_include <- rep("", length(img_names))
   xmlList_exclude <- rep("", length(img_names))
   bAllImgesHaveXMLRoi <-F
@@ -465,17 +466,27 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
                                initial.dir = this$initial_dir)
     if( length( mPath) > 0)
     {
-      if(evt$action$include)
+      if(evt$action$source == "subimg")
+      {
+        #Setting the subimg widget
+        RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action$img]]$subImg), basename(mPath)) 
+        this$xmlList_subimg[evt$action$img] <- mPath
+      }
+      else if(evt$action$source == "include")
       {
         #Setting the include widget
         RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action$img]]$include), basename(mPath)) 
         this$xmlList_include[evt$action$img] <- mPath
       }
-      else
+      else if(evt$action$source == "exclude")
       {
         #Setting the exclude widget
         RGtk2::gtkEntrySetText(gWidgets2::getToolkitWidget(this$selFilesEntry_list[[evt$action$img]]$exclude), basename(mPath)) 
         this$xmlList_exclude[evt$action$img] <- mPath
+      }
+      else
+      {
+        stop("Error: browseButtonClicked() in XmlRoiSelectionDialog(). Invaldi source field\n")
       }
       this$initial_dir <- dirname(mPath)
     }
@@ -497,20 +508,31 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
   {
     frm <- gWidgets2::gframe( container = parent_widget)
     vbox <- gWidgets2::ggroup(horizontal = F, container = frm)
+  
+    hboxSubImg <- gWidgets2::ggroup(horizontal = T, container = vbox, expand = T)
+    lblSubImg <- gWidgets2::glabel(paste0(text, " ROI's sub-image:"), container = hboxSubImg)
+    gWidgets2::addSpring(hboxSubImg)
+    entrySubImg <- gWidgets2::gedit( container = hboxSubImg, width = 30 )
+    btnSubImg <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, source = "subimg"), container = hboxSubImg)
     
+    if(!is_imzML)
+    {
+      gWidgets2::visible(hboxSubImg) <- F
+    }
+  
     hboxInc <- gWidgets2::ggroup(horizontal = T, container = vbox, expand = T)
     lblInc <- gWidgets2::glabel(paste0(text, " ROI's include:"), container = hboxInc)
     gWidgets2::addSpring(hboxInc)
     entryInc <- gWidgets2::gedit( container = hboxInc, width = 30 )
-    btnInc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, include = T), container = hboxInc)
+    btnInc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, source = "include"), container = hboxInc)
     
     hboxExc <- gWidgets2::ggroup(horizontal = T, container = vbox, expand = T)
     lblExc <- gWidgets2::glabel(paste0(text, " ROI's exclude:"), container = hboxExc)
     gWidgets2::addSpring(hboxExc)
     entryExc <- gWidgets2::gedit( container = hboxExc, width = 30 )
-    btnExc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index, include = F), container = hboxExc)
+    btnExc <- gWidgets2::gbutton("Select", handler = this$browseButtonClicked, action = list(img = index,  source = "exclude"), container = hboxExc)
     
-    return(list(include = entryInc, exclude = entryExc))
+    return(list(subImg = entrySubImg, include = entryInc, exclude = entryExc))
   }
   
   OkButtonClicked <- function (h, ...)
@@ -582,7 +604,7 @@ XmlRoiSelectionDialog <- function( img_names, init_dir = getwd() )
     return(NULL)
   }
   
-  return( list( xml_include=this$xmlList_include, xml_exclude=this$xmlList_exclude, summary_export = this$summaryEnabled & this$bAllImgesHaveXMLRoi, summary_norm = this$summaryNorm))
+  return( list( xml_subimg = this$xmlList_subimg, xml_include=this$xmlList_include, xml_exclude=this$xmlList_exclude, summary_export = this$summaryEnabled & this$bAllImgesHaveXMLRoi, summary_norm = this$summaryNorm))
 }
 
 

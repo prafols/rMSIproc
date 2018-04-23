@@ -651,7 +651,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   
   #Ask the user for the XML's containing the ROI files
   imgs_names <- unlist(lapply(dataPaths, function(x){ x$name }))
-  xmlRoiFiles <- XmlRoiSelectionDialog(imgs_names, init_dir = dirname(procParams$data$source$datapath) )
+  xmlRoiFiles <- XmlRoiSelectionDialog(imgs_names, init_dir = dirname(procParams$data$source$datapath), is_imzML =  (procParams$data$source$type == "imzml") )
   if(is.null(xmlRoiFiles))
   {
     #Process aborted by user
@@ -659,6 +659,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     return()
   }
   
+  #ROIs
   for( i in 1:NumOfImages)
   {
     if(xmlRoiFiles$xml_include[i] != "")
@@ -670,6 +671,53 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     {
       dataPaths[[i]]$xmlroiExclude <- xmlRoiFiles$xml_exclude[i]
     }
+  }
+  
+  #Parse sub-images xml
+  subImgCoords <- list()
+  for( i in 1:length(xmlRoiFiles$xml_subimg))
+  {
+    if( xmlRoiFiles$xml_subimg[i] != "")
+    {
+      xmlRois_subImg <- rMSI::ParseBrukerXML( xmlRoiFiles$xml_subimg[i] )
+      NumOfImages <- NumOfImages + length(xmlRois_subImg) - 1
+      
+      for( j in 1:length(xmlRois_subImg))
+      {
+        subImgCoords[[length(subImgCoords) + 1]] <- list(name = xmlRois_subImg[[j]]$name, coords = complex(real = xmlRois_subImg[[j]]$pos$x, imaginary = xmlRois_subImg[[j]]$pos$y ))
+        
+        #replicate dataPaths
+        if( j > 1)
+        {
+          newItemIndx <- length(subImgCoords)
+          newlst <- dataPaths[1:(newItemIndx - 1)]
+          newlst[[newItemIndx]] <-  dataPaths[[newItemIndx-1]]
+          if( length(dataPaths) >=  newItemIndx)
+          {
+            newlst[(newItemIndx+1):(length(dataPaths)+1)] <- dataPaths[newItemIndx:length(dataPaths)]
+          }
+          dataPaths <- newlst
+        }
+      }
+      
+    }
+    else
+    {
+      #No SubImage roi specified for current image
+      subImgCoords[[length(subImgCoords) + 1]] <-  list(name = NULL, coords = NULL)
+    }
+  }
+  
+  #Depending on the dataset merge bit the whole processing will be executed differnt times
+  if(procParams$mergedatasets)
+  {
+    NumOfProcRuns <- 1
+    NumOfImages2Merge <- NumOfImages
+  }
+  else
+  {
+    NumOfProcRuns <- NumOfImages
+    NumOfImages2Merge <- 1
   }
   rm(NumOfImages)
   
@@ -697,7 +745,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       }
       else
       {
-        mImg_list[[iimg]]  <- rMSI::LoadMsiData(dataPaths[[loadImgIndex]]$filepath, ff_overwrite = overwriteRamdisk )  
+        mImg_list[[iimg]]  <- rMSI::LoadMsiData(dataPaths[[loadImgIndex]]$filepath, ff_overwrite = overwriteRamdisk, imzMLRename = subImgCoords[[loadImgIndex]]$name, imzMLSubCoords = subImgCoords[[loadImgIndex]]$coords )  
       }
       
       #Include ID's in include ROI's
@@ -825,6 +873,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       
       for( iSave in 1:length(procData$procImg) )
       {
+        cat(paste0("--- Dataset ", iSave, "/", length(procData$procImg), " ---\n"))
         imgName <- sub('\\..*$', '',procData$procImg[[iSave]]$name) #Remove extensions of image name
         rMSI::SaveMsiData( procData$procImg[[iSave]], file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
         
