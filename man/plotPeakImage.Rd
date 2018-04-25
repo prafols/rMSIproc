@@ -4,8 +4,11 @@
 \alias{plotPeakImage}
 \title{plotPeakImage.}
 \usage{
-plotPeakImage(peakMatrix, mz = NULL, column = NULL, offset_horizontal = T,
-  matrix = "intensity", rotate = 0, pixel_size_um = 100)
+plotPeakImage(peakMatrix, mz = NULL, column = NULL, matrix = "intensity",
+  normalization = NULL, nrow, ncol, byrow = T, margin = 20,
+  img_names = peakMatrix$names, labels = img_names, rotations = rep(0,
+  length(img_names)), mirror_x = rep(F, length(img_names)),
+  mirror_y = rep(F, length(img_names)), pixel_size_um = 100, light = 8)
 }
 \arguments{
 \item{peakMatrix}{the peak matrix in an rMSIproc object.}
@@ -14,13 +17,31 @@ plotPeakImage(peakMatrix, mz = NULL, column = NULL, offset_horizontal = T,
 
 \item{column}{the column of the peak matrix to plot.}
 
-\item{offset_horizontal}{if true images will be laydout horizontally.}
-
 \item{matrix}{the name of the peak matrix to plot.}
 
-\item{rotate}{the rotation in degrees.}
+\item{normalization}{the name of normalization to use.}
+
+\item{nrow}{number of rows of the plotted matrix layout (only used if byrow == F)}
+
+\item{ncol}{number of cols of the plotted matrix layout (only used if byrow == T)}
+
+\item{byrow}{a bool specifing if images must be arranged in rows.}
+
+\item{margin}{the separation between plotted images.}
+
+\item{img_names}{a character vector with img names in the desierd plotting order.}
+
+\item{labels}{an alternative character vector with the labels to be displayed for each image.}
+
+\item{rotations}{a vector with the rotation of each images specified in degrees.}
+
+\item{mirror_x}{a bool vector specifing if each image must be flipped or not in X direction prior to rotation.}
+
+\item{mirror_y}{a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.}
 
 \item{pixel_size_um}{the pixel resolution in um.}
+
+\item{light}{the lighting of the plotted image.}
 }
 \description{
 plot the ion image map of a given mass or column of a rMSIproc peak matrix object.

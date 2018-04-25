@@ -16,40 +16,6 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#' OffsetRasterPosMats.
-#' 
-#' creates an unified pos matrix to plot properly various datasets in a single image.
-#'
-#' @param posMatrix the pos matrix of an rMSIproc peak matrix object.
-#' @param numPixels a vector with the number of pixels of each image.
-#' @param horizontal if must be laydout horizontally or vertically.
-#' @param margin number in pixels to separe images.
-#' 
-#' @return a pos Matrix with proper offsets to allow multi dataset visualization
-#'
-OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T, margin = 0)
-{
-  offsetPosMat <-  posMatrix
-  istart <- 1
-  offset <- 0
-  for( i in 1:length(numPixels))
-  {
-    istop <- istart + numPixels[i] - 1
-    if(horizontal)
-    {
-      offsetPosMat[istart:istop, "x"] <- offsetPosMat[istart:istop, "x"] + offset + margin
-      offset <- max(offsetPosMat[istart:istop, "x"])
-    }
-    else
-    {
-      offsetPosMat[istart:istop, "y"] <- offsetPosMat[istart:istop, "y"] + offset + margin
-      offset <- max(offsetPosMat[istart:istop, "y"])
-    }
-    istart <- istop + 1
-  }
-  return(offsetPosMat)
-}
-
 #' plotPeakImage.
 #' 
 #' plot the ion image map of a given mass or column of a rMSIproc peak matrix object.
@@ -59,13 +25,27 @@ OffsetRasterPosMats <- function(posMatrix, numPixels, horizontal = T, margin = 0
 #' @param peakMatrix the peak matrix in an rMSIproc object.
 #' @param mz the peak mass to plot, the nearest peak mass will be ploted.
 #' @param column the column of the peak matrix to plot.
-#' @param offset_horizontal if true images will be laydout horizontally.
 #' @param matrix the name of the peak matrix to plot.
 #' @param normalization the name of normalization to use.
-#' @param rotate the rotation in degrees.
+#' @param nrow number of rows of the plotted matrix layout (only used if byrow == F)
+#' @param ncol number of cols of the plotted matrix layout (only used if byrow == T)
+#' @param byrow a bool specifing if images must be arranged in rows.
+#' @param margin the separation between plotted images.
+#' @param img_names a character vector with img names in the desierd plotting order.
+#' @param labels an alternative character vector with the labels to be displayed for each image.
+#' @param rotations a vector with the rotation of each images specified in degrees.
+#' @param mirror_x a bool vector specifing if each image must be flipped or not in X direction prior to rotation.
+#' @param mirror_y a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.
 #' @param pixel_size_um the pixel resolution in um.
+#' @param light the lighting of the plotted image.
 #'
-plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizontal = T, matrix = "intensity", normalization = NULL, rotate = 0, pixel_size_um = 100)
+plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, matrix = "intensity", normalization = NULL, 
+                          nrow = 2, ncol = 2, byrow = T, 
+                          margin = 20, img_names = peakMatrix$names, 
+                          labels = img_names,
+                          rotations = rep(0, length(img_names)),
+                          mirror_x = rep(F, length(img_names)), mirror_y = rep(F, length(img_names)), 
+                          pixel_size_um = 100, light = 8)
 {
   if(is.null(peakMatrix[[matrix]]))
   {
@@ -100,8 +80,9 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizonta
     normVals <- rep(1, nrow(peakMatrix$pos))
   }
   
-  offsetPosMat <- OffsetRasterPosMats(peakMatrix$pos, peakMatrix$numPixels, offset_horizontal)
-  rMSI::PlotValues(offsetPosMat, peakMatrix[[matrix]][,column]/normVals, rotate = rotate, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um)
+  rasterData <- ArrangeMultipleImg2Plot(peakMatrix, peakMatrix[[matrix]][,column]/normVals, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
+  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um, vlight = light)
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
 }
 
 #' plotClusterImage.
@@ -110,14 +91,213 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, offset_horizonta
 #'
 #' @param peakMatrix the peak matrix in an rMSIproc object.
 #' @param clusters a vector with integer number according the cluster of each pixel.
-#' @param offset_horizontal if true images will be laydout horizontally.
-#' @param rotate rotation to apply.
+#' @param nrow number of rows of the plotted matrix layout (only used if byrow == F)
+#' @param ncol number of cols of the plotted matrix layout (only used if byrow == T)
+#' @param byrow a bool specifing if images must be arranged in rows.
+#' @param margin the separation between plotted images.
+#' @param img_names a character vector with img names in the desierd plotting order.
+#' @param labels an alternative character vector with the labels to be displayed for each image.
+#' @param rotations a vector with the rotation of each images specified in degrees.
+#' @param mirror_x a bool vector specifing if each image must be flipped or not in X direction prior to rotation.
+#' @param mirror_y a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.
 #' @param pixel_size_um the pixel resolution in um.
 #'
 #' @return a vector with the used color for each cluster sorted according clustering numering in assending order.
 #'
-plotClusterImage <- function(peakMatrix, clusters,  offset_horizontal = T, rotate = 0, pixel_size_um = 100)
+plotClusterImage <- function(peakMatrix, clusters, 
+                             nrow = 2, ncol = 2, byrow = T, 
+                             margin = 20, img_names = peakMatrix$names, 
+                             labels = img_names,
+                             rotations = rep(0, length(img_names)),
+                             mirror_x = rep(F, length(img_names)), mirror_y = rep(F, length(img_names)),
+                             pixel_size_um = 100)
 {
-  offsetPosMat <- OffsetRasterPosMats(peakMatrix$pos, peakMatrix$numPixels, offset_horizontal)
-  return(rMSI::PlotClusterImage(offsetPosMat, clusters, rotate, pixel_size_um))
+  rasterData <- ArrangeMultipleImg2Plot(peakMatrix, clusters, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
+  clusColors <- rMSI::PlotClusterImage(rasterData$pos, rasterData$values, rotate = 0, pixel_size_um)
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
+  legend( "right", col = clusColors, legend =  paste0("Clus_",unique(clusters)), pch = 20, horiz = F,  bty = "n" )
+  return(clusColors)
+}
+
+#' plotValuesImage
+#'
+#' Plot arbitrary values in a MS images raster positions.
+#'
+#' @param peakMatrix the peak matrix in an rMSIproc object.
+#' @param values a vector with the values to be plotted in each pixel.
+#' @param nrow number of rows of the plotted matrix layout (only used if byrow == F)
+#' @param ncol number of cols of the plotted matrix layout (only used if byrow == T)
+#' @param byrow a bool specifing if images must be arranged in rows.
+#' @param margin the separation between plotted images.
+#' @param img_names a character vector with img names in the desierd plotting order.
+#' @param labels an alternative character vector with the labels to be displayed for each image.
+#' @param rotations a vector with the rotation of each images specified in degrees.
+#' @param mirror_x a bool vector specifing if each image must be flipped or not in X direction prior to rotation.
+#' @param mirror_y a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.
+#' @param pixel_size_um the pixel resolution in um.
+#' @param scale_title the label for the color scale.
+#' @param light the lighting of the plotted image.
+#'
+plotValuesImage <- function(peakMatrix, values, 
+                             nrow = 2, ncol = 2, byrow = T, 
+                             margin = 20, img_names = peakMatrix$names, 
+                             labels = img_names,
+                             rotations = rep(0, length(img_names)),
+                             mirror_x = rep(F, length(img_names)), mirror_y = rep(F, length(img_names)),
+                             pixel_size_um = 100, scale_title = "", light = 8)
+{
+  rasterData <- ArrangeMultipleImg2Plot(peakMatrix, values, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
+  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = scale_title, pixel_size_um = pixel_size_um, vlight = light)
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
+}
+
+
+
+#' ArrangeMultipleImg2Plot
+#' 
+#' Prepare multiple images to be plotted with arbitrary data that must be specified as a vector using the values parameter.
+#' The values vector must be sorted according the pos matrix of the provided peak matrix object (peakMat).
+#' The images will be plotted laidout in a matrix according the parameters nrow, ncol and byrow which follows the
+#' same conventions as the R matrix() function.
+#' A different order of the images can be specified with the img_name parameter. Just provide the images names to plotted in the desierd order.
+#' Additionally each single image can be flip horizontally and vertically and/or rotated to any angle using the parameters mirror_x, mirror_y and rotations.
+#' 
+#' @param peakMat an rMSIproc peak matrix.
+#' @param values a vector of pixel values following the same order as pixels appear in the peak matrix.
+#' @param nrow number of rows of the plotted matrix layout (only used if byrow == F)
+#' @param ncol number of cols of the plotted matrix layout (only used if byrow == T)
+#' @param byrow a bool specifing if images must be arranged in rows.
+#' @param margin the separation between plotted images.
+#' @param img_names a character vector with img names in the desierd plotting order.
+#' @param rotations a vector with the rotation of each images specified in degrees.
+#' @param mirror_x a bool vector specifing if each image must be flipped or not in X direction prior to rotation.
+#' @param mirror_y a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.
+#'
+#' @return a list object conaining the arranged position matrix, the pixel values and the labels positions.
+#'
+ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, margin = 20, img_names = peakMat$names, 
+                                rotations = rep(0, length(img_names)),
+                                mirror_x = rep(F, length(img_names)), mirror_y = rep(F, length(img_names)) )
+{
+  #Re-Order data according the image names
+  lstRefac <- list()
+  iRow <- 1
+  iCol <- 1
+  nextXOffset <- 0
+  nextYOffset <- 0
+  partialOffset <- 0
+  for(i in 1:length(img_names))
+  {
+    iloc <- which(img_names[i] == peakMat$names)[1]
+    if( length(iloc) > 0  )
+    {
+      if( iloc > 1)
+      {
+        istart <- sum(peakMat$numPixels[ 1:(iloc-1) ]) + 1 
+      }
+      else
+      {
+        istart <- 1
+      }
+      istop <- istart + peakMat$numPixels[iloc] - 1
+      lstRefac[[length(lstRefac) + 1]] <- list( name = img_names[i], pos = peakMat$pos[istart:istop,], vals = values[istart:istop] )
+      
+      #Apply horizontal mirror
+      if(mirror_x[i])
+      {
+        lstRefac[[length(lstRefac)]]$pos[,"x"] <- (-1)*lstRefac[[length(lstRefac)]]$pos[,"x"] + max(lstRefac[[length(lstRefac)]]$pos[,"x"])
+      }
+      
+      #Apply vertical mirror
+      if(mirror_y[i])
+      {
+        lstRefac[[length(lstRefac)]]$pos[,"y"] <- (-1)*lstRefac[[length(lstRefac)]]$pos[,"y"] + max(lstRefac[[length(lstRefac)]]$pos[,"y"])
+      }
+      
+      #Apply the rotation
+      x_aux <- lstRefac[[length(lstRefac)]]$pos[,"x"]
+      y_aux <- lstRefac[[length(lstRefac)]]$pos[,"y"]
+      lstRefac[[length(lstRefac)]]$pos[,"x"] <- x_aux*cos(rotations[i]*pi/180) - y_aux*sin(rotations[i]*pi/180)
+      lstRefac[[length(lstRefac)]]$pos[,"y"] <- x_aux*sin(rotations[i]*pi/180) + y_aux*cos(rotations[i]*pi/180)
+      
+      #Offset each pos matrix to 0,0
+      lstRefac[[length(lstRefac)]]$pos[,"x"] <-  lstRefac[[length(lstRefac)]]$pos[,"x"] - min(lstRefac[[length(lstRefac)]]$pos[,"x"])
+      lstRefac[[length(lstRefac)]]$pos[,"y"] <-  lstRefac[[length(lstRefac)]]$pos[,"y"] - min(lstRefac[[length(lstRefac)]]$pos[,"y"])
+      
+      #Apply the raster offsets
+      lstRefac[[length(lstRefac)]]$pos[,"x"] <- lstRefac[[length(lstRefac)]]$pos[,"x"] + nextXOffset
+      lstRefac[[length(lstRefac)]]$pos[,"y"] <- lstRefac[[length(lstRefac)]]$pos[,"y"] + nextYOffset
+      
+      if(byrow)
+      { 
+        if( iCol < ncol)
+        {
+          nextXOffset <- margin + max(lstRefac[[length(lstRefac)]]$pos[,"x"])
+          partialOffset <- max(partialOffset, max(lstRefac[[length(lstRefac)]]$pos[,"y"]))
+          iCol <- iCol + 1
+        }
+        else
+        {
+          nextXOffset <- 0
+          nextYOffset <- margin + partialOffset
+          partialOffset <- 0 #Reset partial offset
+          iCol <- 1
+        }
+      }
+      else
+      {
+        if( iRow < nrow)
+        {
+          nextYOffset <- margin + max(lstRefac[[length(lstRefac)]]$pos[,"y"])
+          partialOffset <- max(partialOffset, max(lstRefac[[length(lstRefac)]]$pos[,"x"]))
+          iRow <- iRow + 1
+        }
+        else
+        {
+          nextYOffset <- 0
+          nextXOffset <- margin + partialOffset
+          partialOffset <- 0 #Reset partial  offset
+          iRow <- 1
+        }
+      }
+      
+    }
+  }
+  
+  #Abort if no data was selected
+  if(length(lstRefac) == 0)
+  {
+    stop("Error: Empty data matrix, no matching image name was selected.\n")
+  }
+  
+  #Raster matrix positon
+  rasterValues <- c()
+  labelsPos <- matrix( nrow = length(lstRefac), ncol = 2)
+  colnames(labelsPos) <- c("x", "y")
+  for( i in 1:length(lstRefac))
+  {
+    rasterValues <- c(rasterValues, lstRefac[[i]]$vals) 
+    if( i > 1)
+    {
+      rasterPos <- rbind(rasterPos, lstRefac[[i]]$pos)
+    }
+    else
+    {
+      rasterPos <- lstRefac[[i]]$pos
+      colnames(rasterPos) <- colnames(lstRefac[[i]]$pos)
+    }
+  }
+  
+  #Global Y offset
+  rasterPos[,"y"] <- rasterPos[,"y"] + margin
+  
+  #Fill label positions, yes I need another loop because rasterPos is not completelly filled during previous loop
+  for( i in 1:length(lstRefac))
+  {
+    labelsPos[i,"x"] <-  min(lstRefac[[i]]$pos[,"x"]) + 0.5*(max( lstRefac[[i]]$pos[,"x"] ) - min(lstRefac[[i]]$pos[,"x"])) 
+    labelsPos[i,"y"] <-  max(rasterPos[,"y"]) - min(lstRefac[[i]]$pos[,"y"]) - margin/2
+  }
+  
+  #And return the plot data
+  return(list(pos = rasterPos, values = rasterValues, lab_x = labelsPos[,"x"], lab_y = labelsPos[,"y"]) )
 }

@@ -4,17 +4,33 @@
 \alias{plotClusterImage}
 \title{plotClusterImage.}
 \usage{
-plotClusterImage(peakMatrix, clusters, offset_horizontal = T, rotate = 0,
-  pixel_size_um = 100)
+plotClusterImage(peakMatrix, clusters, nrow, ncol, byrow = T, margin = 20,
+  img_names = peakMatrix$names, labels = img_names, rotations = rep(0,
+  length(img_names)), mirror_x = rep(F, length(img_names)),
+  mirror_y = rep(F, length(img_names)), pixel_size_um = 100)
 }
 \arguments{
 \item{peakMatrix}{the peak matrix in an rMSIproc object.}
 
 \item{clusters}{a vector with integer number according the cluster of each pixel.}
 
-\item{offset_horizontal}{if true images will be laydout horizontally.}
+\item{nrow}{number of rows of the plotted matrix layout (only used if byrow == F)}
 
-\item{rotate}{rotation to apply.}
+\item{ncol}{number of cols of the plotted matrix layout (only used if byrow == T)}
+
+\item{byrow}{a bool specifing if images must be arranged in rows.}
+
+\item{margin}{the separation between plotted images.}
+
+\item{img_names}{a character vector with img names in the desierd plotting order.}
+
+\item{labels}{an alternative character vector with the labels to be displayed for each image.}
+
+\item{rotations}{a vector with the rotation of each images specified in degrees.}
+
+\item{mirror_x}{a bool vector specifing if each image must be flipped or not in X direction prior to rotation.}
+
+\item{mirror_y}{a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.}
 
 \item{pixel_size_um}{the pixel resolution in um.}
 }
