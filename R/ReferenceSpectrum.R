@@ -19,19 +19,21 @@
 #' InternalReferenceSpectrum.
 #' 
 #' Calculates the dataset reference spectrum to use in label free alignment.
-#' The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
+#' The reference spectrum is the spectrum in the dataset with the best correlation to average spectrum and with high TIC.
 #'
 #' @param img MSI image to calculate internal reference spectrum.
 #' @param reference the spectrum to use as reference for correlations.
 #'
-#' @return a list with the intensity vector corresponding to the reference spectrum and the correlation coefficient.
+#' @return a list with the intensity vector corresponding to the reference spectrum, the score and the pixel ID selected as reference.
 #'
 InternalReferenceSpectrum <- function(img, reference = img$mean)
 {
   pb <- txtProgressBar(min = 0,  max = nrow(img$pos), style = 3)
   id <- 1
-  maxCor <- 0
+  maxScore <- 0
   maxId <- 0
+  selID <- NA
+  TICref <- sum(reference)
   for( i in 1:length(img$data))
   {
     dc <- rMSI::loadImgChunkFromCube(img, i)
@@ -40,10 +42,13 @@ InternalReferenceSpectrum <- function(img, reference = img$mean)
       if(var(dc[j, ]) > 0)
       {
         pxCor <- cor(reference, dc[j, ] )
-        if( pxCor > maxCor )
+        ticScr <- sum(dc[j, ])/TICref
+        score <- pxCor*ticScr
+        if( score > maxScore )
         {
-          maxCor <- pxCor
+          maxScore <- score
           maxId <- id
+          selID <- id
         }
       }
       setTxtProgressBar(pb, id)
@@ -51,32 +56,23 @@ InternalReferenceSpectrum <- function(img, reference = img$mean)
     }
   }
   
-  # TODO: Afegir agun control, si maxCor == 0 vol dir que tens correlacions negatives i per tant no pots alinear.
-  # Aixo pot ser degut a un espectre mig que no es representatiu del dataset. Per exemple, nomes soroll pq hi ha mes pixels de substrat k d teixit.
-  # Ho hem descobert amb un dataset d l'Alex on tenia mol poca intensitat i practicament tot venia del substrat.
-  
   close(pb)
-  return( list(spectrum = rMSI::loadImgChunkFromIds(img, maxId)[1,], correlation = maxCor ))
+  return( list(spectrum = rMSI::loadImgChunkFromIds(img, maxId)[1,], score = maxScore, ID = selID ))
 }
 
 #' InternalReferenceSpectrumMultipleDatasets.
 #' 
 #' Calculates the dataset reference spectrum to use in label free alignment.
-#' The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
+#' The reference spectrum is the spectrum in the dataset with the best correlation to average spectrum and with high TIC.
 #'
 #' @param img_list a list of various rMSI objects.
 #'
-#' @return the intensity vector corresponding to the reference spectrum.
+#' @return a list with the intensity vector corresponding to the reference spectrum, the score, the image index which contains the refernce spectrum and the pixel ID selected as reference.
 #' 
 InternalReferenceSpectrumMultipleDatasets <- function(img_list)
 {
-  #Calculate a global reference
-  globalAverage <- rep(0, length(img_list[[1]]$mass) )
-  for( i in 1:length(img_list))
-  {
-    globalAverage <- globalAverage + img_list[[i]]$mean
-  }
-  globalAverage <- globalAverage/length(img_list)
+  #Set the global reference as the average of the first dataset
+  globalAverage <- img_list[[1]]$mean 
   
   #Calculate correlations
   bestRefs <- list()
@@ -87,7 +83,7 @@ InternalReferenceSpectrumMultipleDatasets <- function(img_list)
   }
   
   #Select the best correlation in all datasets
-  bestID <- which.max(unlist(lapply(bestRefs, function(x){ return(x$correlation) })))
-  
-  return( bestRefs[[bestID]]$spectrum )
+  bestID <- which.max(unlist(lapply(bestRefs, function(x){ return(x$score) })))
+
+  return(  list(spectrum = bestRefs[[bestID]]$spectrum, score = bestRefs[[bestID]]$score, imgIndex = bestID, ID =  bestRefs[[bestID]]$ID ) )
 }

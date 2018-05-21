@@ -82,7 +82,7 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, matrix = "intens
   
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, peakMatrix[[matrix]][,column]/normVals, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
   rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um, vlight = light)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
 }
 
 #' plotClusterImage.
@@ -114,8 +114,8 @@ plotClusterImage <- function(peakMatrix, clusters,
 {
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, clusters, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
   clusColors <- rMSI::PlotClusterImage(rasterData$pos, rasterData$values, rotate = 0, pixel_size_um)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
-  legend( "right", col = clusColors, legend =  paste0("Clus_",unique(clusters)), pch = 20, horiz = F,  bty = "n" )
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
+  legend( "topright", col = clusColors, legend =  paste0("Clus_",sort(unique(clusters), decreasing = F)), pch = 20, horiz = F,  bty = "n" )
   return(clusColors)
 }
 
@@ -148,7 +148,7 @@ plotValuesImage <- function(peakMatrix, values,
 {
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, values, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
   rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = scale_title, pixel_size_um = pixel_size_um, vlight = light)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.5)  )
+  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
 }
 
 
@@ -223,48 +223,62 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
       #Offset each pos matrix to 0,0
       lstRefac[[length(lstRefac)]]$pos[,"x"] <-  lstRefac[[length(lstRefac)]]$pos[,"x"] - min(lstRefac[[length(lstRefac)]]$pos[,"x"])
       lstRefac[[length(lstRefac)]]$pos[,"y"] <-  lstRefac[[length(lstRefac)]]$pos[,"y"] - min(lstRefac[[length(lstRefac)]]$pos[,"y"])
-      
-      #Apply the raster offsets
-      lstRefac[[length(lstRefac)]]$pos[,"x"] <- lstRefac[[length(lstRefac)]]$pos[,"x"] + nextXOffset
-      lstRefac[[length(lstRefac)]]$pos[,"y"] <- lstRefac[[length(lstRefac)]]$pos[,"y"] + nextYOffset
-      
-      if(byrow)
-      { 
-        if( iCol < ncol)
-        {
-          nextXOffset <- margin + max(lstRefac[[length(lstRefac)]]$pos[,"x"])
-          partialOffset <- max(partialOffset, max(lstRefac[[length(lstRefac)]]$pos[,"y"]))
-          iCol <- iCol + 1
-        }
-        else
-        {
-          nextXOffset <- 0
-          nextYOffset <- margin + partialOffset
-          partialOffset <- 0 #Reset partial offset
-          iCol <- 1
-        }
-      }
-      else
-      {
-        if( iRow < nrow)
-        {
-          nextYOffset <- margin + max(lstRefac[[length(lstRefac)]]$pos[,"y"])
-          partialOffset <- max(partialOffset, max(lstRefac[[length(lstRefac)]]$pos[,"x"]))
-          iRow <- iRow + 1
-        }
-        else
-        {
-          nextYOffset <- 0
-          nextXOffset <- margin + partialOffset
-          partialOffset <- 0 #Reset partial  offset
-          iRow <- 1
-        }
-      }
-      
     }
   }
   
-  #Abort if no data was selected
+  #Apply the raster offsets
+  nextXOffset <- 0
+  nextYOffset <- 0
+  if(byrow)
+  {
+    nrow <- ceiling(length(lstRefac)/ncol)
+    for(icol in 1:ncol)
+    {
+      ind_offsets <- seq(from = icol, by = ncol, length.out = nrow)
+      ind_offsets <- ind_offsets[(ind_offsets<=length(lstRefac))]
+      for(ilst in ind_offsets)
+      {
+        lstRefac[[ilst]]$pos[,"x"] <- lstRefac[[ilst]]$pos[,"x"] + nextXOffset
+      }
+      nextXOffset <- margin + max( unlist( lapply(lstRefac[ind_offsets], function(x){ x$pos[,"x"] }) ) )
+    }
+    for( irow in 1:nrow)
+    {
+      ind_offsets <- irow*ncol + (1:ncol) - ncol
+      ind_offsets <- ind_offsets[(ind_offsets<=length(lstRefac))]
+      for(ilst in ind_offsets)
+      {
+        lstRefac[[ilst]]$pos[,"y"] <- lstRefac[[ilst]]$pos[,"y"] + nextYOffset
+      }
+      nextYOffset <- margin + max( unlist( lapply(lstRefac[ind_offsets], function(x){ x$pos[,"y"] }) ) )
+    }
+  }
+  else
+  {
+    ncol <- ceiling(length(lstRefac)/nrow)
+    for(irow in 1:nrow)
+    {
+      ind_offsets <- seq(from = irow, by = nrow, length.out = ncol)
+      ind_offsets <- ind_offsets[(ind_offsets<=length(lstRefac))]
+      for(ilst in ind_offsets)
+      {
+        lstRefac[[ilst]]$pos[,"y"] <- lstRefac[[ilst]]$pos[,"y"] + nextYOffset
+      }
+      nextYOffset <- margin + max( unlist( lapply(lstRefac[ind_offsets], function(x){ x$pos[,"y"] }) ) )
+    }
+    for( icol in 1:ncol)
+    {
+      ind_offsets <- icol*nrow + (1:nrow) - nrow
+      ind_offsets <- ind_offsets[(ind_offsets<=length(lstRefac))]
+      for(ilst in ind_offsets)
+      {
+        lstRefac[[ilst]]$pos[,"x"] <- lstRefac[[ilst]]$pos[,"x"] + nextXOffset
+      }
+      nextXOffset <- margin + max( unlist( lapply(lstRefac[ind_offsets], function(x){ x$pos[,"x"] }) ) )
+    }
+  }
+
+    #Abort if no data was selected
   if(length(lstRefac) == 0)
   {
     stop("Error: Empty data matrix, no matching image name was selected.\n")
@@ -295,7 +309,7 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
   for( i in 1:length(lstRefac))
   {
     labelsPos[i,"x"] <-  min(lstRefac[[i]]$pos[,"x"]) + 0.5*(max( lstRefac[[i]]$pos[,"x"] ) - min(lstRefac[[i]]$pos[,"x"])) 
-    labelsPos[i,"y"] <-  max(rasterPos[,"y"]) - min(lstRefac[[i]]$pos[,"y"]) - margin/2
+    labelsPos[i,"y"] <-  max(rasterPos[,"y"]) - min(lstRefac[[i]]$pos[,"y"]) 
   }
   
   #And return the plot data

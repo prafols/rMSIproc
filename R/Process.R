@@ -133,6 +133,8 @@ ProcessImage <- function(img,
   {
     #Calculate reference spectrum for label free alignment
     refSpc <- InternalReferenceSpectrumMultipleDatasets(img_list)
+    cat(paste0("Pixel with ID ", refSpc$ID, " from image indexed as ", refSpc$imgIndex, " (", img_list[[ refSpc$imgIndex]]$name, ") selected as internal reference.\n"))
+    refSpc <- refSpc$spectrum
     
     cat("Running Label-Free Alignment...\n")
     #The ff file must be closed befor running the Cpp code
@@ -283,24 +285,6 @@ ProcessImage <- function(img,
   #Calculate some normalizations
   if( EnableSpectraNormalization )
   {
-    mergedNormList <- list()
-    if( EnableTICNorm )
-    {
-      mergedNormList$TIC <- c()
-    }
-    if( EnableRMSNorm )
-    {
-      mergedNormList$RMS <- c()
-    }
-    if( EnableMAXNorm )
-    {
-      mergedNormList$MAX <- c()
-    }
-    if( EnableTICAcqNorm )
-    {
-      mergedNormList$AcqTic <- c()
-    }
-    
     for( i in 1:length(img_list))
     {
       cat(paste0("Normalizations for image ", i, "/", length(img_list), "\n"))
@@ -312,60 +296,86 @@ ProcessImage <- function(img,
       
       if( EnableTICNorm )
       {
-        if(is.null(img_list[[i]]$normalizations$TIC))
-        {
-          img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = F)
-        }
-        else
-        {
-          cat(paste0("TIC normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
-        }
-        mergedNormList$TIC <- c(mergedNormList$TIC,  img_list[[i]]$normalizations$TIC)
+        img_list[[i]] <- rMSI::NormalizeTIC(img_list[[i]], remove_empty_pixels = F)
       }
       if( EnableRMSNorm )
       {
-        if(is.null(img_list[[i]]$normalizations$RMS))
-        {
-          img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = F)
-        }
-        else
-        {
-          cat(paste0("RMS normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
-        }
-        mergedNormList$RMS <- c(mergedNormList$RMS,  img_list[[i]]$normalizations$RMS)
+        img_list[[i]] <- rMSI::NormalizeRMS(img_list[[i]], remove_empty_pixels = F)
       }
       if( EnableMAXNorm )
       {
-        if(is.null(img_list[[i]]$normalizations$MAX))
-        {
-          img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = F)
-        }
-        else
-        {
-          cat(paste0("MAX normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
-        }
-        mergedNormList$MAX <- c(mergedNormList$MAX,  img_list[[i]]$normalizations$MAX)
+        img_list[[i]] <- rMSI::NormalizeMAX(img_list[[i]], remove_empty_pixels = F)
       }
       if( EnableTICAcqNorm )
       {
-        if(is.null(img_list[[i]]$normalizations$AcqTic))
-        {
-          img_list[[i]] <- rMSI::NormalizeByAcqDegradation(img_list[[i]])
-        }
-        else
-        {
-          cat(paste0("TICAcq normalization for image ", i, "/", length(img_list), " is already present, avoiding re-calculation\n"))
-        }
-        mergedNormList$AcqTic <- c(mergedNormList$AcqTic,  img_list[[i]]$normalizations$AcqTic)
+        img_list[[i]] <- rMSI::NormalizeByAcqDegradation(img_list[[i]])
       }
     }
-    
-    #Append normalizations to the peak matrix
-    if(!is.null(pkMatrix))
+  }
+  
+  #Append normalizations to the peak matrix
+  if(!is.null(pkMatrix))
+  {
+    if(all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations) }))))
     {
-      pkMatrix$normalizations <-  as.data.frame(mergedNormList)
+      #All images have normalizations enabled
+      NormTIC_Exists <- all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations$TIC) })))
+      NormRMS_Exists <- all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations$RMS) })))
+      NormMAX_Exists <- all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations$MAX) })))
+      NormAcqTic_Exists <- all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations$AcqTic) })))
+      if(any(c(NormTIC_Exists, NormRMS_Exists, NormMAX_Exists, NormAcqTic_Exists )))
+      {
+        #Some of the normalization is present for all images
+        mergedNormList <- list()
+        if( NormTIC_Exists )
+        {
+          mergedNormList$TIC <- c()
+        }
+        if( NormRMS_Exists )
+        {
+          mergedNormList$RMS <- c()
+        }
+        if( NormMAX_Exists )
+        {
+          mergedNormList$MAX <- c()
+        }
+        if( NormAcqTic_Exists )
+        {
+          mergedNormList$AcqTic <- c()
+        }
+        
+        for( i in 1:length(img_list))
+        {
+          if( NormTIC_Exists )
+          {
+            mergedNormList$TIC <- c(mergedNormList$TIC,  img_list[[i]]$normalizations$TIC)
+          }
+          if( NormRMS_Exists )
+          {
+            mergedNormList$RMS <- c(mergedNormList$RMS,  img_list[[i]]$normalizations$RMS)
+          }
+          if( NormMAX_Exists )
+          {
+            mergedNormList$MAX <- c(mergedNormList$MAX,  img_list[[i]]$normalizations$MAX)
+          }
+          if( NormAcqTic_Exists )
+          {
+            mergedNormList$AcqTic <- c(mergedNormList$AcqTic,  img_list[[i]]$normalizations$AcqTic)
+          }
+        }
+        
+        pkMatrix$normalizations <-  as.data.frame(mergedNormList)
+        rm(mergedNormList)
+      }
+      else
+      {
+        cat("Some normalization vector is not available for some images, so the peak-matrix will not contain normalizations.\n")
+      }
     }
-    rm(mergedNormList)
+    else
+    {
+      cat("Some images do not contain normalization vectors, so the peak-matrix will not contain normalizations.\n")
+    }
   }
   
   #Add a copy of img$pos to pkMatrix
