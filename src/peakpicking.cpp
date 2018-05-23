@@ -119,7 +119,6 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
   const int HalfWinSize = FFT_Size/2;
   double slope = 0.0;
   double slope_ant = 0.0;
-  double noise_mean = 0.0;
   PeakPicking::Peaks *m_peaks = new PeakPicking::Peaks();
   for( int i=0; i < (dataLength - 1); i++)
   {
@@ -127,17 +126,11 @@ PeakPicking::Peaks *PeakPicking::detectPeaks( double *spectrum, double *noise, d
     //Look for a zero crossing at first derivate (negative sign of product) and negative 2nd derivate value (local maxim)
     if(slope*slope_ant <= 0.0 && (slope - slope_ant) < 0.0)
     {
-      noise_mean = 0.0;
-      for( int j=(i - HalfWinSize); j < (i + HalfWinSize); j++)
-      {
-        noise_mean += (j >= 0 && j < dataLength) ? noise[j] : 0.0;
-      }
-      noise_mean /= FFT_Size;
-      if(spectrum[i]/noise_mean >= SNR)
+      if(spectrum[i]/noise[i] >= SNR)
       {
         m_peaks->mass.push_back( predictPeakMass(spectrum, i)); //Compute peak accurately using FFT interpolation); 
         m_peaks->intensity.push_back(spectrum[i]);
-        m_peaks->SNR.push_back(spectrum[i]/noise_mean); 
+        m_peaks->SNR.push_back(spectrum[i]/noise[i]); 
         m_peaks->area.push_back(predictPeakArea(spectrum, i)); //Normalized to non-FFT sapce
         m_peaks->binSize.push_back( fabs(mass[i + 1] - mass[i]) );
       }
