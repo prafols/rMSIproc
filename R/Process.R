@@ -246,7 +246,7 @@ ProcessImage <- function(img,
   if( EnablePeakPicking )
   {
     cat("Running Peak Picking...\n")
-    pkMatrix <- FullImagePeakPicking(fileNames = dataInf$filenames,
+    peakData <- FullImagePeakPicking(fileNames = dataInf$filenames,
                                      mass =  img_list[[1]]$mass,  
                                      numRows = dataInf$nrows,
                                      dataType = dataInf$datatype, 
@@ -257,15 +257,13 @@ ProcessImage <- function(img,
                                      doBinning = UseBinning, 
                                      binningTolerance = BinTolerance, 
                                      binningFilter = BinFilter,
-                                     binningIn_ppm = BinToleranceUsingPPM)
-    
-    #Keep track of used binSize in the binning stage
-    usedBinSize <- pkMatrix$binsize
+                                     binningIn_ppm = BinToleranceUsingPPM, 
+                                     exportPeakList = FALSE) #TODO set a control to allow exporting the peak list as imzML dataset
     
     if(UseBinning)
     {
       cat("Replacing zero values in the binned peak matrix...\n")
-      pkMatrix <- ReplacePeakMatrixZeros(pkMatrix, 
+      peakData$PeakMatrix <- ReplacePeakMatrixZeros(peakData$PeakMatrix, 
                                           fileNames = dataInf$filenames, 
                                           mass = img_list[[1]]$mass, 
                                           numRows = dataInf$nrows, 
@@ -273,12 +271,19 @@ ProcessImage <- function(img,
                                           numOfThreads = NumOfThreads, 
                                           WinSize = peakWindow,  
                                           InterpolationUpSampling = peakUpSampling )
+      #Keep track of used binSize in the binning stage
+      usedBinSize <- peakData$PeakMatrix$binsize
+    }
+    else
+    {
+      usedBinSize <- NULL
     }
     
   }
   else
   {
-    pkMatrix <- NULL
+    peakData <- list() #Dummy peak list because no peak-picking was carried out
+    peakData$PeakMatrix <- NULL
     usedBinSize <- NULL
   }
   
@@ -314,7 +319,7 @@ ProcessImage <- function(img,
   }
   
   #Append normalizations to the peak matrix
-  if(!is.null(pkMatrix))
+  if(!is.null(peakData$PeakMatrix))
   {
     if(all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations) }))))
     {
@@ -364,7 +369,7 @@ ProcessImage <- function(img,
           }
         }
         
-        pkMatrix$normalizations <-  as.data.frame(mergedNormList)
+        peakData$PeakMatrix$normalizations <-  as.data.frame(mergedNormList)
         rm(mergedNormList)
       }
       else
@@ -378,7 +383,7 @@ ProcessImage <- function(img,
     }
   }
   
-  #Add a copy of img$pos to pkMatrix
+  #Add a copy of img$pos to peakData$PeakMatrix
   if( EnablePeakPicking && UseBinning)
   {
     mergedNames <- unlist(lapply(img_list, function(x){ return(x$name) }))
@@ -407,7 +412,7 @@ ProcessImage <- function(img,
       }
       istart <- istop + 1 
     }
-    pkMatrix <- FormatPeakMatrix(pkMatrix, mergedPos,  mergedNumPixels, mergedNames, mergedUUIDs, mergedMotors) 
+    peakData$PeakMatrix <- FormatPeakMatrix(peakData$PeakMatrix, mergedPos,  mergedNumPixels, mergedNames, mergedUUIDs, mergedMotors) 
   }
   
   elap_2nd_stage <- Sys.time() - pt
@@ -424,7 +429,14 @@ ProcessImage <- function(img,
     return_list$procImg <- img_list[[1]]
   }
   
-  return_list$peakMat <- pkMatrix
+  if(!is.null(peakData$PeakList) )
+  {
+    return_list$peakList <- peakData$PeakList
+  }
+  if(!is.null(peakData$PeakMatrix) )
+  {
+    return_list$peakMat <- peakData$PeakMatrix
+  }
   return_list$alignShifts <- alngLags
   return_list$binSizes <- usedBinSize
   return ( return_list )
@@ -467,7 +479,7 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names, uuid, posMo
 #' The rMSIproc binning method is used to calculate the new masses.
 #'
 #' @param PeakMatrixList A list of various peak matrix objexts produced using rMSIproc.
-#' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.
+#' @param binningTolerance the tolerance used to merge peaks to the same bin specified in ppm. It is recomanded to use the half of the peak width.
 #' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
