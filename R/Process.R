@@ -49,7 +49,7 @@
 #' @param EnableTICAcqNorm if TICAcq normalization must be performed on spectra.
 #' @param NumOfThreads the number number of threads used to process the data.
 #' @param CalSpan the used span for the loess fittin used in mass calibration.
-#' 
+#' @param ExportPeakList a boolean detailing wheter the un-binned peak list must be exported or not.
 #'
 #' @return  a named list containing:
 #'             - The process image reference (procImg).
@@ -64,9 +64,9 @@ ProcessImage <- function(img,
                          AlignmentRefLow = 0, AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         UseBinning = T, BinTolerance = 100, BinFilter = 0.05, BinToleranceUsingPPM = T,
+                         UseBinning = T, BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
+                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75, ExportPeakList = F)
 {
   pt <- Sys.time()
   
@@ -258,8 +258,7 @@ ProcessImage <- function(img,
                                      binningTolerance = BinTolerance, 
                                      binningFilter = BinFilter,
                                      binningIn_ppm = BinToleranceUsingPPM, 
-                                     exportPeakList = FALSE) #TODO set a control to allow exporting the peak list as imzML dataset
-    
+                                     exportPeakList = ExportPeakList)
     if(UseBinning)
     {
       cat("Replacing zero values in the binned peak matrix...\n")
@@ -847,7 +846,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, BinToleranceUsingPPM = procParams$peakpicking$binUsingPPM,
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableRMSNorm = procParams$spectraNormalization$RMS, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
-                             NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
+                             NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan, ExportPeakList = procParams$peakpicking$exportPeakList )
 
     #Store data summary (before than storing img's because the rMSI objects will be removed)
     if(xmlRoiFiles$summary_export)
@@ -886,6 +885,13 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       if( !is.null(procData$binSizes) && store_binsize_txt_file )
       {
         write.table(procData$binSizes, file = file.path(procParams$data$outpath,  paste(pkMatName,"-binSize.txt", sep ="")), append = F, row.names = F, col.names = F, dec = ".")
+      }
+      
+      #Store the processed imzML
+      if(procParams$peakpicking$exportPeakList)
+      {
+        #TODO implement imzML export
+        #TODO si tens merge activat el peak list contindra totes les imatges pero les cordeandes poden tenir overlaping... com exporto aixo a imzML?
       }
     }
     

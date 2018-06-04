@@ -12,9 +12,9 @@ InternalReferenceSpectrum(img, reference = img$mean)
 \item{reference}{the spectrum to use as reference for correlations.}
 }
 \value{
-a list with the intensity vector corresponding to the reference spectrum and the correlation coefficient.
+a list with the intensity vector corresponding to the reference spectrum, the score and the pixel ID selected as reference.
 }
 \description{
 Calculates the dataset reference spectrum to use in label free alignment.
-The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
+The reference spectrum is the spectrum in the dataset with the best correlation to average spectrum and with high TIC.
 }

@@ -132,6 +132,13 @@ List FullImagePeakPicking ( StringVector fileNames,
   
   myPeakPicking.Run();
   PeakPicking::Peaks **CpeakList_ptr = myPeakPicking.getPeakList();
+  
+  //Export the peak list without binning for imzML centroid convertion, this must be called before the binning since binning will destroy the peak list
+  List peakList;
+  if( exportPeakList )
+  {
+    peakList = myPeakPicking.ExportPeakList();
+  } 
     
   //Call binning if it is enabled
   List peakMat;
@@ -144,13 +151,6 @@ List FullImagePeakPicking ( StringVector fileNames,
     }
     PeakBinning myPeakBinning(CpeakList_ptr, pixelCount, binningTolerance, binningIn_ppm, binningFilter);
     peakMat = myPeakBinning.BinPeaks(); 
-  }
-
-  //Export the peak list without binning for imzML centroid convertion
-  List peakList;
-  if( exportPeakList )
-  {
-    peakList = myPeakPicking.ExportPeakList();
   }
   
   //The peak list object is automatically destroyed by the MTPeakPicking destructor

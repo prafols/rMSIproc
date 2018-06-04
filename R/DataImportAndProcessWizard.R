@@ -283,6 +283,7 @@ ImportWizardGui <- function()
         this$procParamList$peakpicking$binUsingPPM <- F
       }
       this$procParamList$peakpicking$binfilter <- as.double(gWidgets2::svalue(this$spin_binFilter)/100)
+      this$procParamList$peakpicking$exportPeakList <- gWidgets2::svalue(this$check_exportPeakList) & this$procParamList$peakpicking$enabled 
     }
     
     #Number of threads
@@ -405,6 +406,7 @@ ImportWizardGui <- function()
   frm_binUnits <- gWidgets2::gframe("Binning Tolerance Units:", container = box_peakpick)
   ratio_binningUnits <- gWidgets2::gradio(c("[ppm]", "[scans]"), container = frm_binUnits, selected = 2, horizontal = T)
   spin_binFilter <- drawLabelSpin(box_peakpick, "Peak Filter [%]:", 1, 100, 5)
+  check_exportPeakList <- gWidgets2::gcheckbox("Export peaks as imzML", checked = F, container = box_peakpick )
   
   #Number of processing threads
   frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_proc2, spacing = 10)
