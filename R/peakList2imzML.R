@@ -37,7 +37,7 @@ export_imzMLpeakList <- function(peakList, posMatrix, pixel_size_um, filename, n
   }
   if(length(peakList) != length(normalization))
   {
-    stop("peakList and posMatrix must be the same normalization.\n")
+    stop("peakList and normalization. must be the same length.\n")
   }
   if(length( which(normalization == 0)) > 0)
   {

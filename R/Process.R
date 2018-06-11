@@ -600,15 +600,15 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
   
-  #Decide from the begining if tar data must be saved or not. I'm doing it that way because some of this paramters my change during processing.
-  MSIDataMustBeSavedInTARFormat <- procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"
-  
   if(is.null(procParams))
   {
     cat("Processing aborted\n")
-    return()
+    return(invisible())
   }
   
+  #Decide from the begining if tar data must be saved or not. I'm doing it that way because some of this paramters my change during processing.
+  MSIDataMustBeSavedInTARFormat <- procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"
+
   #Get number of images
   brukerXmlCounters <- rep(0, length(procParams$data$source$xmlpath))
   brukerXmlRois <- list()
@@ -811,6 +811,26 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     # Merge data and resample it if mass axis is different and ID pixel selection if xml are provided
     mImg_list <- MergerMSIDataSets(mImg_list, procParams$data$outpath, pixel_id = pixelID_list ) 
     
+    #Independently of the selected norms, set also the one used for imzML peak list export
+    if(procParams$peakpicking$exportPeakList)
+    {
+      if(procParams$peakpicking$exportPeakListNormalization == "TIC")
+      {
+        procParams$spectraNormalization$TIC <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "MAX")
+      {
+        procParams$spectraNormalization$MAX <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "RMS")
+      {
+        procParams$spectraNormalization$RMS <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "AcqTic")
+      {
+        procParams$spectraNormalization$AcqTIC <- T
+      }
+    }
     #Independently of the selected norms, set also the one used for data summary export
     if(xmlRoiFiles$summary_export)
     {
@@ -830,11 +850,11 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       {
         procParams$spectraNormalization$AcqTIC <- T
       }
-      procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
+    }
+    procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
                                                       procParams$spectraNormalization$MAX,
                                                       procParams$spectraNormalization$RMS,
                                                       procParams$spectraNormalization$AcqTIC )
-    }
     
     #Process data
     procData <- ProcessImage(img = mImg_list,
@@ -887,11 +907,31 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
         write.table(procData$binSizes, file = file.path(procParams$data$outpath,  paste(pkMatName,"-binSize.txt", sep ="")), append = F, row.names = F, col.names = F, dec = ".")
       }
       
-      #Store the processed imzML
+      #Store the processed imzML (split export, each image its one imzML file)
       if(procParams$peakpicking$exportPeakList)
       {
-        #TODO implement imzML export
-        #TODO si tens merge activat el peak list contindra totes les imatges pero les cordeandes poden tenir overlaping... com exporto aixo a imzML?
+        iStart <- 1
+        for( iexp_imzML in 1:length(procData$procImg))
+        {
+          cat(paste0("Storing ", procParams$peakpicking$exportPeakListNormalization ," normalized peak list as imzML of img ", iexp_imzML, " of ", length(procData$procImg), "\n"))
+          iEnd <- iStart + nrow(procData$procImg[[iexp_imzML]]$pos) - 1
+          imgName <- sub('\\..*$', '',procData$procImg[[iexp_imzML]]$name) #Remove extensions of image name
+          fname_imzML <- file.path( path.expand(procParams$data$outpath), paste0("peakList_", imgName, "_", procParams$peakpicking$exportPeakListNormalization))
+          if(procParams$peakpicking$exportPeakListNormalization == "RAW")
+          {
+            norm_imzML <- rep(1, nrow(procData$procImg[[iexp_imzML]]$pos))
+          }
+          else
+          {
+            norm_imzML <- procData$procImg[[iexp_imzML]]$normalizations[[procParams$peakpicking$exportPeakListNormalization]]
+          }
+          rMSIproc::export_imzMLpeakList(peakList = procData$peakList[iStart:iEnd], 
+                                         posMatrix = procData$procImg[[iexp_imzML]]$pos,
+                                         filename = fname_imzML, 
+                                         pixel_size_um = procData$procImg[[iexp_imzML]]$pixel_size_um,
+                                         normalization = norm_imzML )
+          iStart <- 1 + iEnd
+        }
       }
     }
     
