@@ -326,6 +326,9 @@ ImportWizardGui <- function()
     gWidgets2::enabled( this$spin_peakOversample) <- gWidgets2::svalue(check_peakpicking)
     gWidgets2::enabled( this$spin_binTolerance) <- gWidgets2::svalue(check_peakpicking)
     gWidgets2::enabled( this$spin_binFilter) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$frm_binUnits) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$check_exportPeakList) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$box_imzMLNorm) <- gWidgets2::svalue(check_peakpicking)
   }
   
   NormalizationCheckBoxChanged <- function(...)
