@@ -5,6 +5,22 @@
 
 using namespace Rcpp;
 
+// PeakSelectorC
+Rcpp::NumericVector PeakSelectorC(int massChannels, int numPixels, int NumIso, NumericMatrix PeakMtx, NumericVector massVec, int ppmT);
+RcppExport SEXP _rMSIproc_PeakSelectorC(SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP NumIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP ppmTSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type massChannels(massChannelsSEXP);
+    Rcpp::traits::input_parameter< int >::type numPixels(numPixelsSEXP);
+    Rcpp::traits::input_parameter< int >::type NumIso(NumIsoSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type PeakMtx(PeakMtxSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type massVec(massVecSEXP);
+    Rcpp::traits::input_parameter< int >::type ppmT(ppmTSEXP);
+    rcpp_result_gen = Rcpp::wrap(PeakSelectorC(massChannels, numPixels, NumIso, PeakMtx, massVec, ppmT));
+    return rcpp_result_gen;
+END_RCPP
+}
 // AlignSpectrumToReference
 NumericVector AlignSpectrumToReference(NumericVector mass, NumericVector ref, NumericVector x, bool bilinear, double lagRefLow, double lagRefMid, double lagRefHigh, int iterations, double lagLimitppm, int fftOverSampling);
 RcppExport SEXP _rMSIproc_AlignSpectrumToReference(SEXP massSEXP, SEXP refSEXP, SEXP xSEXP, SEXP bilinearSEXP, SEXP lagRefLowSEXP, SEXP lagRefMidSEXP, SEXP lagRefHighSEXP, SEXP iterationsSEXP, SEXP lagLimitppmSEXP, SEXP fftOverSamplingSEXP) {
@@ -328,6 +344,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rMSIproc_PeakSelectorC", (DL_FUNC) &_rMSIproc_PeakSelectorC, 6},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},

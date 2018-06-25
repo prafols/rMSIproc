@@ -20,7 +20,7 @@
 #' @export
 
 
-IsoMALDI <- function(img, IntPcent, NumIso, ppmT)
+IsoMALDI <- function(img, NumIso, ppmT)
 {
-  return(PeakSelectorC(length(img$mass), sum(img$numPixels), IntPcent, NumIso, img$intensity, img$mass, ppmT))
+  return(PeakSelectorC(length(img$mass), sum(img$numPixels), NumIso, img$intensity, img$mass, ppmT))
 }
