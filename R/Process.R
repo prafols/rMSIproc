@@ -49,7 +49,7 @@
 #' @param EnableTICAcqNorm if TICAcq normalization must be performed on spectra.
 #' @param NumOfThreads the number number of threads used to process the data.
 #' @param CalSpan the used span for the loess fittin used in mass calibration.
-#' 
+#' @param ExportPeakList a boolean detailing wheter the un-binned peak list must be exported or not.
 #'
 #' @return  a named list containing:
 #'             - The process image reference (procImg).
@@ -64,9 +64,9 @@ ProcessImage <- function(img,
                          AlignmentRefLow = 0, AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
                          EnableCalibration = T, CalibrationPeakWin = 20,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
-                         UseBinning = T, BinTolerance = 100, BinFilter = 0.05, BinToleranceUsingPPM = T,
+                         UseBinning = T, BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75)
+                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75, ExportPeakList = F)
 {
   pt <- Sys.time()
   
@@ -246,7 +246,7 @@ ProcessImage <- function(img,
   if( EnablePeakPicking )
   {
     cat("Running Peak Picking...\n")
-    pkMatrix <- FullImagePeakPicking(fileNames = dataInf$filenames,
+    peakData <- FullImagePeakPicking(fileNames = dataInf$filenames,
                                      mass =  img_list[[1]]$mass,  
                                      numRows = dataInf$nrows,
                                      dataType = dataInf$datatype, 
@@ -257,15 +257,12 @@ ProcessImage <- function(img,
                                      doBinning = UseBinning, 
                                      binningTolerance = BinTolerance, 
                                      binningFilter = BinFilter,
-                                     binningIn_ppm = BinToleranceUsingPPM)
-    
-    #Keep track of used binSize in the binning stage
-    usedBinSize <- pkMatrix$binsize
-    
+                                     binningIn_ppm = BinToleranceUsingPPM, 
+                                     exportPeakList = ExportPeakList)
     if(UseBinning)
     {
       cat("Replacing zero values in the binned peak matrix...\n")
-      pkMatrix <- ReplacePeakMatrixZeros(pkMatrix, 
+      peakData$PeakMatrix <- ReplacePeakMatrixZeros(peakData$PeakMatrix, 
                                           fileNames = dataInf$filenames, 
                                           mass = img_list[[1]]$mass, 
                                           numRows = dataInf$nrows, 
@@ -273,12 +270,19 @@ ProcessImage <- function(img,
                                           numOfThreads = NumOfThreads, 
                                           WinSize = peakWindow,  
                                           InterpolationUpSampling = peakUpSampling )
+      #Keep track of used binSize in the binning stage
+      usedBinSize <- peakData$PeakMatrix$binsize
+    }
+    else
+    {
+      usedBinSize <- NULL
     }
     
   }
   else
   {
-    pkMatrix <- NULL
+    peakData <- list() #Dummy peak list because no peak-picking was carried out
+    peakData$PeakMatrix <- NULL
     usedBinSize <- NULL
   }
   
@@ -314,7 +318,7 @@ ProcessImage <- function(img,
   }
   
   #Append normalizations to the peak matrix
-  if(!is.null(pkMatrix))
+  if(!is.null(peakData$PeakMatrix))
   {
     if(all(unlist(lapply(img_list, function(x){ !is.null(x$normalizations) }))))
     {
@@ -364,7 +368,7 @@ ProcessImage <- function(img,
           }
         }
         
-        pkMatrix$normalizations <-  as.data.frame(mergedNormList)
+        peakData$PeakMatrix$normalizations <-  as.data.frame(mergedNormList)
         rm(mergedNormList)
       }
       else
@@ -378,7 +382,7 @@ ProcessImage <- function(img,
     }
   }
   
-  #Add a copy of img$pos to pkMatrix
+  #Add a copy of img$pos to peakData$PeakMatrix
   if( EnablePeakPicking && UseBinning)
   {
     mergedNames <- unlist(lapply(img_list, function(x){ return(x$name) }))
@@ -407,7 +411,7 @@ ProcessImage <- function(img,
       }
       istart <- istop + 1 
     }
-    pkMatrix <- FormatPeakMatrix(pkMatrix, mergedPos,  mergedNumPixels, mergedNames, mergedUUIDs, mergedMotors) 
+    peakData$PeakMatrix <- FormatPeakMatrix(peakData$PeakMatrix, mergedPos,  mergedNumPixels, mergedNames, mergedUUIDs, mergedMotors) 
   }
   
   elap_2nd_stage <- Sys.time() - pt
@@ -424,7 +428,14 @@ ProcessImage <- function(img,
     return_list$procImg <- img_list[[1]]
   }
   
-  return_list$peakMat <- pkMatrix
+  if(!is.null(peakData$PeakList) )
+  {
+    return_list$peakList <- peakData$PeakList
+  }
+  if(!is.null(peakData$PeakMatrix) )
+  {
+    return_list$peakMat <- peakData$PeakMatrix
+  }
   return_list$alignShifts <- alngLags
   return_list$binSizes <- usedBinSize
   return ( return_list )
@@ -467,7 +478,7 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names, uuid, posMo
 #' The rMSIproc binning method is used to calculate the new masses.
 #'
 #' @param PeakMatrixList A list of various peak matrix objexts produced using rMSIproc.
-#' @param binningTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.
+#' @param binningTolerance the tolerance used to merge peaks to the same bin specified in ppm. It is recomanded to use the half of the peak width.
 #' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
@@ -589,15 +600,15 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
   #Get processing params using a GUI
   procParams <- ImportWizardGui()
   
-  #Decide from the begining if tar data must be saved or not. I'm doing it that way because some of this paramters my change during processing.
-  MSIDataMustBeSavedInTARFormat <- procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"
-  
   if(is.null(procParams))
   {
     cat("Processing aborted\n")
-    return()
+    return(invisible())
   }
   
+  #Decide from the begining if tar data must be saved or not. I'm doing it that way because some of this paramters my change during processing.
+  MSIDataMustBeSavedInTARFormat <- procParams$smoothing$enabled || procParams$alignment$enabled || procParams$calibration$enabled || procParams$spectraNormalization$enabled || procParams$data$source$type != "tar"
+
   #Get number of images
   brukerXmlCounters <- rep(0, length(procParams$data$source$xmlpath))
   brukerXmlRois <- list()
@@ -800,6 +811,26 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     # Merge data and resample it if mass axis is different and ID pixel selection if xml are provided
     mImg_list <- MergerMSIDataSets(mImg_list, procParams$data$outpath, pixel_id = pixelID_list ) 
     
+    #Independently of the selected norms, set also the one used for imzML peak list export
+    if(procParams$peakpicking$exportPeakList)
+    {
+      if(procParams$peakpicking$exportPeakListNormalization == "TIC")
+      {
+        procParams$spectraNormalization$TIC <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "MAX")
+      {
+        procParams$spectraNormalization$MAX <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "RMS")
+      {
+        procParams$spectraNormalization$RMS <- T
+      }
+      else if(procParams$peakpicking$exportPeakListNormalization == "AcqTic")
+      {
+        procParams$spectraNormalization$AcqTIC <- T
+      }
+    }
     #Independently of the selected norms, set also the one used for data summary export
     if(xmlRoiFiles$summary_export)
     {
@@ -819,11 +850,11 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       {
         procParams$spectraNormalization$AcqTIC <- T
       }
-      procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
+    }
+    procParams$spectraNormalization$enabled <- any( procParams$spectraNormalization$TIC, 
                                                       procParams$spectraNormalization$MAX,
                                                       procParams$spectraNormalization$RMS,
                                                       procParams$spectraNormalization$AcqTIC )
-    }
     
     #Process data
     procData <- ProcessImage(img = mImg_list,
@@ -835,7 +866,7 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
                              EnablePeakPicking = procParams$peakpicking$enabled, SNR = procParams$peakpicking$snr, peakWindow = procParams$peakpicking$winsize, peakUpSampling = procParams$peakpicking$oversample,
                              UseBinning = T, BinTolerance = procParams$peakpicking$bintolerance, BinFilter = procParams$peakpicking$binfilter, BinToleranceUsingPPM = procParams$peakpicking$binUsingPPM,
                              EnableSpectraNormalization = procParams$spectraNormalization$enabled, EnableTICNorm = procParams$spectraNormalization$TIC, EnableRMSNorm = procParams$spectraNormalization$RMS, EnableMAXNorm = procParams$spectraNormalization$MAX, EnableTICAcqNorm = procParams$spectraNormalization$AcqTIC,
-                             NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan )
+                             NumOfThreads = procParams$nthreads, CalSpan = calibrationSpan, ExportPeakList = procParams$peakpicking$exportPeakList )
 
     #Store data summary (before than storing img's because the rMSI objects will be removed)
     if(xmlRoiFiles$summary_export)
@@ -874,6 +905,33 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       if( !is.null(procData$binSizes) && store_binsize_txt_file )
       {
         write.table(procData$binSizes, file = file.path(procParams$data$outpath,  paste(pkMatName,"-binSize.txt", sep ="")), append = F, row.names = F, col.names = F, dec = ".")
+      }
+      
+      #Store the processed imzML (split export, each image its one imzML file)
+      if(procParams$peakpicking$exportPeakList)
+      {
+        iStart <- 1
+        for( iexp_imzML in 1:length(procData$procImg))
+        {
+          cat(paste0("Storing ", procParams$peakpicking$exportPeakListNormalization ," normalized peak list as imzML of img ", iexp_imzML, " of ", length(procData$procImg), "\n"))
+          iEnd <- iStart + nrow(procData$procImg[[iexp_imzML]]$pos) - 1
+          imgName <- sub('\\..*$', '',procData$procImg[[iexp_imzML]]$name) #Remove extensions of image name
+          fname_imzML <- file.path( path.expand(procParams$data$outpath), paste0("peakList_", imgName, "_", procParams$peakpicking$exportPeakListNormalization))
+          if(procParams$peakpicking$exportPeakListNormalization == "RAW")
+          {
+            norm_imzML <- rep(1, nrow(procData$procImg[[iexp_imzML]]$pos))
+          }
+          else
+          {
+            norm_imzML <- procData$procImg[[iexp_imzML]]$normalizations[[procParams$peakpicking$exportPeakListNormalization]]
+          }
+          rMSIproc::export_imzMLpeakList(peakList = procData$peakList[iStart:iEnd], 
+                                         posMatrix = procData$procImg[[iexp_imzML]]$pos,
+                                         filename = fname_imzML, 
+                                         pixel_size_um = procData$procImg[[iexp_imzML]]$pixel_size_um,
+                                         normalization = norm_imzML )
+          iStart <- 1 + iEnd
+        }
       }
     }
     

@@ -21,12 +21,8 @@ FullImageAlign <- function(fileNames, mass, refSpectrum, numRows, dataType, numO
     .Call('_rMSIproc_FullImageAlign', PACKAGE = 'rMSIproc', fileNames, mass, refSpectrum, numRows, dataType, numOfThreads, AlignmentBilinear, AlignmentIterations, AlignmentMaxShiftPpm, RefLow, RefMid, RefHigh, OverSampling)
 }
 
-FullImagePeakPicking <- function(fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 100, binningFilter = 0.9, binningIn_ppm = TRUE) {
-    .Call('_rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm)
-}
-
-MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 100, binningFilter = 0.01) {
-    .Call('_rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
+FullImagePeakPicking <- function(fileNames, mass, numRows, dataType, numOfThreads, SNR = 5, WinSize = 10L, InterpolationUpSampling = 10L, doBinning = TRUE, binningTolerance = 100, binningFilter = 0.9, binningIn_ppm = TRUE, exportPeakList = FALSE) {
+    .Call('_rMSIproc_FullImagePeakPicking', PACKAGE = 'rMSIproc', fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm, exportPeakList)
 }
 
 ReplacePeakMatrixZeros <- function(PeakMatrix, fileNames, mass, numRows, dataType, numOfThreads, WinSize = 10L, InterpolationUpSampling = 10L) {
@@ -83,6 +79,10 @@ NoiseEstimationFFTCosWinMat <- function(x, filWinSize = 40L) {
 #' @return a
 NoiseEstimationFFTExpWinMat <- function(x, filWinSize = 40L) {
     .Call('_rMSIproc_NoiseEstimationFFTExpWinMat', PACKAGE = 'rMSIproc', x, filWinSize)
+}
+
+MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 100, binningFilter = 0.01) {
+    .Call('_rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
 }
 
 #'LoadPeakMatrix.
