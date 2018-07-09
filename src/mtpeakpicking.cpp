@@ -135,7 +135,7 @@ List FullImagePeakPicking ( StringVector fileNames,
   
   //Export the peak list without binning for imzML centroid convertion, this must be called before the binning since binning will destroy the peak list
   List peakList;
-  if( exportPeakList )
+  if( exportPeakList || !doBinning )
   {
     peakList = myPeakPicking.ExportPeakList();
   } 

@@ -812,23 +812,26 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
     mImg_list <- MergerMSIDataSets(mImg_list, procParams$data$outpath, pixel_id = pixelID_list ) 
     
     #Independently of the selected norms, set also the one used for imzML peak list export
-    if(procParams$peakpicking$exportPeakList)
+    if( procParams$peakpicking$enabled )
     {
-      if(procParams$peakpicking$exportPeakListNormalization == "TIC")
+      if(procParams$peakpicking$exportPeakList)
       {
-        procParams$spectraNormalization$TIC <- T
-      }
-      else if(procParams$peakpicking$exportPeakListNormalization == "MAX")
-      {
-        procParams$spectraNormalization$MAX <- T
-      }
-      else if(procParams$peakpicking$exportPeakListNormalization == "RMS")
-      {
-        procParams$spectraNormalization$RMS <- T
-      }
-      else if(procParams$peakpicking$exportPeakListNormalization == "AcqTic")
-      {
-        procParams$spectraNormalization$AcqTIC <- T
+        if(procParams$peakpicking$exportPeakListNormalization == "TIC")
+        {
+          procParams$spectraNormalization$TIC <- T
+        }
+        else if(procParams$peakpicking$exportPeakListNormalization == "MAX")
+        {
+          procParams$spectraNormalization$MAX <- T
+        }
+        else if(procParams$peakpicking$exportPeakListNormalization == "RMS")
+        {
+          procParams$spectraNormalization$RMS <- T
+        }
+        else if(procParams$peakpicking$exportPeakListNormalization == "AcqTic")
+        {
+          procParams$spectraNormalization$AcqTIC <- T
+        }
       }
     }
     #Independently of the selected norms, set also the one used for data summary export
@@ -942,7 +945,14 @@ ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationS
       for( iSave in 1:length(procData$procImg) )
       {
         cat(paste0("--- Dataset ", iSave, "/", length(procData$procImg), " ---\n"))
-        imgName <- sub('\\..*$', '',procData$procImg[[iSave]]$name) #Remove extensions of image name
+        
+        #Remove extensions of image name
+        imgName <- procData$procImg[[iSave]]$name
+        imgName <- sub('\\.tar.*$', '', imgName)
+        imgName <- sub('\\.TAR.*$', '', imgName)
+        imgName <- sub('\\.imzml.*$', '', imgName)
+        imgName <- sub('\\.IMZML.*$', '', imgName)
+        imgName <- sub('\\.imzML.*$', '', imgName)
         rMSI::SaveMsiData( procData$procImg[[iSave]], file.path(procParams$data$outpath,  paste(imgName,"-proc.tar", sep ="")))
         
         #Delete data 
