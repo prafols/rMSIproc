@@ -19,40 +19,47 @@
 #include "DeIsoMSI.h"
 using namespace Rcpp;
 
-Deisotyper::Deisotyper(IsoDef imgRuninfo, double** PeakMatrix)
+Deisotoper::Deisotoper(IsoDef imgRuninfo, double** PeakMatrix, double* ProMassAxis, double* RawMassAxis)
 {
-  pPeakOrder = new int[imgRuninfo.massChannels];
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  pPeakOrder = new int[imgRuninfo.massPeaks];
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     pPeakOrder[i] = 0;
   }
   
-  pTPI = new double[imgRuninfo.massChannels];
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  pRawPeakOrder = new int[imgRuninfo.massPeaks];
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
+  {
+    pRawPeakOrder[i] = 0;
+  }
+  
+  pTPI = new double[imgRuninfo.massPeaks];
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     pTPI[i] = 0;
   }
   
-  PeakFilter(PeakMatrix,imgRuninfo);
+  PeakFilter(PeakMatrix,imgRuninfo, ProMassAxis, RawMassAxis);
   
-  pNumCandidates = new int[imgRuninfo.massChannels];
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  pNumCandidates = new int[imgRuninfo.massPeaks];
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     pNumCandidates[i] = 0;
   }
 }
 
-Deisotyper::~Deisotyper()
+Deisotoper::~Deisotoper()
 {
   delete[] pPeakOrder;
+  delete[] pRawPeakOrder;
   delete[] pTPI;
   delete[] pNumCandidates;
 }
- 
-void Deisotyper::PeakFilter(double** PeakMatrix, IsoDef imgRuninfo)
+
+void Deisotoper::PeakFilter(double** PeakMatrix, IsoDef imgRuninfo, double* ProMassAxis, double* RawMassAxis)
 {
   //Fill the total pixel intensity vector
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     for(int j = 0; j < imgRuninfo.numPixels; j++)
     {
@@ -66,11 +73,11 @@ void Deisotyper::PeakFilter(double** PeakMatrix, IsoDef imgRuninfo)
   double tmp = 0; //temporal maximum value of pTPI  
   int flag = 0;   //index repeat flag
   
-  for(int j = 0; j < imgRuninfo.massChannels; j++)
+  for(int j = 0; j < imgRuninfo.massPeaks; j++)
   {
     tmp = 0;
     indx = 0;
-    for(int i = 0; i < imgRuninfo.massChannels; i++)
+    for(int i = 0; i < imgRuninfo.massPeaks; i++)
     {
       if(pTPI[i]>tmp)
       {
@@ -91,32 +98,73 @@ void Deisotyper::PeakFilter(double** PeakMatrix, IsoDef imgRuninfo)
     }
     pPeakOrder[j] = indx;
   }
+  
+  //Generate the raw peak order vector
+  for(int j = 0; j < imgRuninfo.massPeaks; j++)
+  {
+    tmp = RawMassAxis[imgRuninfo.massChannels - 1];
+    for(int k = 0; k < imgRuninfo.massChannels; k++)
+    {
+      if(std::abs(ProMassAxis[pPeakOrder[j]] - RawMassAxis[k]) > tmp)
+      {
+        pRawPeakOrder[j] = k - 1;
+        break;
+      }
+      
+      if(std::abs(ProMassAxis[pPeakOrder[j]] - RawMassAxis[k]) < tmp)
+      {
+        tmp = std::abs(ProMassAxis[pPeakOrder[j]] - RawMassAxis[k]);
+      }
+    }
+  }
+  
 }
 
-NumericMatrix Deisotyper::CandidateFinder(double* massAxis, IsoDef imgRuninfo)
+NumericMatrix Deisotoper::CandidateFinder(double* ProMassAxis, double* RawMassAxis, IsoDef imgRuninfo)
 {
-  double MonoIsoMass = 0;
+  double CentralIsoMass = 0;
+  double LeftIsoMass = 0;
+  double RightIsoMass = 0;
+  double tmp = 0;
   int cnt = 0;
+  int RawMassAxisPointer = 0;
   
   //This loop finds the number of candidates for each peak
-  for(int i = 0; i < imgRuninfo.massChannels; i++)    
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)    
   {
-    MonoIsoMass = massAxis[pPeakOrder[i]];
-    cnt = 0; 
-    for(int j = 0; j < imgRuninfo.massChannels; j++)
+    tmp = RawMassAxis[imgRuninfo.massChannels - 1];
+    CentralIsoMass = ProMassAxis[pPeakOrder[i]] + (imgRuninfo.CrntNumIso*1.0033548378);
+    
+    for(int k = pRawPeakOrder[i]; k < imgRuninfo.massChannels; k++)
     {
-      if((pPeakOrder[i] + j) >= imgRuninfo.massChannels)
+      if(std::abs(CentralIsoMass - RawMassAxis[k]) < tmp)
+      {
+        tmp = std::abs(CentralIsoMass - RawMassAxis[k]);
+      } else
+      {
+        RawMassAxisPointer = k - 1;
+        break;
+      }
+    }
+    
+    LeftIsoMass  = RawMassAxis[RawMassAxisPointer - imgRuninfo.scansT];
+    RightIsoMass = RawMassAxis[RawMassAxisPointer + imgRuninfo.scansT];
+    
+    cnt = 0;
+    for(int j = 0; j < imgRuninfo.massPeaks; j++)
+    {
+      if((pPeakOrder[i] + j) >= imgRuninfo.massPeaks)
       {
         break;
       }
       
-      if( ((massAxis[pPeakOrder[i] + j]) > (MonoIsoMass + 1.003355 - (imgRuninfo.ppmT*MonoIsoMass/10e6))) && 
-          ((massAxis[pPeakOrder[i] + j]) < (MonoIsoMass + 1.003355 + (imgRuninfo.ppmT*MonoIsoMass/10e6))) ) 
+      if( ((ProMassAxis[pPeakOrder[i] + j]) > (LeftIsoMass)) && 
+          ((ProMassAxis[pPeakOrder[i] + j]) < (RightIsoMass)) )  
       {
         cnt = cnt + 1;
       }
       
-      if((massAxis[pPeakOrder[i] + j]) > (MonoIsoMass + 1.003355 + (imgRuninfo.ppmT*MonoIsoMass/10e6)))
+      if( (ProMassAxis[pPeakOrder[i] + j]) > (RightIsoMass) )
       {
         break;
       }
@@ -124,77 +172,93 @@ NumericMatrix Deisotyper::CandidateFinder(double* massAxis, IsoDef imgRuninfo)
     pNumCandidates[i] = cnt;
   }
   
-  MaxCan = 0;
+  
   //Building the CanMass matrix
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  maxCan = 0;
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
-    if(MaxCan < pNumCandidates[i])
+    if(maxCan < pNumCandidates[i])
     {
-      MaxCan = pNumCandidates[i];
+      maxCan = pNumCandidates[i];
     }
   }
   
-  NumericMatrix CanMatrix(imgRuninfo.massChannels,MaxCan+1); //Matrix containing the candidate masses for each selected peak
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  //Matrix containing the candidate masses for each selected peak
+  NumericMatrix CanMatrix(imgRuninfo.massPeaks, maxCan+1); 
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
-    for(int j = 1; j <= MaxCan; j++)
+    for(int j = 1; j <= maxCan; j++)
     {
       CanMatrix(i,j) = 0; 
     }
   }
   
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     CanMatrix(i,0) = pPeakOrder[i]; 
   }
   
   //Computing the candidates peak indexes of each mass
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
   {
-    MonoIsoMass = massAxis[pPeakOrder[i]];
-    cnt = 1; 
-    for(int j = 0; j < imgRuninfo.massChannels; j++)
+    tmp = RawMassAxis[imgRuninfo.massChannels - 1];
+    CentralIsoMass = ProMassAxis[pPeakOrder[i]] + (imgRuninfo.CrntNumIso*1.0033548378);
+    
+    for(int k = pRawPeakOrder[i]; k < imgRuninfo.massChannels; k++)
     {
-      if((pPeakOrder[i] + j) >= imgRuninfo.massChannels)
+      if(std::abs(CentralIsoMass - RawMassAxis[k]) > tmp)
+      {
+        RawMassAxisPointer = k - 1;
+        break;
+      }
+      
+      if(std::abs(CentralIsoMass - RawMassAxis[k]) < tmp)
+      {
+        tmp = std::abs(CentralIsoMass - RawMassAxis[k]);
+      }
+    }
+    
+    LeftIsoMass  = RawMassAxis[RawMassAxisPointer - imgRuninfo.scansT];
+    RightIsoMass = RawMassAxis[RawMassAxisPointer + imgRuninfo.scansT];
+    
+    cnt = 1; 
+    for(int j = 0; j < imgRuninfo.massPeaks; j++)
+    {
+      if((pPeakOrder[i] + j) >= imgRuninfo.massPeaks)
       {
         break;
       }
       
-      if( ((massAxis[pPeakOrder[i] + j]) > (MonoIsoMass + 1.003355 - (imgRuninfo.ppmT*MonoIsoMass/10e6))) && 
-          ((massAxis[pPeakOrder[i] + j]) < (MonoIsoMass + 1.003355 + (imgRuninfo.ppmT*MonoIsoMass/10e6))) ) 
+      if( ((ProMassAxis[pPeakOrder[i] + j]) > (LeftIsoMass)) && 
+          ((ProMassAxis[pPeakOrder[i] + j]) < (RightIsoMass)) ) 
       {
         CanMatrix(i,cnt) = (pPeakOrder[i] + j);
         cnt = cnt + 1;
       }
       
-      if((massAxis[pPeakOrder[i] + j]) > (MonoIsoMass + 1.003355 + (imgRuninfo.ppmT*MonoIsoMass/10e6)))
+      if((ProMassAxis[pPeakOrder[i] + j]) > (RightIsoMass))
       {
         break;
       }
     }
   }
-  
   return CanMatrix;
 }
 
-double* Deisotyper::ScoreCalculator(int* test, int NumCan, double** PeakMatrix, int numPixels, double* result, double* massAxis)
+double* Deisotoper::ScoreCalculator(int* test, int NumCan, double** PeakMatrix, IsoDef imgRuninfo, double* result, double* ProMassAxis)
 {
-  double x[numPixels];  //array containing the image of the principal mass 
-  double y[numPixels];  //array containing the image of the candidate mass
-  double A = 0;
-  double B = 0;
-  double SStot = 0;
-  double SSres = 0;
-  double m_slope = 0;
+  double x[imgRuninfo.numPixels];  //array containing the image of the principal mass 
+  double y[imgRuninfo.numPixels];  //array containing the image of the candidate mass
+  double A, B, SStot, SSres, m_slope, t_slope, tmpM, tmpI, numC, numCFact, CrntNumIsoFctrl = 0;
   
   for(int i = 0; i < NumCan; i++)
   {
-  result[i] = 0;
+    result[i] = 0;
   }
-
-  for(int i = 0; i < numPixels ; i++)
+  
+  for(int i = 0; i < imgRuninfo.numPixels ; i++)
   {
-    x[i] = PeakMatrix[i][test[0]];
+    x[i] = PeakMatrix[i][test[0]];  //Monoisotopic peak
   }
   
   for(int i = 0; i < NumCan; i++)
@@ -204,100 +268,92 @@ double* Deisotyper::ScoreCalculator(int* test, int NumCan, double** PeakMatrix, 
     SStot = 0;
     SSres = 0;
     
-    for(int j = 0; j < numPixels ; j++)
+    for(int j = 0; j < imgRuninfo.numPixels ; j++)
     {
-      y[j] = PeakMatrix[j][test[i+1]];
+      y[j] = PeakMatrix[j][test[i+1]];  //Isotopic peak
     }
     
     //Model slope
-    for(int j = 0; j < numPixels; j++)  
+    for(int j = 0; j < imgRuninfo.numPixels; j++)  
     {
       A += (y[j] * x[j]);
       B += (x[j] * x[j]);
     }
-    m_slope = A/B;
+    m_slope = A/B;  //Isotope ratio from the data
     
-    if (m_slope < 0)
+    if (m_slope < 0) //If the slope is negative then is not a possible candidate
     {
-      result[i] = 0;
+      tmpM = 0;
+      tmpI = 0;
     }
-      else
+    else
+    { 
+      //***********************************//Morphology score (R2)//*******************************************************//
+      for(int j = 0; j < imgRuninfo.numPixels ; j++)
       {
-      //Morphology score (R2)
-      for(int j = 0; j < numPixels ; j++)
-      {
-        SStot += (y[j]) * (y[j]);  
+        SStot += (y[j]) * (y[j]);  //Total sum of squares: the sum of the squares of the difference of the dependent variable and its mean
       }
-      for(int j = 0; j < numPixels ; j++)
+      for(int j = 0; j < imgRuninfo.numPixels ; j++)
       {
-        SSres += (y[j] - (m_slope*x[j])) * (y[j] - (m_slope*x[j]));  
+        SSres += (y[j] - (m_slope*x[j])) * (y[j] - (m_slope*x[j])); //Sum of squared residuals: the sum of the squares of the residuals
       }
-      result[i] = 1 - (SSres/SStot);  
+      tmpM = 1 - (SSres/SStot);  //Definition of R2 
       
-      //multiplying both scores
-      result[i] = result[i] * SlopeScore(m_slope, massAxis[test[0]]); //Calls the slope score with the model score in result
+      //***********************************//Intensity Score//*******************************************************//
+      
+      
+      numC  = nearbyint((0.076*ProMassAxis[test[0]] - 12)); //theoretical number of Carbons extracted from the Human metabolome database model
+      CrntNumIsoFctrl = 1;
+      for(int j = 0; j < imgRuninfo.CrntNumIso; j++)
+      {
+        CrntNumIsoFctrl *= (j + 1);
       }
+      
+      numCFact = 1;
+      for(int j = 0; j < imgRuninfo.CrntNumIso; j++)
+      {
+        numCFact *= (numC - j);
+      }
+      
+      t_slope = (numCFact * pow(0.0107, imgRuninfo.CrntNumIso)) / (CrntNumIsoFctrl * pow(0.9893, imgRuninfo.CrntNumIso));     //Computing the theoretical ratio using the isotope distribution formula 
+      
+      tmpI = (t_slope - m_slope);                // The score is computed using the following formula:
+      tmpI = tmpI/0.5;                           //                y = e^(-(x/0.5)^2)
+      tmpI = -(tmpI * tmpI);
+      tmpI = std::exp(tmpI); 
     }
-  return result;
-  }
-
-double Deisotyper::SlopeScore(double m_slope, double mass)
-{
-  double score = 0;
-  double tmp = 0;
-  double t_slope, t_mass; 
-  double adduct_mass[3];
-  adduct_mass[0] = 1;   // Proton
-  adduct_mass[1] = 23;  // Sodium
-  adduct_mass[2] = 18;  // Potassium
-  
-  for(int i = 0; i < 3; i++)
-  {
-    t_mass = mass - adduct_mass[i];
-    t_slope = c0 + c1*t_mass;                 // The model is computed using a lineal regression: y = c0 + c1·x
-    tmp = (t_slope - m_slope);                // The score is computed using the following formula:
-    tmp = tmp/c;                              //                y = e^(-(x/c)^2)
-    tmp = -(tmp * tmp);
-    tmp = std::exp(tmp);  
-    if (tmp > score)
+    
+    //Returning the scores
+    result[5*i] = tmpM * tmpI;
+    result[5*i + 1] = tmpM; 
+    result[5*i + 2] = tmpI;
+    result[5*i + 3] = m_slope;
+    
+    if(imgRuninfo.CrntNumIso == 1)
     {
-      score = tmp;
+      result[5*i + 4] = m_slope*0.9893/0.0107; //Estimated number of carbons extracted from the first isotope distribution
     }
+    
   }
-                                  // TODO: el ratio per el segon isotop
-  return score;
+  return result;
 }
 
-NumericMatrix Deisotyper::MatrixAnnotator(double **PeakMatrix, IsoDef imgRuninfo, NumericMatrix CanMatrix, double* massAxis)
+List Deisotoper::MatrixAnnotator(double **PeakMatrix, IsoDef imgRuninfo, NumericMatrix CanMatrix, double* ProMassAxis)
 {
-  NumericMatrix AnnMatrix(imgRuninfo.massChannels, MaxCan + MaxCan + 1);
+  List AnnMatrix(imgRuninfo.massPeaks);   // List containing the results of the annotation process
+  int* CandidateRow;
+  CandidateRow = new int[imgRuninfo.MaxCan];
+  double* scores;
+  scores = new double[imgRuninfo.MaxCan * 5];
+  NumericMatrix TMP(6 ,imgRuninfo.MaxCan); 
   
-  int* CandidateRow;     
-  double* result;
-  CandidateRow = new int[MaxCan];
-  result = new double[MaxCan];
-  int massPointer;
-  
-  for(int i = 0; i < MaxCan; i++)
+  for(int i = 0; i < 5*imgRuninfo.MaxCan; i++)
   {
-    result[i] = 0;
-  }
-  
-  //Copying the candidates matrix into the results matrix
-  for(int i = 0; i < imgRuninfo.massChannels; i++)
-  {
-    for(int j = 0; j <= MaxCan; j++)
-    {
-      massPointer = CanMatrix(i,j);
-      if (massPointer > 0)
-      {
-        AnnMatrix(i,j) = massAxis[massPointer]; //aqui es pot escriure l'index de la columna enlloc de la massa     
-      }
-    }
+    scores[i] = 0;
   }
   
   //For each peak & candidates, the scores are calculated and annotated in the matrix
-  for (int i = 0; i < imgRuninfo.massChannels; i++)
+  for (int i = 0; i < imgRuninfo.massPeaks; i++)
   {
     if(pNumCandidates[i] > 0)
     {
@@ -306,59 +362,110 @@ NumericMatrix Deisotyper::MatrixAnnotator(double **PeakMatrix, IsoDef imgRuninfo
         CandidateRow[j] = CanMatrix(i,j);
       }
       
-      result = ScoreCalculator(CandidateRow, pNumCandidates[i], PeakMatrix, imgRuninfo.numPixels, result, massAxis);
+      scores = ScoreCalculator(CandidateRow, pNumCandidates[i], PeakMatrix, imgRuninfo, scores, ProMassAxis);
       
-      for(int j = 0; j < pNumCandidates[i]; j++)
+      for(int k = 0; k < pNumCandidates[i]; k++)
       {
-        AnnMatrix(i,  MaxCan + (j + 1) ) = result[j];  
+        TMP(0,k) = ProMassAxis[CandidateRow[k + 1]];
+        TMP(1,k) = scores[5*k];
+        TMP(2,k) = scores[(5*k) + 1];
+        TMP(3,k) = scores[(5*k) + 2];
+        TMP(4,k) = scores[(5*k) + 3];
+        TMP(5,k) = scores[(5*k) + 4];
       }
+      
+      for(int k = pNumCandidates[i]; k < imgRuninfo.MaxCan; k++)
+      {
+        TMP(0,k) = -1;
+        TMP(1,k) = -1;
+        TMP(2,k) = -1;
+        TMP(3,k) = -1;
+        TMP(4,k) = -1;
+        TMP(5,k) = -1;
+      }
+      
+      AnnMatrix[i] = TMP(Range(0,5),Range(0,pNumCandidates[i]-1));
     }
   }
-
-  delete[] result;
+  
+  delete[] scores;
   delete[] CandidateRow;
   return AnnMatrix;
 }
 
-NumericMatrix Deisotyper::Run(double **PeakMatrix, IsoDef imgRuninfo, double* massAxis)
+
+List Deisotoper::Run(double **PeakMatrix, IsoDef imgRuninfo, double* ProMassAxis ,double* RawMassAxis)
 {
-  //return MatrixAnnotator(PeakMatrix, imgRuninfo, CandidateMatrixCheck(PeakFinder(massAxis, imgRuninfo),imgRuninfo), massAxis);
-  return MatrixAnnotator(PeakMatrix, imgRuninfo, CandidateFinder(massAxis, imgRuninfo), massAxis);
+  List Result(imgRuninfo.NumIso + 1);
+  List PeakResults;
+  NumericMatrix CandidatesMatrix;
+  NumericVector NUMCAN(imgRuninfo.massPeaks);
   
+  for(int i = 0; i < imgRuninfo.NumIso; i++)
+  {
+    imgRuninfo.CrntNumIso = i + 1;
+    CandidatesMatrix = CandidateFinder(ProMassAxis, RawMassAxis, imgRuninfo);
+    
+    imgRuninfo.MaxCan = maxCan;
+    
+    PeakResults = MatrixAnnotator(PeakMatrix, imgRuninfo, CandidatesMatrix, ProMassAxis);
+    Result[i + 1] = PeakResults;
+  }
+  
+  NumericVector PeakMassesVector(imgRuninfo.massPeaks);
+  for(int i = 0; i < imgRuninfo.massPeaks; i++ )
+  {
+    PeakMassesVector[i] = ProMassAxis[pPeakOrder[i]];
+  }
+  
+  Result[0] = PeakMassesVector;
+  
+  return Result;
 }
 
+
 // [[Rcpp::export]]
-Rcpp::NumericVector PeakSelectorC(int massChannels, int numPixels, int NumIso, NumericMatrix PeakMtx, NumericVector massVec, int ppmT)
+Rcpp::List PeakSelectorC(int massPeaks, int massChannels, int numPixels, int NumIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int scansT)
 {
-  Deisotyper::IsoDef imgRuninfo;
+  Deisotoper::IsoDef imgRuninfo;
+  imgRuninfo.massPeaks = massPeaks;
   imgRuninfo.massChannels = massChannels;
   imgRuninfo.numPixels = numPixels;
   imgRuninfo.NumIso = NumIso;
-  imgRuninfo.ppmT = ppmT;
+  imgRuninfo.scansT = scansT;
   
   double** pMatrix;
   pMatrix = new double*[imgRuninfo.numPixels];
   for(int i = 0; i < imgRuninfo.numPixels; i++)
   {
-    pMatrix[i] = new double[imgRuninfo.massChannels];
-    for(int j = 0; j < imgRuninfo.massChannels; j++)
+    pMatrix[i] = new double[imgRuninfo.massPeaks];
+    for(int j = 0; j < imgRuninfo.massPeaks; j++)
     {
       pMatrix[i][j] = PeakMtx(i,j);
     }
   }
   
-  double* massAxis;
-  massAxis = new double[imgRuninfo.massChannels];
+  double* ProMassAxis;    //mass axis of the peak matrix
+  ProMassAxis = new double[imgRuninfo.massPeaks];
+  for(int i = 0; i < imgRuninfo.massPeaks; i++)
+  {
+    ProMassAxis[i] = massVec[i];
+  }
+  
+  double* RawMassAxis;    //mass axis of the massChannels
+  RawMassAxis = new double[imgRuninfo.massChannels];
   for(int i = 0; i < imgRuninfo.massChannels; i++)
   {
-    massAxis[i] = massVec[i];
+    RawMassAxis[i] = massChanVec[i];
   }
-
-  //Program call
-  Deisotyper myDeisotyper(imgRuninfo, pMatrix);
-  NumericMatrix res(myDeisotyper.Run(pMatrix,imgRuninfo, massAxis));
   
-  delete[] massAxis;
+  //Program call
+  Deisotoper myDeisotoper(imgRuninfo, pMatrix, ProMassAxis, RawMassAxis);
+  List result = myDeisotoper.Run(pMatrix,imgRuninfo, ProMassAxis, RawMassAxis);
+  
+  delete[] RawMassAxis;
+  
+  delete[] ProMassAxis;
   
   for(int i = 0; i < imgRuninfo.numPixels; i++)
   {
@@ -366,7 +473,7 @@ Rcpp::NumericVector PeakSelectorC(int massChannels, int numPixels, int NumIso, N
   }
   delete[] pMatrix;
   
-  return res;
+  return result;
 }
 
 
