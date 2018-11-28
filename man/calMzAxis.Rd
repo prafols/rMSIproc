@@ -4,7 +4,8 @@
 \alias{calMzAxis}
 \title{calMzAxis.}
 \usage{
-calMzAxis(avgSpc_mz, ref_mz, target_mz, method = "loess", CalSpan = 0.75)
+calMzAxis(avgSpc_mz, ref_mz, target_mz, method = "loess",
+  CalSpan = 0.75)
 }
 \arguments{
 \item{avgSpc_mz}{The mass axis to calibrate.}

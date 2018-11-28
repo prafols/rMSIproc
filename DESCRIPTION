@@ -16,4 +16,4 @@ Imports:
     RGtk2 (>= 2.20.25),
     gWidgets2RGtk2 (>= 1.0)
 LinkingTo: Rcpp
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1

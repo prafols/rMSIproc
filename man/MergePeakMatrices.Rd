@@ -10,7 +10,7 @@ MergePeakMatrices(PeakMatrixList, binningTolerance = 100,
 \arguments{
 \item{PeakMatrixList}{A list of various peak matrix objexts produced using rMSIproc.}
 
-\item{binningTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the half of the peak width in ppm units.}
+\item{binningTolerance}{the tolerance used to merge peaks to the same bin specified in ppm. It is recomanded to use the half of the peak width.}
 
 \item{binningFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.}
 }
