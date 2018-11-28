@@ -5,19 +5,22 @@
 
 using namespace Rcpp;
 
-// PeakSelectorC
-Rcpp::NumericVector PeakSelectorC(int massChannels, int numPixels, int NumIso, NumericMatrix PeakMtx, NumericVector massVec, int ppmT);
-RcppExport SEXP _rMSIproc_PeakSelectorC(SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP NumIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP ppmTSEXP) {
+// IsotopeAnnotator
+Rcpp::List IsotopeAnnotator(int massPeaks, int massChannels, int numPixels, int NumIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int scansT, double accu);
+RcppExport SEXP _rMSIproc_IsotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP NumIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP scansTSEXP, SEXP accuSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type massPeaks(massPeaksSEXP);
     Rcpp::traits::input_parameter< int >::type massChannels(massChannelsSEXP);
     Rcpp::traits::input_parameter< int >::type numPixels(numPixelsSEXP);
     Rcpp::traits::input_parameter< int >::type NumIso(NumIsoSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type PeakMtx(PeakMtxSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type massVec(massVecSEXP);
-    Rcpp::traits::input_parameter< int >::type ppmT(ppmTSEXP);
-    rcpp_result_gen = Rcpp::wrap(PeakSelectorC(massChannels, numPixels, NumIso, PeakMtx, massVec, ppmT));
+    Rcpp::traits::input_parameter< NumericVector >::type massChanVec(massChanVecSEXP);
+    Rcpp::traits::input_parameter< int >::type scansT(scansTSEXP);
+    Rcpp::traits::input_parameter< double >::type accu(accuSEXP);
+    rcpp_result_gen = Rcpp::wrap(IsotopeAnnotator(massPeaks, massChannels, numPixels, NumIso, PeakMtx, massVec, massChanVec, scansT, accu));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -107,8 +110,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // FullImagePeakPicking
-List FullImagePeakPicking(StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter, bool binningIn_ppm);
-RcppExport SEXP _rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP, SEXP binningIn_ppmSEXP) {
+List FullImagePeakPicking(StringVector fileNames, NumericVector mass, IntegerVector numRows, String dataType, int numOfThreads, double SNR, int WinSize, int InterpolationUpSampling, bool doBinning, double binningTolerance, double binningFilter, bool binningIn_ppm, bool exportPeakList);
+RcppExport SEXP _rMSIproc_FullImagePeakPicking(SEXP fileNamesSEXP, SEXP massSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP, SEXP SNRSEXP, SEXP WinSizeSEXP, SEXP InterpolationUpSamplingSEXP, SEXP doBinningSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP, SEXP binningIn_ppmSEXP, SEXP exportPeakListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -124,20 +127,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
     Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
     Rcpp::traits::input_parameter< bool >::type binningIn_ppm(binningIn_ppmSEXP);
-    rcpp_result_gen = Rcpp::wrap(FullImagePeakPicking(fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm));
-    return rcpp_result_gen;
-END_RCPP
-}
-// MergePeakMatricesC
-List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
-RcppExport SEXP _rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type PeakMatrices(PeakMatricesSEXP);
-    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
-    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
-    rcpp_result_gen = Rcpp::wrap(MergePeakMatricesC(PeakMatrices, binningTolerance, binningFilter));
+    Rcpp::traits::input_parameter< bool >::type exportPeakList(exportPeakListSEXP);
+    rcpp_result_gen = Rcpp::wrap(FullImagePeakPicking(fileNames, mass, numRows, dataType, numOfThreads, SNR, WinSize, InterpolationUpSampling, doBinning, binningTolerance, binningFilter, binningIn_ppm, exportPeakList));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -219,6 +210,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
     Rcpp::traits::input_parameter< int >::type filWinSize(filWinSizeSEXP);
     rcpp_result_gen = Rcpp::wrap(NoiseEstimationFFTExpWinMat(x, filWinSize));
+    return rcpp_result_gen;
+END_RCPP
+}
+// MergePeakMatricesC
+List MergePeakMatricesC(List PeakMatrices, double binningTolerance, double binningFilter);
+RcppExport SEXP _rMSIproc_MergePeakMatricesC(SEXP PeakMatricesSEXP, SEXP binningToleranceSEXP, SEXP binningFilterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type PeakMatrices(PeakMatricesSEXP);
+    Rcpp::traits::input_parameter< double >::type binningTolerance(binningToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type binningFilter(binningFilterSEXP);
+    rcpp_result_gen = Rcpp::wrap(MergePeakMatricesC(PeakMatrices, binningTolerance, binningFilter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -344,20 +348,20 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rMSIproc_PeakSelectorC", (DL_FUNC) &_rMSIproc_PeakSelectorC, 6},
+    {"_rMSIproc_IsotopeAnnotator", (DL_FUNC) &_rMSIproc_IsotopeAnnotator, 9},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
     {"_rMSIproc_SpectrumBitDepthReduction", (DL_FUNC) &_rMSIproc_SpectrumBitDepthReduction, 2},
     {"_rMSIproc_FullImageAlign", (DL_FUNC) &_rMSIproc_FullImageAlign, 13},
-    {"_rMSIproc_FullImagePeakPicking", (DL_FUNC) &_rMSIproc_FullImagePeakPicking, 12},
-    {"_rMSIproc_MergePeakMatricesC", (DL_FUNC) &_rMSIproc_MergePeakMatricesC, 3},
+    {"_rMSIproc_FullImagePeakPicking", (DL_FUNC) &_rMSIproc_FullImagePeakPicking, 13},
     {"_rMSIproc_ReplacePeakMatrixZeros", (DL_FUNC) &_rMSIproc_ReplacePeakMatrixZeros, 8},
     {"_rMSIproc_FullImageSmoothing", (DL_FUNC) &_rMSIproc_FullImageSmoothing, 6},
     {"_rMSIproc_NoiseEstimationFFTCosWin", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTCosWin, 2},
     {"_rMSIproc_NoiseEstimationFFTExpWin", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTExpWin, 2},
     {"_rMSIproc_NoiseEstimationFFTCosWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTCosWinMat, 2},
     {"_rMSIproc_NoiseEstimationFFTExpWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTExpWinMat, 2},
+    {"_rMSIproc_MergePeakMatricesC", (DL_FUNC) &_rMSIproc_MergePeakMatricesC, 3},
     {"_rMSIproc_LoadPeakMatrixC", (DL_FUNC) &_rMSIproc_LoadPeakMatrixC, 1},
     {"_rMSIproc_StorePeakMatrixC", (DL_FUNC) &_rMSIproc_StorePeakMatrixC, 2},
     {"_rMSIproc_DetectPeaks_C", (DL_FUNC) &_rMSIproc_DetectPeaks_C, 5},

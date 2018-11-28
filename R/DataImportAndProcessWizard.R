@@ -283,6 +283,8 @@ ImportWizardGui <- function()
         this$procParamList$peakpicking$binUsingPPM <- F
       }
       this$procParamList$peakpicking$binfilter <- as.double(gWidgets2::svalue(this$spin_binFilter)/100)
+      this$procParamList$peakpicking$exportPeakList <- gWidgets2::svalue(this$check_exportPeakList) & this$procParamList$peakpicking$enabled 
+      this$procParamList$peakpicking$exportPeakListNormalization <- gWidgets2::svalue(this$combo_imzMLNorm)
     }
     
     #Number of threads
@@ -324,6 +326,43 @@ ImportWizardGui <- function()
     gWidgets2::enabled( this$spin_peakOversample) <- gWidgets2::svalue(check_peakpicking)
     gWidgets2::enabled( this$spin_binTolerance) <- gWidgets2::svalue(check_peakpicking)
     gWidgets2::enabled( this$spin_binFilter) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$frm_binUnits) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$check_exportPeakList) <- gWidgets2::svalue(check_peakpicking)
+    gWidgets2::enabled( this$box_imzMLNorm) <- gWidgets2::svalue(check_peakpicking)
+  }
+  
+  NormalizationCheckBoxChanged <- function(...)
+  {
+    current_value <- gWidgets2::svalue(this$combo_imzMLNorm)
+    current_enabled_norms <- c("RAW")
+    if( gWidgets2::svalue(this$check_TICnorm) )
+    {
+      current_enabled_norms <- c(current_enabled_norms, "TIC")
+    }
+    if( gWidgets2::svalue(this$check_RMSnorm) )
+    {
+      current_enabled_norms <- c(current_enabled_norms, "RMS")
+    }
+    if( gWidgets2::svalue(this$check_MAXnorm) )
+    {
+      current_enabled_norms <- c(current_enabled_norms, "MAX")
+    }  
+    if( gWidgets2::svalue(this$check_TicACQnorm) )
+    {
+      current_enabled_norms <- c(current_enabled_norms, "AcqTic")
+    }  
+    this$combo_imzMLNorm$set_items(current_enabled_norms)
+    set_index <- grep(current_value, current_enabled_norms)
+    if( length(set_index) == 0)
+    {
+      set_index <- 1
+    }
+    this$combo_imzMLNorm$set_index(min(set_index[1], length(current_enabled_norms)))
+  }
+  
+  SetNormComboEnable <- function(...)
+  {
+    gWidgets2::enabled(this$box_imzMLNorm) <- gWidgets2::svalue(check_exportPeakList)
   }
   
   mainWin<-gWidgets2::gwindow(title = "MSI data import and process wizard", visible = F)
@@ -389,10 +428,10 @@ ImportWizardGui <- function()
   box_spectraNorm <- gWidgets2::ggroup(horizontal = T, container = frm_spectraNorm)
   box_spectraNormL <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
   box_spectraNormR <- gWidgets2::ggroup(horizontal = F, container = box_spectraNorm)
-  check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNormL )
-  check_RMSnorm <- gWidgets2::gcheckbox("RMS", checked = T, container = box_spectraNormL )
-  check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = T, container = box_spectraNormR )
-  check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = T, container = box_spectraNormR )
+  check_TICnorm <- gWidgets2::gcheckbox("TIC", checked = T, container = box_spectraNormL, handler = this$NormalizationCheckBoxChanged )
+  check_RMSnorm <- gWidgets2::gcheckbox("RMS", checked = T, container = box_spectraNormL, handler = this$NormalizationCheckBoxChanged )
+  check_MAXnorm <- gWidgets2::gcheckbox("MAX", checked = F, container = box_spectraNormR, handler = this$NormalizationCheckBoxChanged )
+  check_TicACQnorm <- gWidgets2::gcheckbox("TICAcq", checked = F, container = box_spectraNormR, handler = this$NormalizationCheckBoxChanged )
   
   #Peak picking and binning params
   frm_peakpick <- gWidgets2::gframe("Peak-Picking", container = box_proc2, spacing = 10)
@@ -405,6 +444,12 @@ ImportWizardGui <- function()
   frm_binUnits <- gWidgets2::gframe("Binning Tolerance Units:", container = box_peakpick)
   ratio_binningUnits <- gWidgets2::gradio(c("[ppm]", "[scans]"), container = frm_binUnits, selected = 2, horizontal = T)
   spin_binFilter <- drawLabelSpin(box_peakpick, "Peak Filter [%]:", 1, 100, 5)
+  check_exportPeakList <- gWidgets2::gcheckbox("Export peaks in imzML", checked = F, container = box_peakpick, handler = this$SetNormComboEnable )
+  box_imzMLNorm <- gWidgets2::ggroup(horizontal = T, container = box_peakpick,  expand = T, fill = T)
+  lbl_imzMLNorm <- gWidgets2::glabel("imzML Normalization:", container = box_imzMLNorm)
+  combo_imzMLNorm <- gWidgets2::gcombobox(items = "RAW" , container = box_imzMLNorm,  expand = T, fill = T)
+  this$NormalizationCheckBoxChanged()
+  gWidgets2::enabled(this$box_imzMLNorm) <- gWidgets2::svalue(check_exportPeakList)
   
   #Number of processing threads
   frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_proc2, spacing = 10)

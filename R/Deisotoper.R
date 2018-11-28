@@ -1,6 +1,6 @@
 #########################################################################
 #     
-#     Copyright (C) 2018 Lluc Sementé Fernàndez
+#     Copyright (C) 2018 Lluc Semente Fernandez
 # 
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -16,20 +16,19 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-
-#' @export
-
-
-Deisotoping <- function(PeakMtx, NumIso, scansT, massChannelsVec)
+Deisotoping <- function(PeakMtx, IsoNumber, Scans, Score, MassChannelsVec)
 {
   
+  #Calling the C++ method
   r <- list()  
-  r <- PeakSelectorC(length(PeakMtx$mass), length(massChannelsVec), 
-                     sum(PeakMtx$numPixels), NumIso, PeakMtx$intensity, 
-                     PeakMtx$mass, massChannelsVec, scansT)
-   
+  r <- IsotopeAnnotator(length(PeakMtx$mass), length(MassChannelsVec), 
+                     sum(PeakMtx$numPixels), IsoNumber, PeakMtx$intensity, 
+                     PeakMtx$mass, MassChannelsVec, Scans, Score)
+  
+  #Giving format to the output
   NullVec <- matrix(nrow = length(r)-1, ncol = length(r[[1]]))
   Nullcnt <- 0
+  
   #Naming the list
   for(i in 2:length(r))
   {
@@ -52,21 +51,6 @@ Deisotoping <- function(PeakMtx, NumIso, scansT, massChannelsVec)
 
   #Removing the mass vector
   r <- r[-1]
-
-  #Removing the Number of C atoms from the second,third... isotopes matrixes
-  if(length(r)>1)
-  {
-    for(i in 2:length(r))
-    {
-      for(j in 1:length(r[[i]]))
-      {
-        if(!(is.null(dim(r[[i]][[j]]))))
-        {
-        r[[i]][[j]] <- r[[i]][[j]][-6,]
-        }
-      }
-    }
-  }
 
   return(r)
 }

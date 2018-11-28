@@ -33,12 +33,13 @@ public:
   typedef struct
   {
     int massPeaks;        //Number of mass Peaks
-    int massChannels;     //Number of mass channels
+    long int massChannels;     //Number of mass channels
     int numPixels;        //Number of pixels
     int NumIso;           //Number of isotopes to be found given a specific monoisotopic mass
     int scansT;           //scans tolerance for peak candidates
     int CrntNumIso;       //Current isotop beeing computed
     int MaxCan;           //maximum number of candidates for one peak
+    double accu;          //Score needed to pass the isotope test
   }IsoDef;
   
   Deisotoper(IsoDef imgRunInfo, double** PeakMtx, double* ProMassAxis, double* RawMassAxis);
@@ -56,10 +57,10 @@ private:
   
   
   //private functions
-  void PeakFilter(double** PeakMtx, IsoDef imgRuninfo, double* ProMassAxis, double* RawMassAxis);   //Selects the peaks that are gonna be proccesed
-  NumericMatrix CandidateFinder(double* ProMassAxis, double* RawMassAxis, IsoDef imgRuninfo);   //Finds the isotope candidates for each selected peak
-  double* ScoreCalculator(int* test, int NumCan, double** PeakMatrix, IsoDef imgRuninfo, double* result, double* ProMassAxis);    //Computes the morphology & intensity test
-  List MatrixAnnotator(double **PeakMatrix, IsoDef imgRuninfo, NumericMatrix CanMatrix, double* ProMassAxis);    //Annotates the matrix
+  void PeakOrganizer(double** PeakMtx, IsoDef imgRuninfo, double* ProMassAxis, double* RawMassAxis);   //Selects the peaks by intensity and points each preocessed mass to the raw mass axis
+  NumericMatrix CandidateFinder(double* ProMassAxis, double* RawMassAxis, IsoDef imgRuninfo, NumericVector PeaksToCheck);   //Finds the isotope candidates for each selected peak
+  double* ScoreCalculator(int* test, int NumCan, double** PeakMatrix, IsoDef imgRuninfo, double* result, double* ProMassAxis, double before_m_slope);    //Computes the morphology & intensity test
+  List MatrixAnnotator(double **PeakMatrix, IsoDef imgRuninfo, NumericMatrix CanMatrix, double* ProMassAxis, NumericVector PeaksToCheck);    //Annotates the matrix
 };
 #endif
 

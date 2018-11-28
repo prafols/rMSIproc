@@ -36,46 +36,26 @@ class MTPeakPicking : public ThreadingMsiProc
       Rcpp::StringVector fileNames; //Filname of each ramdisk file
       int *numRows; //An array containing the number of rows stored in each ramdisk file. The length ot this array is the length of fileNames
       Rcpp::String dataType; //A string with the data type
-      double tolerance;
-      bool tolerance_in_ppm; //If true the binning tolerance is specified in  ppm, if false then the number of datapoints per peak is used instead
-      double filter;
-      bool performBinning;
       int numOfThreads;
     }ImgProcDef;  
     
-    MTPeakPicking();
     MTPeakPicking(ImgProcDef imgRunInfo);
     ~MTPeakPicking();
     
     //Exectur a full imatge processing using threaded methods
-    Rcpp::List Run(); 
+    void Run();
     
-    //Appends a list of peaks to the current list of peaks (mPeaks)
-    //Peaks are input as a binned matrix
-    void AppendPeaksAsMatrix(Rcpp::List peaksLst);
+    PeakPicking::Peaks **getPeakList();
     
-    //Perfomr peak binning over mPeaks, this is mono-thread implemented.
-    Rcpp::List BinPeaks();
-    void SetBinSize(double value);
-    void SetBinFilter(double value);
-    
+    //Export the peak list to an R-like object
+    Rcpp::List ExportPeakList();
+
   private:
     PeakPicking **peakObj;
     int numOfPixels;
     double minSNR;
-    double binSize;
-    bool binSizeInppm;
-    double binFilter;
     PeakPicking::Peaks **mPeaks; //A place to store peaks objects outside threaded space
-    bool bDoBinning;
-    
-    typedef struct
-    {
-      double intensity;
-      double SNR;
-      double area;
-    }TBin;
-    
+
     //Thread Processing function definition
     void ProcessingFunction(int threadSlot);
 };

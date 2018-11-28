@@ -10,9 +10,9 @@ InternalReferenceSpectrumMultipleDatasets(img_list)
 \item{img_list}{a list of various rMSI objects.}
 }
 \value{
-the intensity vector corresponding to the reference spectrum.
+a list with the intensity vector corresponding to the reference spectrum, the score, the image index which contains the refernce spectrum and the pixel ID selected as reference.
 }
 \description{
 Calculates the dataset reference spectrum to use in label free alignment.
-The reference spectrum is the spectrum in the dataset with the bes correlation to average spectrum.
+The reference spectrum is the spectrum in the dataset with the best correlation to average spectrum and with high TIC.
 }
