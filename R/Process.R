@@ -383,7 +383,7 @@ ProcessImage <- function(img,
   }
   
   #Add a copy of img$pos to peakData$PeakMatrix
-  if( EnablePeakPicking && UseBinning)
+  if( EnablePeakPicking )
   {
     mergedNames <- unlist(lapply(img_list, function(x){ return(x$name) }))
     mergedNumPixels <- unlist(lapply(img_list, function(x){ return(nrow(x$pos)) }))
