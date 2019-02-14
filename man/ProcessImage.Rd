@@ -6,13 +6,14 @@
 \usage{
 ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   EnableAlignment = T, AlignmentIterations = 3,
-  AlignmentMaxShiftppm = 200, AlignmentBilinear = F, AlignmentRefLow = 0,
-  AlignmentRefMid = 0.5, AlignmentRefHigh = 1, AlignmentOversampling = 2,
-  EnableCalibration = T, CalibrationPeakWin = 20, EnablePeakPicking = T,
-  SNR = 5, peakWindow = 10, peakUpSampling = 10, UseBinning = T,
+  AlignmentMaxShiftppm = 200, AlignmentBilinear = F,
+  AlignmentRefLow = 0, AlignmentRefMid = 0.5, AlignmentRefHigh = 1,
+  AlignmentOversampling = 2, EnableCalibration = T,
+  CalibrationPeakWin = 20, EnablePeakPicking = T, SNR = 5,
+  peakWindow = 10, peakUpSampling = 10, UseBinning = T,
   BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
-  EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T,
-  EnableMAXNorm = T, EnableTICAcqNorm = T,
+  EnableSpectraNormalization = T, EnableTICNorm = T,
+  EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
   NumOfThreads = parallel::detectCores(), CalSpan = 0.75,
   ExportPeakList = F)
 }
