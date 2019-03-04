@@ -191,10 +191,12 @@ plotMassDriftImageG <- function(peakMatrix, peakList, target_mass, error_range_p
 #' @param title_label a string to be used as plot title. Chemical forumlas will be parsed to produce better results.
 #' @param normalization a vector containing the normalization value for each pixel or NA if no normalization should be applied.
 #' @param visible_legend a boolean specfing if a legend detailing the included MS images must be displayed.
+#' @param legend_title the title for the legend.
 #'
 #' @return a ggplot2 object.
 #'
-plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, min_SNR = 10, mass_offset = 0, title_label="", normalization = NA, visible_legend = T)
+plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, min_SNR = 10, mass_offset = 0, 
+                           title_label="", normalization = NA, visible_legend = T, legend_title = "")
 {
   if (!requireNamespace("ggplot2", quietly = TRUE)) 
   {
@@ -287,10 +289,11 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
   pltPts <- pltPts + ggplot2::theme(axis.text.y=ggplot2::element_blank(),
                            axis.ticks.y=ggplot2::element_blank(),
                            axis.title.y=ggplot2::element_blank(),
-                           legend.position=c(0.85,0.5),
-                           #legend.justification = c(0.5, 0),
-                           legend.direction = "horizontal",
+                           legend.position=c(1, 1),
+                           legend.justification = c(1, 1),
+                           legend.direction = "vertical",
                            legend.background = ggplot2::element_rect(fill="transparent"),
+                           legend.key = ggplot2::element_blank(),
                            axis.title.x = ggplot2::element_text(hjust=0.5, size = 12),
                            plot.title = ggplot2::element_text(hjust=0.5)
                            )
@@ -304,7 +307,7 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
                                                                            by = round(error_range_ppm/5)) ))
   if(visible_legend)
   {
-    pltPts <- pltPts + ggplot2::guides(alpha = FALSE, colour = ggplot2::guide_legend( ncol = 1, title = "", override.aes = list(size=4)))   
+    pltPts <- pltPts + ggplot2::guides(alpha = FALSE, colour = ggplot2::guide_legend( ncol = 1, title = legend_title, override.aes = list(size=4)))   
   }
   else
   {
@@ -434,6 +437,7 @@ plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_l
                                                     rotations = plot_rotations, mirror_x = plot_mirror_X, mirror_y = plot_mirror_Y)  
   
   pltDf <- data.frame( x = rasterData$pos[,"x"], y = rasterData$pos[,"y"], intensity = rasterData$values)
+  pltDf$y <- max(pltDf$y) - pltDf$y
 
   pltRas <- ggplot2::ggplot(pltDf, ggplot2::aes(x, y))
   pltRas <- pltRas + theme_black(base_size = 15 )
@@ -457,14 +461,19 @@ plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_l
     pltRas <- pltRas +  ggplot2::geom_raster(ggplot2::aes(fill = intensity, alpha = log(abs(intensity)+0.01)) ) #Sum 0.01 to avoid NaNs on log(intensity)
     pltRas <- pltRas +  ggplot2::scale_fill_gradientn(scale_label, na.value = "black", 
                                             colours = gradient_scale_colours, 
-                                            limits = gradient_scale_limits)
-    pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = ggplot2::guide_colourbar(title.position = "top", title.hjust = 0.5, barheight = 1, barwidth = 25, frame.colour = "white"))
+                                            limits = gradient_scale_limits,
+                                            breaks = pretty(pltDf$intensity,n=10))
+    pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = ggplot2::guide_colourbar(title.position = "top", 
+                                                                                   title.hjust = 0.5, 
+                                                                                   barheight = 1, 
+                                                                                   barwidth = 25, 
+                                                                                   frame.colour = "white" ))
   }
 
   pltRas <- pltRas +  ggplot2::annotate("text", label = plot_labels,
-                              size = 5, colour = "white", hjust = 0.5, vjust = 1,
+                              size = 5, colour = "white", hjust = 0.5, vjust = 0,
                               x =  rasterData$lab_x,
-                              y = rasterData$lab_y  + plot_margin/2
+                              y = rasterData$lab_y - 0.9*plot_margin
                               )
   pltRas <- pltRas +  ggplot2::labs(title = parse(text= chemFormula2Expression(title_label) ))
   if(fixed_aspect_ratio)
@@ -564,10 +573,10 @@ plotMassDriftComparedG <- function(peakMatrix_RAW, peakMatrix_ALNG, peaklist_RAW
   }
   
   pltDriftRaw <- plotMassDriftG(peakMatrix_RAW, peaklist_RAW, mass, error_range_ppm, min_SNR = min_SNR, 
-                               mass_offset = mass_offset_RAW, title_label = "", normalization = normalization_RAW, visible_legend = F)
+                               mass_offset = mass_offset_RAW, title_label = "", normalization = normalization_RAW, visible_legend = T, legend_title = "RAW")
   
   pltDriftAlng <- plotMassDriftG(peakMatrix_ALNG, peaklist_ALNG, mass, error_range_ppm, min_SNR = min_SNR, 
-                                mass_offset = 0, title_label = "", normalization = normalization_ALNG, visible_legend = T)
+                                mass_offset = 0, title_label = "", normalization = normalization_ALNG, visible_legend = T, legend_title = "Aligned")
   
   pltIon<-plotPeakImageG(peakMatrix = peakMatrix_ALNG, mass = mass, normalization = normalization_ALNG, title_label = title_label,
                         plot_cols = ion_map_plot_cols, plot_rows = ion_map_plot_rows, plot_byrow = ion_map_plot_byrow, 
