@@ -1145,7 +1145,12 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
   {
     for( i in 2:length(img_list))
     {
-      common_mass <- rMSI::MergeMassAxis(common_mass, img_list[[i]]$mass)
+      massMergeRes <- rMSI::MergeMassAxis(common_mass, img_list[[i]]$mass)
+      if(massMergeRes$error)
+      {
+        stop("ERROR: The mass axis of the images to merge is not compatible because they do not share a common range.\n")
+      }
+      common_mass <- massMergeRes$mass
     }
   }
   
