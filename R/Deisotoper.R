@@ -21,36 +21,48 @@
 #' 
 #'
 #' @param PeakMtx An rMSIprocPeakMatrix.
-#' @param IsoNumber Number of isotopes to be found.
-#' @param Tolerance Mass tolerance for the candidates in scans or ppms.
-#' @param ScoreThreshold Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
-#' @param ImageVector The mass channels vector of the imaging dataset.
+#' @param IsoNumber Integer. Number of isotopes to be found.
+#' @param Tolerance Integer. Mass tolerance for the candidates in scans or ppms.
+#' @param ScoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
+#' @param ToleranceUnits String. Must be "ppm" or "scan". If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass), else tolerance will be interpreted in ppms 
+#' @param ImageVector Numeric Vector. The mass channels vector of the imaging dataset.
 #' 
 #' @return A list containing the results of the scores and other kind of information.
 #' 
 #' @export
 
-Deisotoping <- function(PeakMtx, IsoNumber = 2,Tolerance = 10, ScoreThreshold = 0.8,ToleranceUnits = "ppm", ImageVector = NULL)
+Deisotoping <- function(PeakMtx, IsoNumber = 2, Tolerance = 30, ScoreThreshold = 0.8, ToleranceUnits = "ppm", ImageVector = NULL)
 {
+  ##### Type check #####
+
   if(ToleranceUnits == "ppm")
   {
     InScans <- FALSE
+    ImageVector <- c(1,2)
   } else if(ToleranceUnits == "scan")
     {
       InScans <- TRUE
     } else
       {
-        writeLines("Error: ToleranceUnits must be 'ppm' or 'scan'")
-        break
+        stop("ToleranceUnits must be 'ppm' or 'scan'")
       }
   
   if((ToleranceUnits == "scan") & (length(PeakMtx$mass) > length(ImageVector)))
   {
-    writeLines("Error: If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image. (rMSIObj$mass)")
-    break
+    stop("If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image. (rMSIObj$mass)")
   }
 
-  ############################## Calling the C++ method ##############################
+  if(!(IsoNumber%%1 == 0))
+  {
+    stop("Error: IsoNumber must be an integer")
+  }
+  
+  if((ToleranceUnits == "scan") & !(Tolerance%%1 == 0))
+  {
+    stop("Error: If ToleranceUnits is 'scan' then Tolerance must be integer")
+  }
+
+  ##### Calling the C++ method #####
   r <- list()  
   r <- IsotopeAnnotator(length(PeakMtx$mass),     #number of mass peaks
                         length(ImageVector),      #number of massChannels
@@ -62,12 +74,11 @@ Deisotoping <- function(PeakMtx, IsoNumber = 2,Tolerance = 10, ScoreThreshold = 
                         Tolerance,                #tolerance in ppm or scans
                         ScoreThreshold,           #score threshold
                         InScans)                  #tolerance units
-  
-  ############################## Giving format to the output ##############################
+  return(r)
+  ##### Names the results list #####
   NullVec <- matrix(nrow = length(r)-1, ncol = length(r[[1]]))
   Nullcnt <- 0
 
-  #Naming the list
   for(i in 2:length(r))
   {
     names(r[[i]]) <- signif(r[[1]],digits = 8)
@@ -76,18 +87,19 @@ Deisotoping <- function(PeakMtx, IsoNumber = 2,Tolerance = 10, ScoreThreshold = 
     {
       if(!is.null(r[[i]][[j]]))
       {
-        row.names(r[[i]][[j]]) <- c("M+N mass", "M+0 index", "M+N index","ppm error", "Final score","Morphology score", "Intensity score", "Model slope", "Number of C atoms")
+        row.names(r[[i]][[j]]) <- c("M+N mass","Abs ppm error","M+0 index", "M+N index","Final score","Morphology score","Intensity score", "Mass error score", "Isotopic ratio", "Number of C atoms")
         colnames(r[[i]][[j]]) <- (1:(dim(r[[i]][[j]])[2]))
       }else
-      {
-        Nullcnt <- Nullcnt + 1
-        NullVec[i-1,Nullcnt] <- j
-      }
+        {
+          Nullcnt <- Nullcnt + 1
+          NullVec[i-1,Nullcnt] <- j
+        }
     }
     r[[i]] <- r[[i]][-(NullVec[i-1,1:Nullcnt])]
   }
  
-  #Removing the mass vector and the empty isotope lists
+  
+  ##### Removes the mass vector and the empty isotope lists #####
   r <- r[-1]
   flagRemList <- FALSE
   RemList <- c()
@@ -106,37 +118,27 @@ Deisotoping <- function(PeakMtx, IsoNumber = 2,Tolerance = 10, ScoreThreshold = 
     r <- r[-RemList]
   }
   
-  #Creating the isotope index vector
+
+  ##### Creats the isotopic & monoisotopic ions index vectors #####
+  MonoVec <- c()
   CompVec <- c()
   for(i in (1:(length(r))))
   {
     for(j in (1:length(r[[i]])))
     {
-      if(!is.null(r[[i]][[j]]))
+      if((!is.null(r[[i]][[j]])) & (r[[i]][[j]][5,which.max(r[[i]][[j]][5,])] >= ScoreThreshold))
       {
-        if(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])] >= ScoreThreshold)
+        if(i == 1)
         {
-          CompVec <- c(CompVec, r[[1]][[j]][3,which.min(abs(r[[1]][[j]][4,which(r[[1]][[j]][5,]>= ScoreThreshold)]))])  
+          MonoVec <- c(MonoVec, r[[1]][[j]][3,which.max(r[[1]][[j]][5,])])
         }
-      }  
-    }
-  }
-  names(r) <- paste("M+",1:length(r),sep = "")
-  r$isotopeIndex <- sort(unique(CompVec))
-  
-  
-  MonoVec <- c()
-  for(i in 1:length(r[[1]]))
-  {
-    if(!is.null(r[[1]][[i]]))
-    {
-      if(r[[1]][[i]][5,which.min(abs(r[[1]][[i]][4,]))] >= ScoreThreshold)
-      {
-        MonoVec <- c(MonoVec, r[[1]][[i]][2,which.min(abs(r[[1]][[i]][4,]))])
+        CompVec <- c(CompVec, r[[i]][[j]][4,which.max(r[[i]][[j]][5,])])
       }
     }
   }
-  r$MonoisotopeIndex <- sort(unique(MonoVec))
+  names(r) <- paste("M",1:length(r),sep = "")
+  r$isotopicPeaks <- sort(unique(CompVec))
+  r$monoisotopicPeaks <- sort(unique(MonoVec))
   
   return(r)
 }
