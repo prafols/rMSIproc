@@ -5,9 +5,9 @@
 
 using namespace Rcpp;
 
-// IsotopeAnnotator
-Rcpp::List IsotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
-RcppExport SEXP _rMSIproc_IsotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
+// isotopeAnnotator
+Rcpp::List isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
+RcppExport SEXP _rMSIproc_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type tolerance(toleranceSEXP);
     Rcpp::traits::input_parameter< double >::type scoreThreshold(scoreThresholdSEXP);
     Rcpp::traits::input_parameter< bool >::type ToleranceInScans(ToleranceInScansSEXP);
-    rcpp_result_gen = Rcpp::wrap(IsotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans));
+    rcpp_result_gen = Rcpp::wrap(isotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -349,7 +349,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rMSIproc_IsotopeAnnotator", (DL_FUNC) &_rMSIproc_IsotopeAnnotator, 10},
+    {"_rMSIproc_isotopeAnnotator", (DL_FUNC) &_rMSIproc_isotopeAnnotator, 10},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
