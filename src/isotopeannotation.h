@@ -60,11 +60,11 @@ class Deisotoper
 
     void SortPeaksByIntensity();  //Sorts the peaks by intensity 
     void MatrixToImageAxis(); //Points the peak matrix mass axis to the image mass axis in order to use the tolerance in scans
-    NumericMatrix ScanCandidateFinder(NumericVector PeaksToCheck);  //Finds the isotope candidates for each selected peak
-    NumericMatrix PPMCandidateFinder(NumericVector PeaksToCheck); //Finds the isotope candidates for each selected peak
+    NumericMatrix CandidateFinder(NumericVector PeaksToCheck);  //Finds the isotope candidates for each selected peak
     double* ScoreCalculator(int *CandidateRow, int NumCan, double *result, double lastModslope, int peakNumber); //Computes all the scores over a candidates row 
     List MatrixAnnotator(NumericMatrix CanMatrix,NumericVector PeaksToCheck); //Directs the ScoreCalculator function for each ion to its candidates
-    double getToleranceFromCurve(int massIndex);
+    double getToleranceFromCurve(int massIndex);  //get the base tolerance for the mass error score. Scan mode only.
+    double* getCandidateLimits(int massIndex); //Finds the candidates mass limits for each peak in both scan and ppm mode
 };
 #endif
 
