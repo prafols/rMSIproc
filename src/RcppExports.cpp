@@ -5,6 +5,21 @@
 
 using namespace Rcpp;
 
+// adductAnnotation
+Rcpp::List adductAnnotation(int numMonoiso, int numAdducts, int tolerance, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector);
+RcppExport SEXP _rMSIproc_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type numMonoiso(numMonoisoSEXP);
+    Rcpp::traits::input_parameter< int >::type numAdducts(numAdductsSEXP);
+    Rcpp::traits::input_parameter< int >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R_monoisitopeMassVector(R_monoisitopeMassVectorSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R_adductMassVector(R_adductMassVectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(adductAnnotation(numMonoiso, numAdducts, tolerance, R_monoisitopeMassVector, R_adductMassVector));
+    return rcpp_result_gen;
+END_RCPP
+}
 // isotopeAnnotator
 Rcpp::List isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
 RcppExport SEXP _rMSIproc_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
@@ -349,6 +364,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rMSIproc_adductAnnotation", (DL_FUNC) &_rMSIproc_adductAnnotation, 5},
     {"_rMSIproc_isotopeAnnotator", (DL_FUNC) &_rMSIproc_isotopeAnnotator, 10},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},

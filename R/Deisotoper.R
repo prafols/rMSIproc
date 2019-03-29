@@ -25,11 +25,11 @@
 #' \item PeakMtx$mass. A vector containg the masses of each peak. Must be in the same order with the columns of the intensity marix.   
 #' \item PeakMtx$numPixels. Number of pixels (rows in your matrix).   
 #' }
-#' @param IsoNumber Integer. Number of isotopes to be found.
-#' @param Tolerance Integer. Mass tolerance for the candidates in scans or ppms.
-#' @param ScoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
-#' @param ToleranceUnits String. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
-#' @param ImageVector Numeric Vector. The mass channels vector of the imaging dataset containing all the scans.
+#' @param isoNumber Integer. Number of isotopes to be found.
+#' @param tolerance Integer. Mass tolerance for the candidates in scans or ppms.
+#' @param scoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
+#' @param toleranceUnits String. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
+#' @param imageVector Numeric Vector. The mass channels vector of the imaging dataset containing all the scans.
 #' 
 #' @return A list containing the results of the test and other kind of information.
 #' 
@@ -39,88 +39,78 @@ Deisotoping <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThreshold =
   result <- list()  
   
   ##### Type check #####
-  DeisotopingTypeCheck(PeakMtx,IsoNumber,Tolerance,ScoreThreshold,ToleranceUnits,ImageVector)
-  
+  {
+    if(!(is.matrix(PeakMtx$intensity) & (length(PeakMtx$mass)>0)))
+    {
+      stop("Error: PeakMtx has not the rMSIprocPeakMatrix format. Look at help for more information.")
+    }
+    
+    
+    if(isoNumber < 1)
+    {
+      stop("Error: IsoNumber must be 1 or a greater integer")
+    }
+    
+    if ((scoreThreshold > 1) | (scoreThreshold < 0))
+    {
+      stop("Error: ScoreThreshold must be between 0 and 1")
+    }
+    
+    if(toleranceUnits == "ppm")
+    {
+      InScans <- FALSE
+      imageVector <- c(1,2)
+    } else if(toleranceUnits == "scan")
+    {
+      InScans <- TRUE
+    } else
+    {
+      stop("Error: ToleranceUnits must be 'ppm' or 'scan'")
+    }
+    
+    if((toleranceUnits == "scan") & (length(PeakMtx$mass) > length(imageVector)))
+    {
+      stop("Error: If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image. (rMSIObj$mass)")
+    }
+    
+    if((toleranceUnits == "ppm") & (tolerance>500))
+    {
+      writeLines("Maximum allowed tolerance is 500. Replacing the value")
+      tolerance = 500
+    }
+    
+    if(!(isoNumber%%1 == 0))
+    {
+      stop("Error: IsoNumber must be an integer")
+    }
+    
+    if((toleranceUnits == "scan") & !(tolerance%%1 == 0))
+    {
+      stop("Error: If ToleranceUnits is 'scan' then Tolerance must be integer")
+    }
+    
+    if((toleranceUnits == "scan") & (tolerance>length(imageVector)))
+    {
+      stop("Error: Not enough scans in your mass axis, reduce the tolerance")
+    }
+  }
   ##### Calling the C++ method #####
   result <- isotopeAnnotator(length(PeakMtx$mass),   #number of mass peaks
-                        length(ImageVector),         #number of massChannels
+                        length(imageVector),         #number of massChannels
                         sum(PeakMtx$numPixels),      #number of pixels
-                        IsoNumber,                   #number of isotopes
+                        isoNumber,                   #number of isotopes
                         PeakMtx$intensity,           #peak matrix
                         PeakMtx$mass,                #matrix mass axis
-                        ImageVector,                 #image mass axis 
-                        Tolerance,                   #tolerance in ppm or scans
-                        ScoreThreshold,              #score threshold
+                        imageVector,                 #image mass axis 
+                        tolerance,                   #tolerance in ppm or scans
+                        scoreThreshold,              #score threshold
                         InScans)                     #tolerance units
  
   ##### Output format #####
-  result <- DeisotopingOutputFormat(result,ScoreThreshold)
+  result <- DeisotopingOutputFormat(result,scoreThreshold)
   
   return(result)
 }
-
-
-#' DeisotopingTypeCheck
-#' 
-#' Checks the types of the input. Interupts the program if founds and error and give information about it.
-
-DeisotopingTypeCheck <- function(PeakMtx, IsoNumber = 2, Tolerance = 30, ScoreThreshold = 0.8, ToleranceUnits = "ppm", ImageVector = NULL)
-{
-  if(!(is.matrix(PeakMtx$intensity) & (length(PeakMtx$mass)>0)))
-  {
-    stop("Error: PeakMtx has not the rMSIprocPeakMatrix format. Look at help for more information.")
-  }
-  
-  
-  if(IsoNumber < 1)
-  {
-    stop("Error: IsoNumber must be 1 or a greater integer")
-  }
-  
-  if ((ScoreThreshold > 1) | (ScoreThreshold < 0))
-  {
-    stop("Error: ScoreThreshold must be between 0 and 1")
-  }
-  
-  if(ToleranceUnits == "ppm")
-  {
-    InScans <- FALSE
-    ImageVector <- c(1,2)
-  } else if(ToleranceUnits == "scan")
-  {
-    InScans <- TRUE
-  } else
-  {
-    stop("Error: ToleranceUnits must be 'ppm' or 'scan'")
-  }
-  
-  if((ToleranceUnits == "scan") & (length(PeakMtx$mass) > length(ImageVector)))
-  {
-    stop("Error: If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image. (rMSIObj$mass)")
-  }
-  
-  if((ToleranceUnits == "ppm") & (Tolerance>500))
-  {
-    writeLines("Maximum allowed tolerance is 500. Replacing the value")
-    Tolerance = 500
-  }
-  
-  if(!(IsoNumber%%1 == 0))
-  {
-    stop("Error: IsoNumber must be an integer")
-  }
-  
-  if((ToleranceUnits == "scan") & !(Tolerance%%1 == 0))
-  {
-    stop("Error: If ToleranceUnits is 'scan' then Tolerance must be integer")
-  }
-  
-  if((ToleranceUnits == "scan") & !(Tolerance>length(ImageVector)))
-  {
-    stop("Error: Not enough scans in your mass axis, reduce the tolerance")
-  }
-}
-
 
 #' DeisotopingOutputFormat
 #' 
