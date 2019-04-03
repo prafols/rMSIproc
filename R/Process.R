@@ -66,7 +66,7 @@ ProcessImage <- function(img,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75, ExportPeakList = F)
+                         NumOfThreads = min(parallel::detectCores()/2, 6), CalSpan = 0.75, ExportPeakList = F)
 {
   pt <- Sys.time()
   
