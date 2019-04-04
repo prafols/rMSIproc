@@ -17,27 +17,82 @@
 ############################################################################
 #' adductAnnotation
 #' 
-#' Finds and evaluate isotope candidates for each ion mass.
 #' 
-#' @param monoisitopeMassVector Integer. Number of isotopes to be found.
-#' @param adductDataFrame Integer. Mass tolerance for the candidates in scans or ppms.
-#' @param scoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
-#
-#' @return A list containing the results of the test and other kind of information.
+#' 
+#' @param isotopeObj List. Results from the isotopes test.
+#' @param massVector  Vector. Mass vector from wich ceck adduct relationship.
+#' @param adductDataFrame Data frame with two columns. $name, with the names of adducts to be found, $mass, with each masses.
+#' @param tolerance Integer. Mass error tolerance.
+#' @return 
 #' 
 
-adductAnnotation <- function(monoisitopeMassVector, adductDataFrame, tolerance)
+adductAnnotation <- function(isotopeObj, massVector, adductDataFrame, tolerance)
 {
-  result <- list()  
+  adducts <- list()
+  result <- list()
+  result$isotopes <- isotopeObj 
+  
+  combinations <- 0
+  for(i in 1:nrow(adductDataFrame))
+  {
+    combinations <- combinations + 1
+  }
+  
+  name1 = 1
+  name2 = 2
+  lim = nrow(adductDataFrame)
+  namesVector <- c()
+  firstnameVector <- c()
+  secondnameVector <- c()
+  for(i in 1:combinations)
+  {
+    namesVector[i] <- paste(adductDataFrame$name[name1]," & ",adductDataFrame$name[name2],sep = "")
+    firstnameVector[i] <- as.character(adductDataFrame$name[name1])
+    secondnameVector[i] <- as.character(adductDataFrame$name[name2])
+    name2 <- name2 + 1
+    if(name2 > lim)
+    {
+      name1 <- name1 + 1
+      name2 <- name1 + 1
+    }
+  }
   
   ##### Calling the C++ method #####
-  result <- adductAnnotation(length(monoisitopeMassVector),
-                             nrow(adductDataFrame), 
-                             tolerance, 
-                             monoisitopeMassVector,
-                             adductDataFrame$mass)   
- 
+  adducts <- C_adductAnnotation(length(isotopeObj$monoisotopicPeaks),
+                                            nrow(adductDataFrame), 
+                                            tolerance,
+                                            length(massVector),
+                                            sort(massVector[isotopeObj$monoisotopicPeaks])-1,
+                                            adductDataFrame$mass,
+                                            isotopeObj$M1,
+                                            order(isotopeObj$monoisotopicPeaks)-1,
+                                            massVector)   
   ##### Output format #####
+
+  tmp <- adducts[[length(adducts)]]
+  adducts <- adducts[-length(adducts)]
+  names(adducts) <- format(tmp,nsmall = 4)
+  
+  for(i in 1:length(adducts))
+  {
+    name1 <- firstnameVector[(adducts[[i]][1]+1)]
+    name2 <- secondnameVector[(adducts[[i]][1]+1)]
+    mainname <- namesVector[adducts[[i]][1]+1]
+    adducts[[i]] <- as.matrix(adducts[[i]][-1,])
+    
+    row.names(adducts[[i]]) <- c(paste("M+",name1," mass",sep = ""),
+                                 paste("M+",name1," index",sep = ""),
+                                 paste("M+",name1," slope",sep = ""),
+                                 paste("M+",name2," mass",sep = ""),
+                                 paste("M+",name2," index",sep = ""),
+                                 paste("M+",name2," slope",sep = ""),
+                                 "Correlation",
+                                 "ppm error")
+     colnames(adducts[[i]]) <- mainname
+  }
+
+  result$adducts <- adducts
+  
   
   return(result)
 }

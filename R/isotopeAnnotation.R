@@ -15,7 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
-#' Deisotoping
+#' isotopeAnnotation
 #' 
 #' Finds and evaluate isotope candidates for each ion mass.
 #' 
@@ -34,7 +34,7 @@
 #' @return A list containing the results of the test and other kind of information.
 #' 
 
-Deisotoping <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThreshold = 0.8, toleranceUnits = "ppm", imageVector = NULL)
+isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThreshold = 0.8, toleranceUnits = "ppm", imageVector = NULL)
 {
   result <- list()  
   
@@ -95,16 +95,16 @@ Deisotoping <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThreshold =
     }
   }
   ##### Calling the C++ method #####
-  result <- isotopeAnnotator(length(PeakMtx$mass),   #number of mass peaks
-                        length(imageVector),         #number of massChannels
-                        sum(PeakMtx$numPixels),      #number of pixels
-                        isoNumber,                   #number of isotopes
-                        PeakMtx$intensity,           #peak matrix
-                        PeakMtx$mass,                #matrix mass axis
-                        imageVector,                 #image mass axis 
-                        tolerance,                   #tolerance in ppm or scans
-                        scoreThreshold,              #score threshold
-                        InScans)                     #tolerance units
+  result <- C_isotopeAnnotator(length(PeakMtx$mass),        #number of mass peaks
+                               length(imageVector),         #number of massChannels
+                               sum(PeakMtx$numPixels),      #number of pixels
+                               isoNumber,                   #number of isotopes
+                               PeakMtx$intensity,           #peak matrix
+                               PeakMtx$mass,                #matrix mass axis
+                               imageVector,                 #image mass axis 
+                               tolerance,                   #tolerance in ppm or scans
+                               scoreThreshold,              #score threshold
+                               InScans)                     #tolerance units
  
   ##### Output format #####
   result <- DeisotopingOutputFormat(result,scoreThreshold)
@@ -181,8 +181,8 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   }
   
   names(r) <- paste("M",1:length(r),sep = "")
-  r$isotopicPeaks <- sort(unique(CompVec))
-  r$monoisotopicPeaks <- sort(unique(MonoVec))
+  r$isotopicPeaks <- (unique(CompVec))
+  r$monoisotopicPeaks <- (unique(MonoVec))
   writeLines(paste("Number of monoisotopic ions found =",length(r$monoisotopicPeaks)))
   
   return(r)

@@ -540,9 +540,9 @@ List Deisotoper::Run()
 }
 
 // [[Rcpp::export]]
-Rcpp::List isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso,
-                            NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec,
-                            int tolerance, double scoreThreshold, bool ToleranceInScans)
+Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso,
+                              NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec,
+                              int tolerance, double scoreThreshold, bool ToleranceInScans)
 {
   //Fill the class data structure with the information of the experiment
   Deisotoper::IsoDef myIsoDef;  

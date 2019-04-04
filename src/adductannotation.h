@@ -26,29 +26,40 @@ class AdductPairer
 public:
   typedef struct 
   {
+    int numMass;    //Length of the mass axis.
     int numMonoiso; //Number of monoistopic peaks.
     int numAdducts;	//Number of adduct forming chemical masses.  
     int tolerance;  //Mass tolerance in ppm
   }AdductDef;
   
-  AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector);  //Constructor
-  ~AdductPairer();                      //Destructor
-  List Run();                           //Program executioning function
+  AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis);  //Constructor
+  ~AdductPairer();                        //Destructor
+  List Run();                             //Program executioning function
 
 private:
-	AdductDef *RunDef;
-	int mdVlength; 							          //Length of the mass differences vector. At each shift
-	double *monoisitopeMassVector;          //Vector containing the masses of the monoisotopic species (length = numMonoiso)
-	double **massDifferencesMatrix;         //Vector containing the substraction of the monoisotopic masses. At each step, the length is reduced by 1. (length = mDV.length)  
-  double *adductMassVector; 		          //Vector containing the adduct forming chemical elements masses.   
-  double *adductMassDifferencesVector;    //Vector containing the mass differeneces between adduct forming chemical elements.
-  int **adductMaskMatrix;                //Boolean matrix with the same size of massDifferencesMatrix. TRUE means that the a pair of ians could be adducts. At the end, TRUE positions will write in the massDifferencesMatrix the ppm error and in the FALSE a -1 
-  int currentShift;							          //Current shift in the mass substraction
-  int maxShift;                           //Maximum allowed shift for the number of monoisotopic masses
-  int adductDiffCombinations;             //Length of adductMassDifferencesVector
-  
-  void CalculateAdductMassDifferences();  //Fills adductMassDifferencesVector
-	void ShiftAndSubstract();               //Substracts the monoisotopeMassVector with the shifted version of himself
-  void CheckDifferences();                //Checks if there's any pair of peaks with the current
-  List GenerateResultsList();
+	AdductDef *RunDef;                          //Pointer to the structure.
+	double *monoisitopeMassVector;              //Vector containing the masses of the monoisotopic species (length = numMonoiso)
+	double **massDifferencesMatrix;             //Vector containing the substraction of the monoisotopic masses. At each step, the length is reduced by 1. (length = mdVlength)  
+  double *adductMassVector; 		              //Vector containing the adduct forming chemical elements masses.   
+  double *adductMassDifferencesVector;        //Vector containing the mass differeneces between adduct forming chemical elements.
+  double *adductPairFirstMassVector;          //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (K, K, Na) 
+  double *adductPairSecondMassVector;          //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (Na, H, H) 
+  double *massAxis;                           //Vector containint the mass axis of the peak matrix.
+  int **adductPairsNameMatrix;                //Matrix containing the adduct elements of the pairs. -1 if no pair found.
+  int *isotopeListOrder;                      //Vector containing where the ion is found in the isotopes list
+  int currentShift;							              //Current shift in the mass substraction
+  int maxShift;                               //Maximum allowed shift for the number of monoisotopic masses
+  int adductDiffCombinations;                 //Length of adductMassDifferencesVector
+  int mdVlength; 							                //Length of the mass differences vector. At each shift
+  int positiveTest;                           //Number of pairs that have succes in the test
+  List isotopes;                              //Results from the isotope test
+      
+  void CalculateAdductMassDifferences();      //Fills adductMassDifferencesVector
+	void ShiftAndSubstract();                   //Substracts the monoisotopeMassVector with the shifted version of himself
+  void CheckDifferences();                    //Checks if there's any pair of peaks with the current
+  void ValidateCandidates();                  //Reads the information form the isotopes tests and merge it with the adduct candidates information.
+  List GenerateResultsList();                 //Output construction function
 };
+
+
+

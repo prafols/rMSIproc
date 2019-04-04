@@ -5,24 +5,28 @@
 
 using namespace Rcpp;
 
-// adductAnnotation
-Rcpp::List adductAnnotation(int numMonoiso, int numAdducts, int tolerance, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector);
-RcppExport SEXP _rMSIproc_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP) {
+// C_adductAnnotation
+Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, int tolerance, int numMass, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis);
+RcppExport SEXP _rMSIproc_C_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP numMassSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP, SEXP R_isotopesSEXP, SEXP R_isotopeListOrderSEXP, SEXP R_massAxisSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type numMonoiso(numMonoisoSEXP);
     Rcpp::traits::input_parameter< int >::type numAdducts(numAdductsSEXP);
     Rcpp::traits::input_parameter< int >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< int >::type numMass(numMassSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type R_monoisitopeMassVector(R_monoisitopeMassVectorSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type R_adductMassVector(R_adductMassVectorSEXP);
-    rcpp_result_gen = Rcpp::wrap(adductAnnotation(numMonoiso, numAdducts, tolerance, R_monoisitopeMassVector, R_adductMassVector));
+    Rcpp::traits::input_parameter< List >::type R_isotopes(R_isotopesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R_isotopeListOrder(R_isotopeListOrderSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R_massAxis(R_massAxisSEXP);
+    rcpp_result_gen = Rcpp::wrap(C_adductAnnotation(numMonoiso, numAdducts, tolerance, numMass, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis));
     return rcpp_result_gen;
 END_RCPP
 }
-// isotopeAnnotator
-Rcpp::List isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
-RcppExport SEXP _rMSIproc_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
+// C_isotopeAnnotator
+Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
+RcppExport SEXP _rMSIproc_C_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -36,7 +40,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type tolerance(toleranceSEXP);
     Rcpp::traits::input_parameter< double >::type scoreThreshold(scoreThresholdSEXP);
     Rcpp::traits::input_parameter< bool >::type ToleranceInScans(ToleranceInScansSEXP);
-    rcpp_result_gen = Rcpp::wrap(isotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans));
+    rcpp_result_gen = Rcpp::wrap(C_isotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -364,8 +368,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rMSIproc_adductAnnotation", (DL_FUNC) &_rMSIproc_adductAnnotation, 5},
-    {"_rMSIproc_isotopeAnnotator", (DL_FUNC) &_rMSIproc_isotopeAnnotator, 10},
+    {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 9},
+    {"_rMSIproc_C_isotopeAnnotator", (DL_FUNC) &_rMSIproc_C_isotopeAnnotator, 10},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
