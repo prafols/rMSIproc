@@ -29,11 +29,13 @@ AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMas
   maxShift = RunDef->numMonoiso - 1;
   isotopes = R_isotopes;
   
+  
 	monoisitopeMassVector = new double[RunDef->numMonoiso];
 	for(int i = 0; i < RunDef->numMonoiso; i++)
 	{
 		monoisitopeMassVector[i] = R_monoisitopeMassVector[i];
 	}
+	
 	
 	massAxis = new double[RunDef->numMass];
 	for(int i = 0; i < RunDef->numMass; i++)
@@ -41,11 +43,13 @@ AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMas
 	  massAxis[i] = R_massAxis[i];
 	}
 	
+	
 	adductMassVector = new double[RunDef->numAdducts];
 	for(int i = 0; i < RunDef->numAdducts; i++)
 	{
 	  adductMassVector[i] = R_adductMassVector[i];
 	}
+	
 	
 	isotopeListOrder = new int[RunDef->numMonoiso];
 	for(int i = 0; i < RunDef->numMonoiso; i++)
@@ -53,16 +57,18 @@ AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMas
 	  isotopeListOrder[i] = R_isotopeListOrder[i];
 	}
 	
-	massDifferencesMatrix = new double*[maxShift];
+	
+	ppmMatrix = new double*[maxShift];
   for(int i = 0; i < maxShift; i++)
   {
-    massDifferencesMatrix[i] = new double[mdVlength];
+    ppmMatrix[i] = new double[mdVlength];
     for(int j = 0; j < mdVlength; j++)
     {
-      massDifferencesMatrix[i][j] = 0;
+      ppmMatrix[i][j] = 9999;
     }
   }
 
+  
   adductPairsNameMatrix = new int*[maxShift];
   for(int i = 0; i < maxShift; i++)
   {
@@ -80,11 +86,13 @@ AdductPairer::~AdductPairer()
 {
 	delete[] monoisitopeMassVector;
   
+  
   for(int i = 0; i < maxShift; i++)
   {
-	  delete[] massDifferencesMatrix[i];
+    delete[] ppmMatrix[i];
   }
-  delete[] massDifferencesMatrix;
+  delete[] ppmMatrix;
+  
   
   for(int i = 0; i < maxShift; i++)
   {
@@ -92,13 +100,15 @@ AdductPairer::~AdductPairer()
   }
   delete[] adductPairsNameMatrix;
   
+  
 	delete[] adductMassVector;
 	
-	delete[] adductMassDifferencesVector;
 	
 	delete[] isotopeListOrder;
 	
+	
 	delete[] massAxis;
+	
 	
 	delete[] adductPairFirstMassVector;
 }
@@ -112,7 +122,7 @@ void AdductPairer::CalculateAdductMassDifferences()
 	{
 		adductDiffCombinations += i;
 	}
-	adductMassDifferencesVector = new double[adductDiffCombinations]; //Vector containing the mass diferences of all adduct combinations
+
   adductPairFirstMassVector = new double[adductDiffCombinations];
   adductPairSecondMassVector = new double[adductDiffCombinations];
   
@@ -122,7 +132,6 @@ void AdductPairer::CalculateAdductMassDifferences()
 
 	for(int i = 0; i < adductDiffCombinations; i++)   //Fill the vector
 	{
-		adductMassDifferencesVector[i] = adductMassVector[p1]-adductMassVector[p2];
 	  adductPairFirstMassVector[i] = adductMassVector[p1];
 	  adductPairSecondMassVector[i] = adductMassVector[p2];
 		p2++;
@@ -136,38 +145,26 @@ void AdductPairer::CalculateAdductMassDifferences()
 
 
 //Substracts the monoisotopeMassVector with the shifted version of himself
-void AdductPairer::ShiftAndSubstract()
+void AdductPairer::ShiftandCalculateAdductPairs()
 {
+  double ppmMassError = 0; //ppm mass error for each pair
+  double Mmass1;
+  double Mmass2;
+  
   currentShift = currentShift + 1;  //Add more shift
   mdVlength = RunDef->numMonoiso - currentShift;  //Shrink the massdifferences matrix row
-  for(int i = 0; i < mdVlength; i++)  //Fill the row with the differences
+  
+  for(int i = 0; i < adductDiffCombinations; i++) 
   {
-    massDifferencesMatrix[currentShift-1][i] = monoisitopeMassVector[currentShift+i] - monoisitopeMassVector[i];
-  }
-}
-
-
-//Checks if there's any pair of peaks with the current
-void AdductPairer::CheckDifferences()
-{
-	double ppmMassError = 0; //ppm mass error for each pair
-
-	for(int i = 0; i < adductDiffCombinations; i++) 
-	{
-		for(int j = 0; j < mdVlength; j++)  
-		{
-			ppmMassError = abs(1000000*((massDifferencesMatrix[currentShift-1][j]-adductMassDifferencesVector[i])/adductMassDifferencesVector[i])); 
-			if(adductPairsNameMatrix[currentShift-1][j] == -1) //If no previous write
-			{
-			  adductPairsNameMatrix[currentShift-1][j] = (ppmMassError < RunDef->tolerance) ? i : -1;    //and the ppmMassError is less than the tolerance, we assign the category. 
-			  if(i == 0)
-			  {
-			    massDifferencesMatrix[currentShift-1][j] = ppmMassError;    //ppmMass
-			  }
-			  massDifferencesMatrix[currentShift-1][j] = (i>0 & massDifferencesMatrix[currentShift-1][j]>ppmMassError) ? ppmMassError : massDifferencesMatrix[currentShift-1][j];
-			}
-		}
-	}
+    for(int j = 0; j < mdVlength; j++)  //Fill the row with the differences
+    {
+      Mmass1 = monoisitopeMassVector[currentShift+j]-adductPairFirstMassVector[i];
+      Mmass2 = monoisitopeMassVector[j]-adductPairSecondMassVector[i];
+      ppmMassError  = 1000000*abs(Mmass1 - Mmass2)/(Mmass2);
+      adductPairsNameMatrix[currentShift-1][j] = ((ppmMassError < RunDef->tolerance) & (adductPairsNameMatrix[currentShift-1][j] == -1)) ? i : -1;  
+      ppmMatrix[currentShift-1][j] = (adductPairsNameMatrix[currentShift-1][j] != -1) ? ppmMassError : ppmMatrix[currentShift-1][j];  
+    }
+  }  
 }
 
 
@@ -191,7 +188,7 @@ void AdductPairer::ValidateCandidates()
         slope1 = IsoData1[8];
         slope2 = IsoData2[8];
         
-        if(abs(slope1 - slope2) < 0.1)    //positive test condition (may change)
+        if(abs(slope1 - slope2) < 0.3)    //positive test condition (may change)
         {
           positiveTest += 1;
         } 
@@ -233,7 +230,7 @@ List AdductPairer::GenerateResultsList()
 		    r(6,0)  = IsoData2[8];                          //M+Add2 slope
 		    
 		    r(7,0)  = j;                             //Correlation degree
-		    r(8,0)  = massDifferencesMatrix[i][j];   //Mass diference error in ppm 
+		    r(8,0)  = ppmMatrix[i][j];   //Mass diference error in ppm 
 		    
 		    Results[cntList] = r;
 
@@ -254,12 +251,12 @@ List AdductPairer::GenerateResultsList()
 List AdductPairer::Run()
 {
 	CalculateAdductMassDifferences(); //Fills adductMassDifferencesVector
-  
+
 	while(currentShift<maxShift)      //While more shifts allowed
 	{
-	  ShiftAndSubstract();            //Do the shift and substract the masses
-	  CheckDifferences();             //Check if there are any adduct candidate after the current shift
+	  ShiftandCalculateAdductPairs();            //Do the shift and substract the masses
 	}
+
 
 	ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
 	
@@ -282,6 +279,9 @@ Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts,
   
   List result;
   AdductPairer myAdductPairer(&myAdductDef, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis); //Class constructor
+  
+
+  
   result = myAdductPairer.Run();  //Program executioning function
   
   return result;

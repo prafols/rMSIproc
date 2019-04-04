@@ -39,9 +39,8 @@ public:
 private:
 	AdductDef *RunDef;                          //Pointer to the structure.
 	double *monoisitopeMassVector;              //Vector containing the masses of the monoisotopic species (length = numMonoiso)
-	double **massDifferencesMatrix;             //Vector containing the substraction of the monoisotopic masses. At each step, the length is reduced by 1. (length = mdVlength)  
+	double **ppmMatrix;             //Vector containing the substraction of the monoisotopic masses. At each step, the length is reduced by 1. (length = mdVlength)  
   double *adductMassVector; 		              //Vector containing the adduct forming chemical elements masses.   
-  double *adductMassDifferencesVector;        //Vector containing the mass differeneces between adduct forming chemical elements.
   double *adductPairFirstMassVector;          //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (K, K, Na) 
   double *adductPairSecondMassVector;          //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (Na, H, H) 
   double *massAxis;                           //Vector containint the mass axis of the peak matrix.
@@ -53,10 +52,9 @@ private:
   int mdVlength; 							                //Length of the mass differences vector. At each shift
   int positiveTest;                           //Number of pairs that have succes in the test
   List isotopes;                              //Results from the isotope test
-      
+  
   void CalculateAdductMassDifferences();      //Fills adductMassDifferencesVector
-	void ShiftAndSubstract();                   //Substracts the monoisotopeMassVector with the shifted version of himself
-  void CheckDifferences();                    //Checks if there's any pair of peaks with the current
+	void ShiftandCalculateAdductPairs();        //Substracts the monoisotopeMassVector with the shifted version of himself
   void ValidateCandidates();                  //Reads the information form the isotopes tests and merge it with the adduct candidates information.
   List GenerateResultsList();                 //Output construction function
 };
