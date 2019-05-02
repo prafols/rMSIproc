@@ -8,7 +8,7 @@
 For Linux platform, you’ll need to install the following libraries using your distribution package manager: fftw and boost. For Windows systems, these libraries are provided as re-distributable binaries inside the *rMSIproc* package, so no extra step is needed. 
 To install *rMSIproc* you can use the devtools package to fetch it directly from github:
 ```R
-> devtools::install_github("prafols/rMSIproc", ref = "0.1")
+> devtools::install_github("prafols/rMSIproc", ref = "0.2")
 ```
 
 ### Basic usage
