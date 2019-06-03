@@ -207,6 +207,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CPeakList2PeakMatrix
+List CPeakList2PeakMatrix(List RpeakList, double BinTolerance, double BinFilter, bool BinToleranceUsingPPM);
+RcppExport SEXP _rMSIproc_CPeakList2PeakMatrix(SEXP RpeakListSEXP, SEXP BinToleranceSEXP, SEXP BinFilterSEXP, SEXP BinToleranceUsingPPMSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type RpeakList(RpeakListSEXP);
+    Rcpp::traits::input_parameter< double >::type BinTolerance(BinToleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type BinFilter(BinFilterSEXP);
+    Rcpp::traits::input_parameter< bool >::type BinToleranceUsingPPM(BinToleranceUsingPPMSEXP);
+    rcpp_result_gen = Rcpp::wrap(CPeakList2PeakMatrix(RpeakList, BinTolerance, BinFilter, BinToleranceUsingPPM));
+    return rcpp_result_gen;
+END_RCPP
+}
 // LoadPeakMatrixC
 List LoadPeakMatrixC(String path);
 RcppExport SEXP _rMSIproc_LoadPeakMatrixC(SEXP pathSEXP) {
@@ -342,6 +356,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rMSIproc_NoiseEstimationFFTCosWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTCosWinMat, 2},
     {"_rMSIproc_NoiseEstimationFFTExpWinMat", (DL_FUNC) &_rMSIproc_NoiseEstimationFFTExpWinMat, 2},
     {"_rMSIproc_MergePeakMatricesC", (DL_FUNC) &_rMSIproc_MergePeakMatricesC, 3},
+    {"_rMSIproc_CPeakList2PeakMatrix", (DL_FUNC) &_rMSIproc_CPeakList2PeakMatrix, 4},
     {"_rMSIproc_LoadPeakMatrixC", (DL_FUNC) &_rMSIproc_LoadPeakMatrixC, 1},
     {"_rMSIproc_StorePeakMatrixC", (DL_FUNC) &_rMSIproc_StorePeakMatrixC, 2},
     {"_rMSIproc_DetectPeaks_C", (DL_FUNC) &_rMSIproc_DetectPeaks_C, 5},

@@ -6,7 +6,7 @@
 \usage{
 plotMassDriftG(peakMatrix, peakList, target_mass, error_range_ppm,
   min_SNR = 10, mass_offset = 0, title_label = "",
-  normalization = NA, visible_legend = T)
+  normalization = NA, visible_legend = T, legend_title = "")
 }
 \arguments{
 \item{peakMatrix}{an rMSIproc peak matrix.}
@@ -26,6 +26,8 @@ plotMassDriftG(peakMatrix, peakList, target_mass, error_range_ppm,
 \item{normalization}{a vector containing the normalization value for each pixel or NA if no normalization should be applied.}
 
 \item{visible_legend}{a boolean specfing if a legend detailing the included MS images must be displayed.}
+
+\item{legend_title}{the title for the legend.}
 }
 \value{
 a ggplot2 object.

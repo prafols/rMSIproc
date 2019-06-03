@@ -21,6 +21,7 @@
 using namespace Rcpp;
 
 PeakBinning::PeakBinning(PeakPicking::Peaks **peakList, int pixelCount, double binTolerance, bool toleranceInppm, double binFilter) :
+  constructedUsingRPeakList(false),
   numOfPixels(pixelCount),
   tolerance(binTolerance),
   binSizeInppm(toleranceInppm),
@@ -29,9 +30,53 @@ PeakBinning::PeakBinning(PeakPicking::Peaks **peakList, int pixelCount, double b
   mPeaks = peakList;
 }
 
+PeakBinning::PeakBinning(Rcpp::List peaksLst, double binTolerance, bool toleranceInppm, double binFilter):
+  constructedUsingRPeakList(true),
+  numOfPixels(peaksLst.length()),
+  tolerance(binTolerance),
+  binSizeInppm(toleranceInppm),
+  binFilter(binFilter)
+{
+  mPeaks =  new PeakPicking::Peaks*[numOfPixels];
+  List auxList;
+  Rcout<<"Copying R peak list to C data...\n";
+  for(int i = 0; i < numOfPixels; i++ )
+  {
+    mPeaks[i]=new PeakPicking::Peaks();
+    
+    auxList=as<List>(peaksLst[i]);
+    NumericVector mass=as<NumericVector>(auxList["mass"]);
+    NumericVector intensity=as<NumericVector>(auxList["intensity"]);
+    NumericVector SNR =as<NumericVector>(auxList["SNR"]);
+    NumericVector area = as<NumericVector>(auxList["area"]);
+    NumericVector binSize = as<NumericVector>(auxList["binSize"]);
+    
+    Rcout<<"Pixel: "<< i << " Length: " << mass.length() << "\n";
+    
+    mPeaks[i]->mass.resize(mass.length());
+    mPeaks[i]->intensity.resize(intensity.length());
+    mPeaks[i]->SNR.resize(SNR.length());
+    mPeaks[i]->area.resize(area.length());
+    mPeaks[i]->binSize.resize(binSize.length());
+    
+    memcpy(mPeaks[i]->mass.data(),mass.begin(),sizeof(double)*mass.length());
+    memcpy(mPeaks[i]->intensity.data(),intensity.begin(),sizeof(double)*intensity.length());
+    memcpy(mPeaks[i]->SNR.data(),SNR.begin(),sizeof(double)*SNR.length());
+    memcpy(mPeaks[i]->area.data(),area.begin(),sizeof(double)*area.length());
+    memcpy(mPeaks[i]->binSize.data(),binSize.begin(),sizeof(double)*binSize.length());
+  }
+}
+
 PeakBinning::~PeakBinning()
 {
-  
+  if(constructedUsingRPeakList)
+  {
+    for( int i = 0; i < numOfPixels; i++ )
+    {
+      delete mPeaks[i];
+    }
+    delete[] mPeaks;
+  }
 }
 
 void PeakBinning::AppendPeaksAsMatrix(List peaksLst)
@@ -286,3 +331,43 @@ List MergePeakMatricesC( List PeakMatrices, double binningTolerance = 100, doubl
   }
   return myPeakBinning.BinPeaks();
 }
+
+//Test method
+Rcpp::List PeakBinning::ExportPeakList()
+{
+  List pkLst(numOfPixels);
+  NumericVector pkMass, pkIntensity, pkSNR, pkArea, pkBinSize;
+  for(int i = 0; i < numOfPixels; i++)
+  {
+    Rcout<<"Copying peaks "<< (i+1) <<" of "<< numOfPixels <<"\n";
+    pkMass = NumericVector(mPeaks[i]->mass.size());
+    pkIntensity = NumericVector(mPeaks[i]->intensity.size());
+    pkSNR = NumericVector(mPeaks[i]->SNR.size());
+    pkArea = NumericVector(mPeaks[i]->area.size());
+    pkBinSize = NumericVector(mPeaks[i]->binSize.size());
+    memcpy(pkMass.begin(), mPeaks[i]->mass.data(), sizeof(double)*mPeaks[i]->mass.size());
+    memcpy(pkIntensity.begin(), mPeaks[i]->intensity.data(), sizeof(double)*mPeaks[i]->intensity.size());
+    memcpy(pkSNR.begin(), mPeaks[i]->SNR.data(), sizeof(double)*mPeaks[i]->SNR.size());
+    memcpy(pkArea.begin(), mPeaks[i]->area.data(), sizeof(double)*mPeaks[i]->area.size());
+    memcpy(pkBinSize.begin(), mPeaks[i]->binSize.data(), sizeof(double)*mPeaks[i]->binSize.size());
+    pkLst[i] = List::create( Named("mass") = pkMass, Named("intensity") = pkIntensity, Named("SNR") = pkSNR, Named("area") = pkArea, Named("binSize") = pkBinSize);
+  }
+  return pkLst;
+}
+
+//' CPeakList2PeakMatrix.
+//' 
+//' Convert's an R peak list into a peak matrix.
+//' @param RpeakList R peak list.
+//' @param the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. 
+//' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+//' @param BinToleranceUsingPPM if True the peak binning tolerance is specified in ppm, if false the tolerance is set using scans.
+//' @return peak matrix.
+//' 
+// [[Rcpp::export]]
+List CPeakList2PeakMatrix(List RpeakList, double BinTolerance = 5, double BinFilter = 0.1, bool BinToleranceUsingPPM = true )
+{
+  PeakBinning myPeakBinning(RpeakList, BinTolerance, BinToleranceUsingPPM, BinFilter);
+  return myPeakBinning.BinPeaks(); 
+}
+  
