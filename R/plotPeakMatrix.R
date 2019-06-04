@@ -302,7 +302,8 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
     }
   }
   
-  #Global Y offset
+  #Global offsets
+  rasterPos[,"x"] <- rasterPos[,"x"] + 1
   rasterPos[,"y"] <- rasterPos[,"y"] + margin
   
   #Round the coordinates to ensure non-float numbers since them produce errors in many plot subsystems
