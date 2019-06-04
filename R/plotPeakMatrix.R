@@ -81,8 +81,8 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, matrix = "intens
   }
   
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, peakMatrix[[matrix]][,column]/normVals, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
-  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um, vlight = light)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
+  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = sprintf("m/z %.4f", peakMatrix$mass[column]), pixel_size_um = pixel_size_um, vlight = light,
+                   labels_x = rasterData$lab_x, labels_y = rasterData$lab_y, labels_text = labels)
 }
 
 #' plotClusterImage.
@@ -113,9 +113,9 @@ plotClusterImage <- function(peakMatrix, clusters,
                              pixel_size_um = 100)
 {
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, clusters, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
-  clusColors <- rMSI::PlotClusterImage(rasterData$pos, rasterData$values, rotate = 0, pixel_size_um)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
-  legend( "topright", col = clusColors, legend =  paste0("Clus_",sort(unique(clusters), decreasing = F)), pch = 20, horiz = F,  bty = "n" )
+  clusColors <- rMSI::PlotClusterImage(rasterData$pos, rasterData$values, rotate = 0, pixel_size_um, 
+                                       labels_x = rasterData$lab_x, labels_y = rasterData$lab_y, labels_text = labels)
+  legend( "topright", col = clusColors, legend =  paste0("Clus_",sort(unique(clusters), decreasing = F)), pch = 20, horiz = F,  bty = "n", text.col = "white" )
   return(clusColors)
 }
 
@@ -147,8 +147,8 @@ plotValuesImage <- function(peakMatrix, values,
                              pixel_size_um = 100, scale_title = "", light = 8)
 {
   rasterData <- ArrangeMultipleImg2Plot(peakMatrix, values, nrow, ncol, byrow, margin, img_names, rotations, mirror_x, mirror_y)
-  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = scale_title, pixel_size_um = pixel_size_um, vlight = light)
-  text( x = rasterData$lab_x, y = rasterData$lab_y, labels = labels , adj = c(0.5, 0.0)  )
+  rMSI::PlotValues(rasterData$pos, rasterData$values, rotate = 0, scale_title = scale_title, pixel_size_um = pixel_size_um, vlight = light,
+                   labels_x = rasterData$lab_x, labels_y = rasterData$lab_y, labels_text = labels)
 }
 
 
