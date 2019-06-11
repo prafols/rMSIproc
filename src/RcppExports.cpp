@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // C_adductAnnotation
-Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, int tolerance, int numMass, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis);
-RcppExport SEXP _rMSIproc_C_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP numMassSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP, SEXP R_isotopesSEXP, SEXP R_isotopeListOrderSEXP, SEXP R_massAxisSEXP) {
+Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, int tolerance, int numMass, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis, NumericMatrix R_peakMatrix, int numPixels);
+RcppExport SEXP _rMSIproc_C_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP numMassSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP, SEXP R_isotopesSEXP, SEXP R_isotopeListOrderSEXP, SEXP R_massAxisSEXP, SEXP R_peakMatrixSEXP, SEXP numPixelsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type R_isotopes(R_isotopesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type R_isotopeListOrder(R_isotopeListOrderSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type R_massAxis(R_massAxisSEXP);
-    rcpp_result_gen = Rcpp::wrap(C_adductAnnotation(numMonoiso, numAdducts, tolerance, numMass, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis));
+    Rcpp::traits::input_parameter< NumericMatrix >::type R_peakMatrix(R_peakMatrixSEXP);
+    Rcpp::traits::input_parameter< int >::type numPixels(numPixelsSEXP);
+    rcpp_result_gen = Rcpp::wrap(C_adductAnnotation(numMonoiso, numAdducts, tolerance, numMass, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis, R_peakMatrix, numPixels));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -368,7 +370,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 9},
+    {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 11},
     {"_rMSIproc_C_isotopeAnnotator", (DL_FUNC) &_rMSIproc_C_isotopeAnnotator, 10},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},

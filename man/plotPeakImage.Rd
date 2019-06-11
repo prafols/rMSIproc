@@ -4,20 +4,12 @@
 \alias{plotPeakImage}
 \title{plotPeakImage.}
 \usage{
-<<<<<<< HEAD
 plotPeakImage(peakMatrix, mz = NULL, column = NULL,
   matrix = "intensity", normalization = NULL, nrow = 2, ncol = 2,
   byrow = T, margin = 20, img_names = peakMatrix$names,
   labels = img_names, rotations = rep(0, length(img_names)),
   mirror_x = rep(F, length(img_names)), mirror_y = rep(F,
   length(img_names)), pixel_size_um = 100, light = 8)
-=======
-plotPeakImage(peakMatrix, mz = NULL, column = NULL, matrix = "intensity",
-  normalization = NULL, nrow = 2, ncol = 2, byrow = T, margin = 20,
-  img_names = peakMatrix$names, labels = img_names, rotations = rep(0,
-  length(img_names)), mirror_x = rep(F, length(img_names)),
-  mirror_y = rep(F, length(img_names)), pixel_size_um = 100, light = 8)
->>>>>>> 3bff3ad101554c83c23b21e026537a21a5bc9ecc
 }
 \arguments{
 \item{peakMatrix}{the peak matrix in an rMSIproc object.}

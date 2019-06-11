@@ -169,13 +169,21 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   {
     for(j in (1:length(r[[i]])))
     {
-      if((!is.null(r[[i]][[j]])) & (r[[i]][[j]][5,which.max(r[[i]][[j]][5,])] >= ScoreThreshold))
+
+      if((!is.null(r[[i]][[j]])) & (as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) > ScoreThreshold))
       {
         if(i == 1)
         {
-          MonoVec <- c(MonoVec, r[[1]][[j]][3,which.max(r[[1]][[j]][5,])])
+          MonoVec <- c(MonoVec, r[[i]][[j]][3,which.max(r[[i]][[j]][5,])])
         }
-        CompVec <- c(CompVec, r[[i]][[j]][4,which.max(r[[i]][[j]][5,])])
+      }
+      
+      for(k in (1:ncol(r[[i]][[j]])))
+      {
+        if(as.numeric(r[[i]][[j]][5, k]) > ScoreThreshold)
+        {
+          CompVec <- c(CompVec, r[[i]][[j]][4, k])
+        }
       }
     }
   }
@@ -183,7 +191,8 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   names(r) <- paste("M",1:length(r),sep = "")
   r$isotopicPeaks <- (unique(CompVec))
   r$monoisotopicPeaks <- (unique(MonoVec))
-  writeLines(paste("Number of monoisotopic ions found =",length(r$monoisotopicPeaks)))
+  #r$monoisotopicPeaks <- setdiff(results$isotopes$monoisotopicPeaks, results$isotopes$isotopicPeaks)
+  cat(paste("Number of monoisotopic ions found =", length(MonoVec),"\n"))
   
   return(r)
 }

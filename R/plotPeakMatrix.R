@@ -304,6 +304,7 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
   
   #Global Y offset
   rasterPos[,"y"] <- rasterPos[,"y"] + margin
+  rasterPos[,"x"] <- rasterPos[,"x"] + 1
   
   #Fill label positions, yes I need another loop because rasterPos is not completelly filled during previous loop
   for( i in 1:length(lstRefac))

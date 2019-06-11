@@ -17,27 +17,32 @@
 ############################################################################
 #' adductAnnotation
 #' 
-#' 
+#' Given the monoisotopic ions found by the isotopes test, founds the possible adduct pairs considering the elements in the adductDataFrame.
 #' 
 #' @param isotopeObj List. Results from the isotopes test.
-#' @param massVector  Vector. Mass vector from wich ceck adduct relationship.
+#' @param PeakMtx List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{
+#' \item PeakMtx$intensity. A matrix containg the intensities of the peaks for each pixel (rows = pixels, cols = peaks).  
+#' \item PeakMtx$mass. A vector containg the masses of each peak. Must be in the same order with the columns of the intensity marix.   
+#' \item PeakMtx$numPixels. Number of pixels (rows in your matrix).   
+#' }
 #' @param adductDataFrame Data frame with two columns. $name, with the names of adducts to be found, $mass, with each masses.
-#' @param tolerance Integer. Mass error tolerance.
-#' @return 
+#' @param tolerance Integer. Mass error tolerance in ppm.
+#' 
+#' @return A list containing the results of the test and other kind of information.
 #' 
 
-adductAnnotation <- function(isotopeObj, massVector, adductDataFrame, tolerance)
+adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
 {
   adducts <- list()
-  result <- list()
-  result$isotopes <- isotopeObj 
   
+  #namber of adduct combinations
   combinations <- 0
-  for(i in 1:nrow(adductDataFrame))
+  for(i in 1:nrow(adductDataFrame)-1)
   {
-    combinations <- combinations + 1
+    combinations <- combinations + i
   }
   
+  #adduct labels for the output
   name1 = 1
   name2 = 2
   lim = nrow(adductDataFrame)
@@ -57,42 +62,54 @@ adductAnnotation <- function(isotopeObj, massVector, adductDataFrame, tolerance)
     }
   }
   
+  #monoisotopic to list order
+  ord <- c()
+  for (i in 1:length(isotopeObj$monoisotopicPeaks)) 
+  {
+    ord <- c(ord,which.min(abs(PeakMtx$mass[sort(isotopeObj$monoisotopicPeaks)[i]]-as.numeric(names(isotopeObj$M1)))))
+  }
+  ord <- ord-1
+
+  
   ##### Calling the C++ method #####
   adducts <- C_adductAnnotation(length(isotopeObj$monoisotopicPeaks),
-                                            nrow(adductDataFrame), 
-                                            tolerance,
-                                            length(massVector),
-                                            sort(massVector[isotopeObj$monoisotopicPeaks])-1,
-                                            adductDataFrame$mass,
-                                            isotopeObj$M1,
-                                            order(isotopeObj$monoisotopicPeaks)-1,
-                                            massVector)   
+                                nrow(adductDataFrame), 
+                                tolerance,
+                                length(PeakMtx$mass),
+                                PeakMtx$mass[sort(isotopeObj$monoisotopicPeaks)],
+                                adductDataFrame$mass,
+                                isotopeObj$M1,
+                                ord,
+                                PeakMtx$mass,
+                                PeakMtx$intensity,
+                                sum(PeakMtx$numPixels))   
   ##### Output format #####
-
-  tmp <- adducts[[length(adducts)]]
-  adducts <- adducts[-length(adducts)]
-  names(adducts) <- format(tmp,nsmall = 4)
-  
-  for(i in 1:length(adducts))
+  if (length(adducts) >= 2) 
   {
-    name1 <- firstnameVector[(adducts[[i]][1]+1)]
-    name2 <- secondnameVector[(adducts[[i]][1]+1)]
-    mainname <- namesVector[adducts[[i]][1]+1]
-    adducts[[i]] <- as.matrix(adducts[[i]][-1,])
-    
-    row.names(adducts[[i]]) <- c(paste("M+",name1," mass",sep = ""),
-                                 paste("M+",name1," index",sep = ""),
-                                 paste("M+",name1," slope",sep = ""),
-                                 paste("M+",name2," mass",sep = ""),
-                                 paste("M+",name2," index",sep = ""),
-                                 paste("M+",name2," slope",sep = ""),
-                                 "Correlation",
-                                 "ppm error")
-     colnames(adducts[[i]]) <- mainname
-  }
-
-  result$adducts <- adducts
+    tmp <- adducts[[length(adducts)]]
+    adducts <- adducts[-length(adducts)]
+    names(adducts) <- format(tmp,nsmall = 4)
   
+    for(i in 1:length(adducts))
+    {
+      name1 <- firstnameVector[(adducts[[i]][1]+1)]
+      name2 <- secondnameVector[(adducts[[i]][1]+1)]
+      mainname <- namesVector[adducts[[i]][1]+1]
+      adducts[[i]] <- as.matrix(adducts[[i]][-1,])
   
-  return(result)
+      row.names(adducts[[i]]) <- c(paste("M+",name1," mass",sep = ""),
+                                   paste("M+",name1," index",sep = ""),
+                                   paste("M+",name2," mass",sep = ""),
+                                   paste("M+",name2," index",sep = ""),
+                                   "C atoms mean",
+                                   "C atmos error",
+                                   "Correlation",
+                                   "Abs ppm error")
+       colnames(adducts[[i]]) <- mainname
+    }
+    return(adducts)
+  }else
+    {
+      return(NULL)
+    }
 }

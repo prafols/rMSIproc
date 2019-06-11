@@ -20,7 +20,10 @@
 using namespace Rcpp;
 
 //Constructor
-AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis)
+AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMassVector,
+                           NumericVector R_adductMassVector, List R_isotopes,
+                           NumericVector R_isotopeListOrder, NumericVector R_massAxis,
+                           NumericMatrix R_peakMatrix)
 {
 	RunDef = imgRunInfo;
   currentShift = 0;
@@ -67,8 +70,27 @@ AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMas
       ppmMatrix[i][j] = 9999;
     }
   }
-
   
+  peakMatrix = new double*[RunDef->numPixels];
+  for(int i = 0; i < RunDef->numPixels; i++)
+  {
+    peakMatrix[i] = new double[RunDef->numMass];
+    for(int j = 0; j < RunDef->numMass; j++)
+    {
+      peakMatrix[i][j] = R_peakMatrix(i,j);
+    }
+  }
+  
+  massMatrix = new double*[maxShift];
+  for(int i = 0; i < maxShift; i++)
+  {
+    massMatrix[i] = new double[mdVlength];
+    for(int j = 0; j < mdVlength; j++)
+    {
+      massMatrix[i][j] = 0;
+    }
+  }
+
   adductPairsNameMatrix = new int*[maxShift];
   for(int i = 0; i < maxShift; i++)
   {
@@ -100,6 +122,17 @@ AdductPairer::~AdductPairer()
   }
   delete[] adductPairsNameMatrix;
   
+  for(int i = 0; i < RunDef->numPixels; i++)
+  {
+    delete[] peakMatrix[i];
+  }
+  delete[] peakMatrix;
+  
+  for(int i = 0; i < maxShift; i++)
+  {
+    delete[] massMatrix[i];
+  }
+  delete[] massMatrix;
   
 	delete[] adductMassVector;
 	
@@ -115,7 +148,7 @@ AdductPairer::~AdductPairer()
 
 
 //Fills adductMassDifferencesVector
-void AdductPairer::CalculateAdductMassDifferences()
+void AdductPairer::AdductPairCreator()
 {
 	adductDiffCombinations = 0;	  //Calculating the number of pair of adducts combinations
 	for(int i = 0; i < RunDef->numAdducts; i++)
@@ -150,21 +183,27 @@ void AdductPairer::ShiftandCalculateAdductPairs()
   double ppmMassError = 0; //ppm mass error for each pair
   double Mmass1;
   double Mmass2;
-  
+  double meanMmass;
   currentShift = currentShift + 1;  //Add more shift
   mdVlength = RunDef->numMonoiso - currentShift;  //Shrink the massdifferences matrix row
   
-  for(int i = 0; i < adductDiffCombinations; i++) 
-  {
-    for(int j = 0; j < mdVlength; j++)  //Fill the row with the differences
+    for(int i = 0; i < adductDiffCombinations; i++) 
     {
-      Mmass1 = monoisitopeMassVector[currentShift+j]-adductPairFirstMassVector[i];
-      Mmass2 = monoisitopeMassVector[j]-adductPairSecondMassVector[i];
-      ppmMassError  = 1000000*abs(Mmass1 - Mmass2)/(Mmass2);
-      adductPairsNameMatrix[currentShift-1][j] = ((ppmMassError < RunDef->tolerance) & (adductPairsNameMatrix[currentShift-1][j] == -1)) ? i : -1;  
-      ppmMatrix[currentShift-1][j] = (adductPairsNameMatrix[currentShift-1][j] != -1) ? ppmMassError : ppmMatrix[currentShift-1][j];  
-    }
-  }  
+      for(int j = 0; j < mdVlength; j++)  //Fill the row with the differences
+      {
+        Mmass1 = monoisitopeMassVector[currentShift+j] - adductPairFirstMassVector[i];
+        Mmass2 = monoisitopeMassVector[j] - adductPairSecondMassVector[i];
+        meanMmass = (Mmass1 + Mmass2)/2;
+        ppmMassError  = 1000000*abs(Mmass1 - Mmass2)/meanMmass;
+        if (ppmMassError < RunDef->tolerance)
+        {
+          adductPairsNameMatrix[currentShift-1][j] = i;
+          ppmMatrix[currentShift-1][j] = ppmMassError;
+          massMatrix[currentShift-1][j] = meanMmass;
+          positiveTest++;
+        }
+      }
+    }  
 }
 
 
@@ -178,25 +217,22 @@ void AdductPairer::ValidateCandidates()
   
   for(int i = 0; i < maxShift; i++)
   {
-    mdVlength = RunDef->numMonoiso - (i+1);
+    mdVlength = RunDef->numMonoiso - 1 - i;
     for(int j = 0; j < mdVlength; j++)
     {
       if(adductPairsNameMatrix[i][j] != -1)
       {
-        IsoData1 = isotopes[isotopeListOrder[j+(i+1)]];
+        IsoData1 = isotopes[isotopeListOrder[j+i+1]];
         IsoData2 = isotopes[isotopeListOrder[j]];
         slope1 = IsoData1[8];
         slope2 = IsoData2[8];
         
-        if(abs(slope1 - slope2) < 0.3)    //positive test condition (may change)
+        if(abs(slope1 - slope2) > 0.2)    //positive test condition (may change)
         {
-          positiveTest += 1;
-        } 
-        else
-        {
+          positiveTest -= 1;
           adductPairsNameMatrix[i][j] = -1;
-        }
-      } 
+        } 
+      }
     }
   }
 }
@@ -208,10 +244,12 @@ List AdductPairer::GenerateResultsList()
   int cntList = 0;
 	List Results(positiveTest+1);
 	NumericVector names(positiveTest);
-	  
+	NumericVector peakA(RunDef->numPixels), peakB(RunDef->numPixels); 
+	double tmp = 0;
 	for(int i = 0; i < maxShift; i++)
 	{
-		for(int j = 0; j < (RunDef->numMonoiso-1); j++)
+	  mdVlength = RunDef->numMonoiso - i - 1;
+		for(int j = 0; j < mdVlength; j++)
 		{
 		  if (adductPairsNameMatrix[i][j] != -1)
 		  {
@@ -219,25 +257,35 @@ List AdductPairer::GenerateResultsList()
 		    List IsoData2 = isotopes[isotopeListOrder[j]];
 		    NumericMatrix r(9,1);
 		    
-		    r(0,0)  =  adductPairsNameMatrix[i][j];         //Pair of adducts ID
+		    r(0,0) = adductPairsNameMatrix[i][j];     //Pair of adducts ID
+		    r(1,0) = monoisitopeMassVector[j+i+1];    //M+Add1 mass
+		    r(2,0) = IsoData1[2];                     //M+Add1 index
+		    r(3,0) = monoisitopeMassVector[j];        //M+Add1 mass
+		    r(4,0) = IsoData2[2];                     //M+Add1 index
 		    
-		    r(1,0)  = massAxis[as<int>(IsoData1[2])-1];     //M+Add1 mass
-		    r(2,0)  = IsoData1[2];                          //M+Add1 index
-		    r(3,0)  = IsoData1[8];                          //M+Add1 slope
+		    tmp = IsoData1[9];                        //Average C atoms
+		    r(5,0)  = IsoData2[9];                    
+		    r(5,0) += tmp;   
+		    r(5,0) *= 0.5;  
+	
+	      tmp = IsoData1[9];                        //C atmos error
+	      tmp = abs(tmp-r(5,0));
+		    r(6,0) = IsoData2[9];                       
+		    r(6,0) = abs(r(6,0)-r(5,0));
+		    r(6,0) = (r(6,0) + tmp)*0.5;
 		    
-		    r(4,0)  = massAxis[as<int>(IsoData2[2])-1];     //M+Add1 mass
-		    r(5,0)  = IsoData2[2];                          //M+Add1 index
-		    r(6,0)  = IsoData2[8];                          //M+Add2 slope
-		    
-		    r(7,0)  = j;                             //Correlation degree
-		    r(8,0)  = ppmMatrix[i][j];   //Mass diference error in ppm 
+		    for(int i = 0; i < RunDef->numPixels; i++)
+		    {
+		      peakA[i] = peakMatrix[i][(int)r(2,0)-1];
+		      peakB[i] = peakMatrix[i][(int)r(4,0)-1];
+		    }
+
+		    r(7,0) = correlation(peakA,peakB,RunDef->numPixels);   //Correlation degree
+		    r(8,0) = ppmMatrix[i][j];                              //Mass diference error in ppm   
 		    
 		    Results[cntList] = r;
 
-		    names[cntList]  = (massAxis[as<int>(IsoData1[2])-1] - adductPairFirstMassVector[adductPairsNameMatrix[i][j]]) ;    //Absolute mass of the compound
-		    names[cntList] += (massAxis[as<int>(IsoData2[2])-1] - adductPairSecondMassVector[adductPairsNameMatrix[i][j]]);
-		    names[cntList] /= 2;
-		    
+		    names[cntList]  = massMatrix[i][j];
 		    cntList = cntList + 1;
 		  }
 		}
@@ -250,15 +298,18 @@ List AdductPairer::GenerateResultsList()
 //Program executioning function
 List AdductPairer::Run()
 {
-	CalculateAdductMassDifferences(); //Fills adductMassDifferencesVector
+  AdductPairCreator(); //Fills adductMassDifferencesVector
+
 
 	while(currentShift<maxShift)      //While more shifts allowed
 	{
 	  ShiftandCalculateAdductPairs();            //Do the shift and substract the masses
 	}
-
+	
 
 	ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
+	
+	Rcout << "Number of adduct pairs found = "<<positiveTest << "\n";
 	
 	return(GenerateResultsList());
 }                                                                   
@@ -268,7 +319,8 @@ List AdductPairer::Run()
 Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, 
                               int tolerance, int numMass, NumericVector R_monoisitopeMassVector, 
                               NumericVector R_adductMassVector, List R_isotopes,
-                              NumericVector R_isotopeListOrder, NumericVector R_massAxis)
+                              NumericVector R_isotopeListOrder, NumericVector R_massAxis, 
+                              NumericMatrix R_peakMatrix, int numPixels)
 {
   //Fill the class data structure with the information of the experiment
   AdductPairer::AdductDef	myAdductDef;  
@@ -276,11 +328,10 @@ Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts,
   myAdductDef.numAdducts = numAdducts;
   myAdductDef.numMonoiso = numMonoiso;
   myAdductDef.tolerance = tolerance;
+  myAdductDef.numPixels = numPixels;
   
   List result;
-  AdductPairer myAdductPairer(&myAdductDef, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis); //Class constructor
-  
-
+  AdductPairer myAdductPairer(&myAdductDef, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis, R_peakMatrix); //Class constructor
   
   result = myAdductPairer.Run();  //Program executioning function
   

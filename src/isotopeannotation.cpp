@@ -343,7 +343,8 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
         A += (x[j] - x_mean)*(y[j] - y_mean);
         B += (x[j] - x_mean)*(x[j] - x_mean);
       }
-      Modslope = A/B;  //Isotope ratio from the data
+      Modslope = (A/B < 0) ?  0 : A/B;  //Isotope ratio from the data
+      
       intercept = y_mean - Modslope*x_mean;
       
     //***********************************//Morphology score (adj. R2)//*******************************************************//
