@@ -83,6 +83,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                 PeakMtx$mass,
                                 PeakMtx$intensity,
                                 sum(PeakMtx$numPixels))   
+  #return(adducts)
   ##### Output format #####
   if (length(adducts) >= 2) 
   {

@@ -260,15 +260,15 @@ double* Deisotoper::getCandidateLimits(int massIndex)
     
     for(int k = pImagePeakOrder[massIndex]; k < imgRuninfo->massChannels; k++) //Founds the scan closer to CentralIsoMass and stores it in ImageAxisPointer
     {
-      if(std::abs(CentralIsoMass - pImageAxis[k]) > tmpDummy)
+      if(fabs(CentralIsoMass - pImageAxis[k]) > tmpDummy)
       {
         ImageAxisPointer = k - 1;
         break;
       }
       
-      if(std::abs(CentralIsoMass - pImageAxis[k]) < tmpDummy)
+      if(fabs(CentralIsoMass - pImageAxis[k]) < tmpDummy)
       {
-        tmpDummy = std::abs(CentralIsoMass - pImageAxis[k]);
+        tmpDummy = fabs(CentralIsoMass - pImageAxis[k]);
       }
     }
     
@@ -374,13 +374,13 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
       
       CA = (CrntNumIso == 2) ? ((sqrt(1+(8*Modslope*(0.9893/0.0107)*(0.9893/0.0107)))+1)*0.5) : (CrntNumIso*((Modslope/lastModslope)*(0.9893/0.0107) + 1) - 1);
 
-      ScoreInt  = abs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
+      ScoreInt  = fabs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
       ScoreInt *= -ScoreInt;                    
       ScoreInt  = exp(ScoreInt); 
     
     //***********************************//Mass ppm Score//******************************************************************//
     
-    ppm = abs((((pMatrixAxis[CandidateRow[i+1]])-(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378))*1000000)/(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378)); //mass error in ppm
+    ppm = fabs((((pMatrixAxis[CandidateRow[i+1]])-(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378))*1000000)/(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378)); //mass error in ppm
     
     maxppm = (!imgRuninfo->ToleranceInScans) ? imgRuninfo->tolerance : getToleranceFromCurve(pImagePeakOrder[peakNumber]); //maximum valid tolerance
   

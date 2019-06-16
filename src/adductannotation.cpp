@@ -180,10 +180,11 @@ void AdductPairer::AdductPairCreator()
 //Substracts the monoisotopeMassVector with the shifted version of himself
 void AdductPairer::ShiftandCalculateAdductPairs()
 {
-  double ppmMassError = 0; //ppm mass error for each pair
+  double ppmMassError = 9999; //ppm mass error for each pair
   double Mmass1;
   double Mmass2;
   double meanMmass;
+  double mass_diff;
   currentShift = currentShift + 1;  //Add more shift
   mdVlength = RunDef->numMonoiso - currentShift;  //Shrink the massdifferences matrix row
   
@@ -194,8 +195,9 @@ void AdductPairer::ShiftandCalculateAdductPairs()
         Mmass1 = monoisitopeMassVector[currentShift+j] - adductPairFirstMassVector[i];
         Mmass2 = monoisitopeMassVector[j] - adductPairSecondMassVector[i];
         meanMmass = (Mmass1 + Mmass2)/2;
-        ppmMassError  = 1000000*abs(Mmass1 - Mmass2)/meanMmass;
-        if (ppmMassError < RunDef->tolerance)
+        mass_diff = Mmass1 - Mmass2; 
+        ppmMassError  = 1e6*mass_diff/meanMmass;
+        if(fabs(ppmMassError) < RunDef->tolerance)
         {
           adductPairsNameMatrix[currentShift-1][j] = i;
           ppmMatrix[currentShift-1][j] = ppmMassError;
@@ -214,6 +216,7 @@ void AdductPairer::ValidateCandidates()
   double slope2 = 0;
   List IsoData1;
   List IsoData2;
+  int mdVlength;
   
   for(int i = 0; i < maxShift; i++)
   {
@@ -246,6 +249,7 @@ List AdductPairer::GenerateResultsList()
 	NumericVector names(positiveTest);
 	NumericVector peakA(RunDef->numPixels), peakB(RunDef->numPixels); 
 	double tmp = 0;
+	
 	for(int i = 0; i < maxShift; i++)
 	{
 	  mdVlength = RunDef->numMonoiso - i - 1;
@@ -274,14 +278,15 @@ List AdductPairer::GenerateResultsList()
 		    r(6,0) = abs(r(6,0)-r(5,0));
 		    r(6,0) = (r(6,0) + tmp)*0.5;
 		    
-		    for(int i = 0; i < RunDef->numPixels; i++)
+		    for(int k = 0; k < RunDef->numPixels; k++)
 		    {
-		      peakA[i] = peakMatrix[i][(int)r(2,0)-1];
-		      peakB[i] = peakMatrix[i][(int)r(4,0)-1];
+		      peakA[k] = peakMatrix[k][(int)r(2,0)-1];
+		      peakB[k] = peakMatrix[k][(int)r(4,0)-1];
 		    }
 
 		    r(7,0) = correlation(peakA,peakB,RunDef->numPixels);   //Correlation degree
 		    r(8,0) = ppmMatrix[i][j];                              //Mass diference error in ppm   
+		    
 		    
 		    Results[cntList] = r;
 
@@ -300,16 +305,14 @@ List AdductPairer::Run()
 {
   AdductPairCreator(); //Fills adductMassDifferencesVector
 
-
 	while(currentShift<maxShift)      //While more shifts allowed
 	{
 	  ShiftandCalculateAdductPairs();            //Do the shift and substract the masses
 	}
 	
-
-	ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
+  //ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
 	
-	Rcout << "Number of adduct pairs found = "<<positiveTest << "\n";
+	Rcout << "Number of adduct pairs found = "<< positiveTest << "\n";
 	
 	return(GenerateResultsList());
 }                                                                   
