@@ -108,6 +108,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                    "Abs ppm error")
        colnames(adducts[[i]]) <- mainname
     }
+    adducts <- adducts[order(as.numeric(names(adducts)))]
     return(adducts)
   }else
     {
