@@ -103,9 +103,9 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                    paste("M+",name2," mass",sep = ""),
                                    paste("M+",name2," index",sep = ""),
                                    "C atoms mean",
-                                   "C atmos error",
+                                   "C atoms avg. error",
                                    "Correlation",
-                                   "Abs ppm error")
+                                   "ppm error")
        colnames(adducts[[i]]) <- mainname
     }
     adducts <- adducts[order(as.numeric(names(adducts)))]
