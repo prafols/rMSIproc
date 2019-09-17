@@ -191,7 +191,8 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   names(r) <- paste("M",1:length(r),sep = "")
   r$isotopicPeaks <- (unique(CompVec))
   r$monoisotopicPeaks <- (unique(MonoVec))
-  #r$monoisotopicPeaks <- setdiff(results$isotopes$monoisotopicPeaks, results$isotopes$isotopicPeaks)
+  r$monoisotopicPeaks <- setdiff(r$monoisotopicPeaks, r$isotopicPeaks)
+  MonoVec <- r$monoisotopicPeaks
   cat(paste("Number of monoisotopic ions found =", length(MonoVec),"\n"))
   
   return(r)
