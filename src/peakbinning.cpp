@@ -370,4 +370,4 @@ List CPeakList2PeakMatrix(List RpeakList, double BinTolerance = 5, double BinFil
   PeakBinning myPeakBinning(RpeakList, BinTolerance, BinToleranceUsingPPM, BinFilter);
   return myPeakBinning.BinPeaks(); 
 }
-  
+

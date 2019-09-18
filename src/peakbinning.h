@@ -33,8 +33,7 @@ public:
   void AppendPeaksAsMatrix(Rcpp::List peaksLst);
   
   //Perfomr peak binning over mPeaks, this is mono-thread implemented.
-  Rcpp::List BinPeaks();
-  
+  Rcpp::List BinPeaks(); 
   Rcpp::List ExportPeakList();
   
 private:

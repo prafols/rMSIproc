@@ -27,6 +27,7 @@
 #' @param filename complete path where the imzML and ibd files will be stored (the .imzML extensions must be omited).
 #' @param normalizations a numeric vector contaning the normalization value for each pixel (1 by default).
 #'
+
 export_imzMLpeakList <- function(peakList, posMatrix, pixel_size_um, filename, normalization = rep(1,length(peakList)))
 {
   if(length(peakList) != nrow(posMatrix))
@@ -114,6 +115,7 @@ export_imzMLpeakList <- function(peakList, posMatrix, pixel_size_um, filename, n
 #'
 #' @return a list containing: the peakList, the rMSI formated position matrix and the pixel size.
 #'
+
 import_imzMLpeakList <- function(imzML_File, ibd_File =  paste(sub("\\.[^.]*$", "", imzML_File), ".ibd", sep = "" ))
 {
   xmlRes <- rMSI:::CimzMLParse(path.expand(imzML_File))

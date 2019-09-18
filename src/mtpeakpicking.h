@@ -46,11 +46,15 @@ class MTPeakPicking : public ThreadingMsiProc
     void Run();
     
     PeakPicking::Peaks **getPeakList();
+
     void setPeakList(PeakPicking::Peaks** peakList);
     
     //Export the peak list to an R-like object
     Rcpp::List ExportPeakList();
     
+    //Export the peak list to an R-like object
+    Rcpp::List ExportPeakList();
+
   private:
     PeakPicking **peakObj;
     int numOfPixels;

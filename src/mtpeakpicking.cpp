@@ -102,6 +102,7 @@ PeakPicking::Peaks **MTPeakPicking::getPeakList()
   return mPeaks;
 }
 
+
 void MTPeakPicking::setPeakList(PeakPicking::Peaks** peakList)
 {
   mPeaks = peakList;

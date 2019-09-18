@@ -28,6 +28,7 @@
 #'
 CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = "", CalibrationSpan = 0.75, NotPerformCalibration = F)
 {
+
   options(guiToolkit="RGtk2") # Forca que toolquit sigu GTK pq fas crides directes a events GTK!!!
   oldWarning<-options()$warn
   options(warn = -1)
