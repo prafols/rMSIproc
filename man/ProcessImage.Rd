@@ -14,7 +14,7 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
   BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
   EnableSpectraNormalization = T, EnableTICNorm = T,
   EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-  NumOfThreads = parallel::detectCores(), CalSpan = 0.75,
+  NumOfThreads = min(parallel::detectCores()/2, 6), CalSpan = 0.75,
   ExportPeakList = F)
 }
 \arguments{
@@ -57,6 +57,8 @@ ProcessImage(img, EnableSmoothing = T, SmoothingKernelSize = 5,
 \item{BinTolerance}{the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. NULL value may be specified if EnablePeakPicking is FALSE.}
 
 \item{BinFilter}{the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.}
+
+\item{BinToleranceUsingPPM}{if True the peak binning tolerance is specified in ppm, if false the tolerance is set using scans.}
 
 \item{EnableSpectraNormalization}{if normalization must be applied.}
 

@@ -102,6 +102,12 @@ PeakPicking::Peaks **MTPeakPicking::getPeakList()
   return mPeaks;
 }
 
+
+void MTPeakPicking::setPeakList(PeakPicking::Peaks** peakList)
+{
+  mPeaks = peakList;
+}
+
 // [[Rcpp::export]]
 List FullImagePeakPicking ( StringVector fileNames, 
                                 NumericVector mass, IntegerVector numRows,

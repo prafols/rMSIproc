@@ -42,6 +42,7 @@
 #' @param UseBinning if true binned matrices are returned instead of peak lists.
 #' @param BinTolerance the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. NULL value may be specified if EnablePeakPicking is FALSE.
 #' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted. NULL value may be specified if EnablePeakPicking is FALSE.
+#' @param BinToleranceUsingPPM if True the peak binning tolerance is specified in ppm, if false the tolerance is set using scans.
 #' @param EnableSpectraNormalization if normalization must be applied.
 #' @param EnableTICNorm if TIC normalization must be performed on spectra.
 #' @param EnableRMSNorm if RMS normalization must be performed on spectra.
@@ -66,7 +67,7 @@ ProcessImage <- function(img,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = parallel::detectCores(), CalSpan = 0.75, ExportPeakList = F)
+                         NumOfThreads = min(parallel::detectCores()/2, 6), CalSpan = 0.75, ExportPeakList = F)
 {
   pt <- Sys.time()
   
@@ -1145,7 +1146,12 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
   {
     for( i in 2:length(img_list))
     {
-      common_mass <- rMSI::MergeMassAxis(common_mass, img_list[[i]]$mass)
+      massMergeRes <- rMSI::MergeMassAxis(common_mass, img_list[[i]]$mass)
+      if(massMergeRes$error)
+      {
+        stop("ERROR: The mass axis of the images to merge is not compatible because they do not share a common range.\n")
+      }
+      common_mass <- massMergeRes$mass
     }
   }
   
@@ -1179,4 +1185,64 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
   }
   
   return(img_list)
+}
+
+#' PeakList2PeakMatrix.
+#' 
+#' Convert's an R peak list into a peak matrix.
+#'
+#' @param PeakList R peak list. Missing values will be set to zero.
+#' @param PosMatrix the pos matrix as following the same format as in rMSI object.
+#' @param BinTolerance tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. 
+#' @param BinToleranceUsingPPM if True the peak binning tolerance is specified in ppm, if false the tolerance is set using scans.
+#' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+#' @param imgUUID a unique ID for the peak matrix, if not provided it will be automatically generated.
+#' @param imgName the name of the original MSI dataset.
+#'
+#' @return peak matrix.
+#' 
+#' @examples  
+#'   #Import an imzML using centroid mode (after peak picking).
+#'   pkLst <- rMSIproc::import_imzMLpeakList("~/path/to/processed/data/file.imzML")
+#'   
+#'   #Run the peak-binning to get the peak matrix.
+#'   myPkMat <- rMSIproc::PeakList2PeakMatrix(pkLst$peakList, pkLst$pos, BinTolerance = 25, BinToleranceUsingPPM = T)
+#'   
+#'   #Save the peak matrix. 
+#'   rMSIproc::StorePeakMatrix("~/path/to/file.zip", myPkMat)
+#'
+PeakList2PeakMatrix<-function( PeakList, PosMatrix,  
+                               BinTolerance = 5, BinToleranceUsingPPM = T, BinFilter = 0.1,
+                               imgUUID = rMSI:::uuid_timebased(), imgName = "rMSIproc_PeakList2PeakMatrix_peakMat" )
+{
+  for(i in 1:length(PeakList))
+  {
+    if(is.null(PeakList[[i]]$intensity))
+    {
+      stop(paste0("ERROR: Pixel number ", i, " does not contain intensity data. Aborting...\n"))
+    }
+    if(is.null(PeakList[[i]]$mass))
+    {
+      stop(paste0("ERROR: Pixel numbe r", i, " does not contain mass data. Aborting...\n"))
+    }
+    if( length(PeakList[[i]]$mass) != length(PeakList[[i]]$intensity)  )
+    {
+      stop(paste0("ERROR: Pixel number ", i, " mass and intensity vector lengths are different. Aborting...\n"))
+    }
+    if(is.null(PeakList[[i]]$area))
+    {
+      PeakList[[i]]$area <- rep(0, length(PeakList[[i]]$mass))
+    }
+    if(is.null(PeakList[[i]]$SNR))
+    {
+      PeakList[[i]]$SNR <- rep(0, length(PeakList[[i]]$mass))
+    }
+    if(is.null(PeakList[[i]]$binSize))
+    {
+      PeakList[[i]]$binSize <- rep(0, length(PeakList[[i]]$mass))
+    }
+  }
+  
+  PeakMat <- CPeakList2PeakMatrix(PeakList, BinTolerance, BinFilter, BinToleranceUsingPPM )
+  return(FormatPeakMatrix(PeakMat, PosMatrix, nrow(PosMatrix), imgName, imgUUID))
 }

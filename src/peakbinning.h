@@ -25,6 +25,7 @@ class PeakBinning
 {
 public:
   PeakBinning(PeakPicking::Peaks **peakList, int pixelCount, double binTolerance, bool toleranceInppm, double binFilter);
+  PeakBinning(Rcpp::List peaksLst, double binTolerance, bool toleranceInppm, double binFilter);
   ~PeakBinning();
   
   //Appends a list of peaks to the current list of peaks (mPeaks)
@@ -32,9 +33,11 @@ public:
   void AppendPeaksAsMatrix(Rcpp::List peaksLst);
   
   //Perfomr peak binning over mPeaks, this is mono-thread implemented.
-  Rcpp::List BinPeaks();
-
+  Rcpp::List BinPeaks(); 
+  Rcpp::List ExportPeakList();
+  
 private:
+  bool constructedUsingRPeakList;
   bool binSizeInppm;
   double binFilter;
   double tolerance;

@@ -453,7 +453,7 @@ ImportWizardGui <- function()
   
   #Number of processing threads
   frm_procThreads <- gWidgets2::gframe("Processing Threads", container = box_proc2, spacing = 10)
-  spin_nThreads <- drawLabelSpin(frm_procThreads, "Max Threads:", 1, parallel::detectCores(), parallel::detectCores(), decPlaces = 0)
+  spin_nThreads <- drawLabelSpin(frm_procThreads, "Max Threads:", 1, parallel::detectCores(), min(parallel::detectCores()/2, 6), decPlaces = 0)
   
   #Data output box
   gWidgets2::addSpring(box_mainV)

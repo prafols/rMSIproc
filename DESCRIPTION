@@ -15,5 +15,8 @@ Imports:
     gWidgets2 (>= 1.0),
     RGtk2 (>= 2.20.25),
     gWidgets2RGtk2 (>= 1.0)
+Suggests:
+    ggplot2 (>= 3.0.0),
+    gridExtra (>= 2.3)
 LinkingTo: Rcpp
 RoxygenNote: 6.1.1

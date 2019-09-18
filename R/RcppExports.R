@@ -93,6 +93,19 @@ MergePeakMatricesC <- function(PeakMatrices, binningTolerance = 100, binningFilt
     .Call('_rMSIproc_MergePeakMatricesC', PACKAGE = 'rMSIproc', PeakMatrices, binningTolerance, binningFilter)
 }
 
+#' CPeakList2PeakMatrix.
+#' 
+#' Convert's an R peak list into a peak matrix.
+#' @param RpeakList R peak list.
+#' @param the tolerance used to merge peaks to the same bin. It is recomanded to use the half of peak width in ppm units. 
+#' @param BinFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
+#' @param BinToleranceUsingPPM if True the peak binning tolerance is specified in ppm, if false the tolerance is set using scans.
+#' @return peak matrix.
+#' 
+CPeakList2PeakMatrix <- function(RpeakList, BinTolerance = 5, BinFilter = 0.1, BinToleranceUsingPPM = TRUE) {
+    .Call('_rMSIproc_CPeakList2PeakMatrix', PACKAGE = 'rMSIproc', RpeakList, BinTolerance, BinFilter, BinToleranceUsingPPM)
+}
+
 #'LoadPeakMatrix.
 #'
 #'Loads a binned peaks matrix from HDD.
