@@ -142,8 +142,11 @@ AdductPairer::~AdductPairer()
 	
 	delete[] massAxis;
 	
-	
+
 	delete[] adductPairFirstMassVector;
+	
+	
+	delete[] adductPairSecondMassVector;
 }
 
 
@@ -200,7 +203,7 @@ void AdductPairer::ShiftandCalculateAdductPairs()
         if(fabs(ppmMassError) < RunDef->tolerance)
         {
           adductPairsNameMatrix[currentShift-1][j] = i;
-          ppmMatrix[currentShift-1][j] = ppmMassError;
+          ppmMatrix[currentShift-1][j] = fabs(ppmMassError);
           massMatrix[currentShift-1][j] = meanMmass;
           positiveTest++;
         }

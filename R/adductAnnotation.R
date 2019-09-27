@@ -34,7 +34,7 @@
 adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
 {
   adducts <- list()
-  
+  adductDataFrame <- adductDataFrame[order(adductDataFrame$mass,decreasing = T),]
   #namber of adduct combinations
   combinations <- 0
   for(i in 1:nrow(adductDataFrame)-1)
