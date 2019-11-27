@@ -21,7 +21,7 @@
 
 #include <Rcpp.h>
 #include <fftw3.h>
-#include <boost/thread.hpp>
+#include <mutex>
 
 #define BOTTOM_SPECTRUM 0
 #define CENTER_SPECTRUM 1
@@ -31,7 +31,7 @@ class LabelFreeAlign
 {
   public:
     //spectraSplit the low/high part of spectra to keep (the resting points to unit will be removed).
-    LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations = 3, 
+    LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, std::mutex *sharedMutex, int iterations = 3, 
                    double lagRefLow = 0.1, double lagRefMid = 0.5, double lagRefHigh = 0.9,
                    double lagLimitppm = 200, int fftOverSampling = 2, double winSizeRelative = 0.6);
     ~LabelFreeAlign();
@@ -92,7 +92,7 @@ class LabelFreeAlign
     double RefLagHigh;
     int FFTScaleShiftOverSampling;
     
-    boost::mutex *fftwMtx; //Lock mechanism for signalling the FourierLinerScaleShift fftw non-thread-safe calls
+    std::mutex *fftwMtx; //Lock mechanism for signalling the FourierLinerScaleShift fftw non-thread-safe calls
 };
 
 #endif

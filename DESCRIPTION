@@ -6,9 +6,9 @@ Date: 2018-03-16
 Author: Pere Rafols Soler
 Maintainer: Pere Rafols Soler<pere.rafols@urv.cat>
 Description: Processing methods for MSI using rMSI data format and C++ methods
-    with boost::threads
 License: What license is it under?
 LazyData: TRUE
+SystemRequirements: C++11
 Imports:
     rMSI,
     Rcpp (>= 0.12.2),

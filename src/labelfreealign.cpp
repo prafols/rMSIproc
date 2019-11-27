@@ -18,12 +18,11 @@
  
 #include <Rcpp.h>
 #include <cmath>
- 
 #include "labelfreealign.h"
 
 using namespace Rcpp;
 
-LabelFreeAlign::LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, boost::mutex *sharedMutex, int iterations, 
+LabelFreeAlign::LabelFreeAlign(double *mass, double *ref_spectrum, int numOfPoints, bool bilinear, std::mutex *sharedMutex, int iterations, 
                                double lagRefLow, double lagRefMid, double lagRefHigh,
                                double lagLimitppm, int fftOverSampling, double winSizeRelative ):
 dataLength(numOfPoints),
@@ -679,7 +678,7 @@ NumericVector AlignSpectrumToReference( NumericVector mass, NumericVector ref, N
   double *refC = new double[ref.length()];
   double *xC = new double[x.length()];
   
-  boost::mutex mtx;
+  std::mutex mtx;
   memcpy(massC, mass.begin(), sizeof(double)*mass.length());
   memcpy(refC, ref.begin(), sizeof(double)*ref.length());
   memcpy(xC, x.begin(), sizeof(double)*x.length());

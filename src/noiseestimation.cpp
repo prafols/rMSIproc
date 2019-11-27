@@ -17,7 +17,6 @@
  **************************************************************************/
 
 #include <Rcpp.h>
-#include <fftw3.h>
 #include <cmath>
 #include "noiseestimation.h"
 using namespace Rcpp;
