@@ -217,8 +217,8 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
       #Apply the rotation
       x_aux <- lstRefac[[length(lstRefac)]]$pos[,"x"]
       y_aux <- lstRefac[[length(lstRefac)]]$pos[,"y"]
-      lstRefac[[length(lstRefac)]]$pos[,"x"] <- x_aux*cos(rotations[i]*pi/180) - y_aux*sin(rotations[i]*pi/180)
-      lstRefac[[length(lstRefac)]]$pos[,"y"] <- x_aux*sin(rotations[i]*pi/180) + y_aux*cos(rotations[i]*pi/180)
+      lstRefac[[length(lstRefac)]]$pos[,"x"] <- x_aux*cos(rotations[i]*pi/180) + y_aux*sin(rotations[i]*pi/180)
+      lstRefac[[length(lstRefac)]]$pos[,"y"] <- -x_aux*sin(rotations[i]*pi/180) + y_aux*cos(rotations[i]*pi/180)
       
       #Offset each pos matrix to 0,0
       lstRefac[[length(lstRefac)]]$pos[,"x"] <-  lstRefac[[length(lstRefac)]]$pos[,"x"] - min(lstRefac[[length(lstRefac)]]$pos[,"x"])
