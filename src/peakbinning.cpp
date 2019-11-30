@@ -18,6 +18,7 @@
 
 #include <Rcpp.h>
 #include "peakbinning.h"
+#include "progressbar.h"
 using namespace Rcpp;
 
 PeakBinning::PeakBinning(PeakPicking::Peaks **peakList, int pixelCount, double binTolerance, bool toleranceInppm, double binFilter) :
@@ -51,7 +52,7 @@ PeakBinning::PeakBinning(Rcpp::List peaksLst, double binTolerance, bool toleranc
     NumericVector area = as<NumericVector>(auxList["area"]);
     NumericVector binSize = as<NumericVector>(auxList["binSize"]);
     
-    Rcout<<"Pixel: "<< i << " Length: " << mass.length() << "\n";
+    progressBar(i, mass.length(), "=", " ");
     
     mPeaks[i]->mass.resize(mass.length());
     mPeaks[i]->intensity.resize(intensity.length());
@@ -140,7 +141,7 @@ List PeakBinning::BinPeaks()
   double alpha = 0; //Use to calculate bin mass related to peak intensity
   while(true)
   {
-    Rcout<<iCount<<"/"<<numOfPixels<<"\n";
+    progressBar(iCount, numOfPixels, "=", " ");
     iCount++;
     //Locate current most intens spectrum
     iMax = -1;
@@ -337,9 +338,10 @@ Rcpp::List PeakBinning::ExportPeakList()
 {
   List pkLst(numOfPixels);
   NumericVector pkMass, pkIntensity, pkSNR, pkArea, pkBinSize;
+  Rcout<<"Copying peaks...\n";
   for(int i = 0; i < numOfPixels; i++)
   {
-    Rcout<<"Copying peaks "<< (i+1) <<" of "<< numOfPixels <<"\n";
+    progressBar(i, numOfPixels, "=", " ");
     pkMass = NumericVector(mPeaks[i]->mass.size());
     pkIntensity = NumericVector(mPeaks[i]->intensity.size());
     pkSNR = NumericVector(mPeaks[i]->SNR.size());

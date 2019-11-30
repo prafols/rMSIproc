@@ -17,6 +17,7 @@
  **************************************************************************/
 
 #include "threadingmsiproc.h" 
+#include "progressbar.h"
 
 ThreadingMsiProc::ThreadingMsiProc()
 {
@@ -82,7 +83,7 @@ void ThreadingMsiProc::runMSIProcessingCpp()
     {
       if(iCube[iThread] == -1 && nextCube < ioObj->getNumberOfCubes()) //No cube assigned then no thread running in this slot
       {
-        Rcpp::Rcout<<"Processing cube "<<(nextCube + 1)<<" of "<<ioObj->getNumberOfCubes()<<"\n";
+        progressBar(nextCube, ioObj->getNumberOfCubes(), "=", " ");
         iCube[iThread] = nextCube;
         nextCube++;
         cubes[iThread] = ioObj->loadDataCube(iCube[iThread]);
