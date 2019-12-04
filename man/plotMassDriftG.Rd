@@ -4,9 +4,18 @@
 \alias{plotMassDriftG}
 \title{plotMassDriftG.}
 \usage{
-plotMassDriftG(peakMatrix, peakList, target_mass, error_range_ppm,
-  min_SNR = 10, mass_offset = 0, title_label = "",
-  normalization = NA, visible_legend = T, legend_title = "")
+plotMassDriftG(
+  peakMatrix,
+  peakList,
+  target_mass,
+  error_range_ppm,
+  min_SNR = 10,
+  mass_offset = 0,
+  title_label = "",
+  normalization = NA,
+  visible_legend = T,
+  legend_title = ""
+)
 }
 \arguments{
 \item{peakMatrix}{an rMSIproc peak matrix.}

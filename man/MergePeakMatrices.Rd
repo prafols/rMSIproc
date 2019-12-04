@@ -4,8 +4,7 @@
 \alias{MergePeakMatrices}
 \title{MergePeakMatrices.}
 \usage{
-MergePeakMatrices(PeakMatrixList, binningTolerance = 100,
-  binningFilter = 0.01)
+MergePeakMatrices(PeakMatrixList, binningTolerance = 100, binningFilter = 0.01)
 }
 \arguments{
 \item{PeakMatrixList}{A list of various peak matrix objexts produced using rMSIproc.}

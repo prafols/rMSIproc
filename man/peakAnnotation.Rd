@@ -4,9 +4,16 @@
 \alias{peakAnnotation}
 \title{peakAnnotation}
 \usage{
-peakAnnotation(PeakMtx, iso.number = 2, iso.tolerance = 30,
-  iso.scoreThreshold, iso.toleranceUnits = "ppm",
-  iso.imageVector = NULL, add.adducts, add.tolerance = 10)
+peakAnnotation(
+  PeakMtx,
+  iso.number = 2,
+  iso.tolerance = 30,
+  iso.scoreThreshold,
+  iso.toleranceUnits = "ppm",
+  iso.imageVector = NULL,
+  add.adducts,
+  add.tolerance = 10
+)
 }
 \arguments{
 \item{PeakMtx}{List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{

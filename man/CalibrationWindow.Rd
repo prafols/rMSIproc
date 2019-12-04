@@ -4,8 +4,14 @@
 \alias{CalibrationWindow}
 \title{CalibrationWindow.}
 \usage{
-CalibrationWindow(mass, intensity, peak_win_size = 20, win_title = "",
-  CalibrationSpan = 0.75, NotPerformCalibration = F)
+CalibrationWindow(
+  mass,
+  intensity,
+  peak_win_size = 20,
+  win_title = "",
+  CalibrationSpan = 0.75,
+  NotPerformCalibration = F
+)
 }
 \arguments{
 \item{mass}{The mass vector of spectrum to calibrate.}

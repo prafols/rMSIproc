@@ -4,8 +4,7 @@
 \alias{DetectPeaks_C}
 \title{DetectPeaks_C.}
 \usage{
-DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L,
-  UpSampling = 10L)
+DetectPeaks_C(mass, intensity, SNR = 5, WinSize = 20L, UpSampling = 10L)
 }
 \arguments{
 \item{mass}{a NumericVector containing the mass axis of the spectrum.}

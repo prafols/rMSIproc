@@ -4,8 +4,13 @@
 \alias{SaveProcessingParams}
 \title{SaveProcessingParams.}
 \usage{
-SaveProcessingParams(procParams, filepath, xmlRoiFilesInclude = NULL,
-  xmlRoiFilesExclude = NULL, RoiNormalization = NULL)
+SaveProcessingParams(
+  procParams,
+  filepath,
+  xmlRoiFilesInclude = NULL,
+  xmlRoiFilesExclude = NULL,
+  RoiNormalization = NULL
+)
 }
 \arguments{
 \item{procParams}{a list of parameters.}

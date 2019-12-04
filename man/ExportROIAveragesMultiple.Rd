@@ -4,8 +4,13 @@
 \alias{ExportROIAveragesMultiple}
 \title{ExportROIAveragesMultiple.}
 \usage{
-ExportROIAveragesMultiple(img_list, xml_list, pkMat = NULL,
-  out_path = getwd(), normalization = NULL)
+ExportROIAveragesMultiple(
+  img_list,
+  xml_list,
+  pkMat = NULL,
+  out_path = getwd(),
+  normalization = NULL
+)
 }
 \arguments{
 \item{img_list}{a lis of rMSI objects.}

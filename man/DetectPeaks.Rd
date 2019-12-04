@@ -4,8 +4,7 @@
 \alias{DetectPeaks}
 \title{DetectPeaks'}
 \usage{
-DetectPeaks(mass, intensity, SNR = 5, WinSize = 20,
-  OverSampling = 10)
+DetectPeaks(mass, intensity, SNR = 5, WinSize = 20, OverSampling = 10)
 }
 \arguments{
 \item{mass}{a vector containing the mass axis.}

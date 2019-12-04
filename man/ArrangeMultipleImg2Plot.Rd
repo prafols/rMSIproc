@@ -4,10 +4,18 @@
 \alias{ArrangeMultipleImg2Plot}
 \title{ArrangeMultipleImg2Plot}
 \usage{
-ArrangeMultipleImg2Plot(peakMat, values, nrow, ncol, byrow = T,
-  margin = 20, img_names = peakMat$names, rotations = rep(0,
-  length(img_names)), mirror_x = rep(F, length(img_names)),
-  mirror_y = rep(F, length(img_names)))
+ArrangeMultipleImg2Plot(
+  peakMat,
+  values,
+  nrow,
+  ncol,
+  byrow = T,
+  margin = 20,
+  img_names = peakMat$names,
+  rotations = rep(0, length(img_names)),
+  mirror_x = rep(F, length(img_names)),
+  mirror_y = rep(F, length(img_names))
+)
 }
 \arguments{
 \item{peakMat}{an rMSIproc peak matrix.}

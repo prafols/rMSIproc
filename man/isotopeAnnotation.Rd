@@ -4,8 +4,14 @@
 \alias{isotopeAnnotation}
 \title{isotopeAnnotation}
 \usage{
-isotopeAnnotation(PeakMtx, isoNumber = 2, tolerance = 30,
-  scoreThreshold = 0.8, toleranceUnits = "ppm", imageVector = NULL)
+isotopeAnnotation(
+  PeakMtx,
+  isoNumber = 2,
+  tolerance = 30,
+  scoreThreshold = 0.8,
+  toleranceUnits = "ppm",
+  imageVector = NULL
+)
 }
 \arguments{
 \item{PeakMtx}{List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{

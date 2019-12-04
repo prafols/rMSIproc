@@ -4,11 +4,20 @@
 \alias{plotClusterImage}
 \title{plotClusterImage.}
 \usage{
-plotClusterImage(peakMatrix, clusters, nrow = 2, ncol = 2, byrow = T,
-  margin = 20, img_names = peakMatrix$names, labels = img_names,
-  rotations = rep(0, length(img_names)), mirror_x = rep(F,
-  length(img_names)), mirror_y = rep(F, length(img_names)),
-  pixel_size_um = 100)
+plotClusterImage(
+  peakMatrix,
+  clusters,
+  nrow = 2,
+  ncol = 2,
+  byrow = T,
+  margin = 20,
+  img_names = peakMatrix$names,
+  labels = img_names,
+  rotations = rep(0, length(img_names)),
+  mirror_x = rep(F, length(img_names)),
+  mirror_y = rep(F, length(img_names)),
+  pixel_size_um = 100
+)
 }
 \arguments{
 \item{peakMatrix}{the peak matrix in an rMSIproc object.}

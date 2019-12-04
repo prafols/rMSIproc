@@ -1,14 +1,17 @@
 Package: rMSIproc
 Type: Package
 Title: MSI Processing in C++
-Version: 0.2
+Version: 0.3
 Date: 2018-03-16
-Author: Pere Rafols Soler
+Author: Pere Rafols[aut], Lluc Semente [aut]
+Authors@R: c( person("Pere", "Rafols", email="pere.rafols@urv.cat",
+        role=c("aut")), person("Lluc", "Semente",
+        email="lluc.semente@urv.cat", role=c("aut")) )
 Maintainer: Pere Rafols Soler<pere.rafols@urv.cat>
 Description: Processing methods for MSI using rMSI data format and C++ methods
-License: What license is it under?
+License: GPL-3
 LazyData: TRUE
-SystemRequirements: C++11
+SystemRequirements: C++11, fftw3 (>= 3.3.5)
 Imports:
     rMSI,
     Rcpp (>= 0.12.2),
@@ -19,4 +22,4 @@ Suggests:
     ggplot2 (>= 3.0.0),
     gridExtra (>= 2.3)
 LinkingTo: Rcpp
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
