@@ -459,15 +459,15 @@ plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_l
   else
   {
     pltRas <- pltRas +  ggplot2::geom_raster(ggplot2::aes(fill = intensity, alpha = log(abs(intensity)+0.01)) ) #Sum 0.01 to avoid NaNs on log(intensity)
-    pltRas <- pltRas +  ggplot2::scale_fill_gradientn(scale_label, na.value = "black", 
+      pltRas <- pltRas +  ggplot2::scale_fill_gradientn(scale_label, na.value = "black", 
                                             colours = gradient_scale_colours, 
                                             limits = gradient_scale_limits,
-                                            breaks = pretty(pltDf$intensity,n=10))
-    pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = ggplot2::guide_colourbar(title.position = "top", 
-                                                                                   title.hjust = 0.5, 
-                                                                                   barheight = 1, 
-                                                                                   barwidth = 25, 
-                                                                                   frame.colour = "white" ))
+                                            breaks = pretty(gradient_scale_limits,n=10))
+    pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = ggplot2::guide_colourbar(title.position = "top",
+                                                                                   title.hjust = 0.5,
+                                                                                   barheight = 1,
+                                                                                   barwidth = 25,
+                                                                                   frame.colour = "white"))
   }
 
   pltRas <- pltRas +  ggplot2::annotate("text", label = plot_labels,
