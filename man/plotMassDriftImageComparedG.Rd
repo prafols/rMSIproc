@@ -4,15 +4,25 @@
 \alias{plotMassDriftImageComparedG}
 \title{plotMassDriftImageComparedG.}
 \usage{
-plotMassDriftImageComparedG(peakMatrix_RAW, peakMatrix_ALNG, peaklist_RAW,
-  peaklist_ALNG, mass, error_range_ppm = 400, mass_offset_RAW = 0,
-  title_label = "", ion_map_plot_cols = 2, ion_map_plot_rows = 2,
-  ion_map_plot_byrow = T, ion_map_plot_rotations = rep(0,
-  length(peakMatrix_ALNG$names)),
+plotMassDriftImageComparedG(
+  peakMatrix_RAW,
+  peakMatrix_ALNG,
+  peaklist_RAW,
+  peaklist_ALNG,
+  mass,
+  error_range_ppm = 400,
+  mass_offset_RAW = 0,
+  title_label = "",
+  ion_map_plot_cols = 2,
+  ion_map_plot_rows = 2,
+  ion_map_plot_byrow = T,
+  ion_map_plot_rotations = rep(0, length(peakMatrix_ALNG$names)),
   ion_map_plot_labels = peakMatrix_ALNG$names,
-  ion_map_plot_margin = 40, ion_map_plot_mirror_X = rep(F,
-  length(peakMatrix_ALNG$names)), ion_map_plot_mirror_Y = rep(F,
-  length(peakMatrix_ALNG$names)), ion_map_fixed_aspect_ratio = F)
+  ion_map_plot_margin = 40,
+  ion_map_plot_mirror_X = rep(F, length(peakMatrix_ALNG$names)),
+  ion_map_plot_mirror_Y = rep(F, length(peakMatrix_ALNG$names)),
+  ion_map_fixed_aspect_ratio = F
+)
 }
 \arguments{
 \item{peakMatrix_RAW}{an rMSIproc peak matrix obtained without the alginment routine (RAW).}

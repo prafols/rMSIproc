@@ -16,10 +16,8 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **************************************************************************/
 
-#include <Rcpp.h>
-#include <boost/thread.hpp>
-//#include <boost/bind.hpp>
 #include "threadingmsiproc.h" 
+#include "progressbar.h"
 
 ThreadingMsiProc::ThreadingMsiProc()
 {
@@ -31,7 +29,7 @@ ThreadingMsiProc::ThreadingMsiProc()
   iCube = new int[numOfThreadsDouble];
   bDataReady = new bool[numOfThreadsDouble];
   bRunningThread = new bool[numOfThreadsDouble];
-  tworkers = new boost::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
+  tworkers = new std::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
   bDataOverWrite = false;
 }
 
@@ -49,7 +47,7 @@ ThreadingMsiProc::ThreadingMsiProc( int numberOfThreads, bool overWriteRamdisk, 
   iCube = new int[numOfThreadsDouble];
   bDataReady = new bool[numOfThreadsDouble];
   bRunningThread = new bool[numOfThreadsDouble];
-  tworkers = new boost::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
+  tworkers = new std::thread[numOfThreadsDouble]; //There will be double of thread objects than the actually running threads
   bDataOverWrite = overWriteRamdisk;
 }
 
@@ -85,14 +83,14 @@ void ThreadingMsiProc::runMSIProcessingCpp()
     {
       if(iCube[iThread] == -1 && nextCube < ioObj->getNumberOfCubes()) //No cube assigned then no thread running in this slot
       {
-        Rcpp::Rcout<<"Processing cube "<<(nextCube + 1)<<" of "<<ioObj->getNumberOfCubes()<<"\n";
+        progressBar(nextCube, ioObj->getNumberOfCubes(), "=", " ");
         iCube[iThread] = nextCube;
         nextCube++;
         cubes[iThread] = ioObj->loadDataCube(iCube[iThread]);
         if(2*runningThreads < numOfThreadsDouble)
         {
           bRunningThread[iThread] = true;
-          tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
+          tworkers[iThread] = std::thread(std::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
           runningThreads++;
         }
       }
@@ -119,7 +117,7 @@ void ThreadingMsiProc::runMSIProcessingCpp()
       if(iCube[iThread] != -1 && !bRunningThread[iThread] && !bDataReady[iThread] && 2*runningThreads < numOfThreadsDouble)
       {
         bRunningThread[iThread] = true;
-        tworkers[iThread] = boost::thread(boost::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
+        tworkers[iThread] = std::thread(std::bind(&ThreadingMsiProc::ProcessingThread, this, iThread)); //Start Thread 
         runningThreads++;
       }      
     }
@@ -166,7 +164,7 @@ void ThreadingMsiProc::ProcessingThread( int threadSlot )
   mtx.unlock();
   
   //Notify Main thread
-  boost::unique_lock<boost::mutex> lock(life_end_mutex);
+  std::unique_lock<std::mutex> lock(life_end_mutex);
   if(!life_end) //Notify only if it haven been done already by another thread
   {
     life_end = true;
@@ -176,7 +174,7 @@ void ThreadingMsiProc::ProcessingThread( int threadSlot )
 
 void ThreadingMsiProc::WaitForSomeThreadEnd()
 {
-  boost::unique_lock<boost::mutex> lock(life_end_mutex);
+  std::unique_lock<std::mutex> lock(life_end_mutex);
   while (!life_end)
   {
     life_end_cond.wait(lock);

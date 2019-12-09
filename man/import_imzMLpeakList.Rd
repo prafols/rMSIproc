@@ -4,8 +4,10 @@
 \alias{import_imzMLpeakList}
 \title{import_imzMLpeakList.}
 \usage{
-import_imzMLpeakList(imzML_File, ibd_File = paste(sub("\\\\.[^.]*$", "",
-  imzML_File), ".ibd", sep = ""))
+import_imzMLpeakList(
+  imzML_File,
+  ibd_File = paste(sub("\\\\.[^.]*$", "", imzML_File), ".ibd", sep = "")
+)
 }
 \arguments{
 \item{imzML_File}{full path to .imzML file.}

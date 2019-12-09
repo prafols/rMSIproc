@@ -1,10 +1,8 @@
 #Makevars to provide gcc compiler flags for extra libraries under windows
 ifeq "$(WIN)" "64"
-PKG_CPPFLAGS = -Ifftw3_win -Iboost_win
-PKG_CXXFLAGS =  -Lboost_win/lib64 -lboost_thread-mgw49-mt-1_64 -lboost_system-mgw49-mt-1_64
-PKG_LIBS = -Lfftw3_win/lib64  -Lboost_win/lib64 -lboost_thread-mgw49-mt-1_64 -lboost_system-mgw49-mt-1_64 -lfftw3-3 -lm
+PKG_CPPFLAGS = -Ifftw3_win 
+PKG_LIBS = -Lfftw3_win/lib64  -lfftw3-3 -lm
 else
-PKG_CPPFLAGS = -Ifftw3_win -Iboost_win
-PKG_CXXFLAGS =  -Lboost_win/lib32 -lboost_thread-mgw49-mt-1_64 -lboost_system-mgw49-mt-1_64
-PKG_LIBS = -Lfftw3_win/lib32  -Lboost_win/lib32 -lboost_thread-mgw49-mt-1_64 -lboost_system-mgw49-mt-1_64 -lfftw3-3 -lm
+PKG_CPPFLAGS = -Ifftw3_win
+PKG_LIBS = -Lfftw3_win/lib32  -lfftw3-3 -lm
 endif

@@ -4,15 +4,23 @@
 \alias{plotValuesImageG}
 \title{plotValuesImageG.}
 \usage{
-plotValuesImageG(peakMatrix, pixel_values, scale_label = "",
-  title_label = "", plot_rows = 2, plot_cols = 2, plot_byrow = T,
+plotValuesImageG(
+  peakMatrix,
+  pixel_values,
+  scale_label = "",
+  title_label = "",
+  plot_rows = 2,
+  plot_cols = 2,
+  plot_byrow = T,
   plot_rotations = rep(0, length(peakMatrix$names)),
   plot_mirror_X = rep(F, length(peakMatrix$names)),
-  plot_mirror_Y = rep(F, length(peakMatrix$names)), plot_margin = 40,
+  plot_mirror_Y = rep(F, length(peakMatrix$names)),
+  plot_margin = 40,
   plot_labels = peakMatrix$names,
   gradient_scale_colours = rev(rainbow(n = 100, start = 0, end = 0.6)),
   gradient_scale_limits = c(min(pixel_values), max(pixel_values)),
-  fixed_aspect_ratio = F)
+  fixed_aspect_ratio = F
+)
 }
 \arguments{
 \item{peakMatrix}{an rMSIproc peak matrix.}

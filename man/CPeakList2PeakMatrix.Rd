@@ -4,8 +4,12 @@
 \alias{CPeakList2PeakMatrix}
 \title{CPeakList2PeakMatrix.}
 \usage{
-CPeakList2PeakMatrix(RpeakList, BinTolerance = 5, BinFilter = 0.1,
-  BinToleranceUsingPPM = TRUE)
+CPeakList2PeakMatrix(
+  RpeakList,
+  BinTolerance = 5,
+  BinFilter = 0.1,
+  BinToleranceUsingPPM = TRUE
+)
 }
 \arguments{
 \item{RpeakList}{R peak list.}

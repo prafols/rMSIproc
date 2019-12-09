@@ -4,8 +4,7 @@
 \alias{ExportROIAverages}
 \title{ExportROIAverages.}
 \usage{
-ExportROIAverages(roi_xml_file, img, out_path = getwd(),
-  normalization = NULL)
+ExportROIAverages(roi_xml_file, img, out_path = getwd(), normalization = NULL)
 }
 \arguments{
 \item{roi_xml_file}{a Bruker region XML file.}

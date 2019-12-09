@@ -4,13 +4,21 @@
 \alias{plotPeakImageG}
 \title{plotPeakImageG.}
 \usage{
-plotPeakImageG(peakMatrix, mass, normalization = NA, plot_rows = 2,
-  plot_cols = 2, plot_byrow = T, plot_rotations = rep(0,
-  length(peakMatrix$names)), plot_mirror_X = rep(F,
-  length(peakMatrix$names)), plot_mirror_Y = rep(F,
-  length(peakMatrix$names)), plot_margin = 40,
-  plot_labels = peakMatrix$names, title_label = "",
-  fixed_aspect_ratio = F)
+plotPeakImageG(
+  peakMatrix,
+  mass,
+  normalization = NA,
+  plot_rows = 2,
+  plot_cols = 2,
+  plot_byrow = T,
+  plot_rotations = rep(0, length(peakMatrix$names)),
+  plot_mirror_X = rep(F, length(peakMatrix$names)),
+  plot_mirror_Y = rep(F, length(peakMatrix$names)),
+  plot_margin = 40,
+  plot_labels = peakMatrix$names,
+  title_label = "",
+  fixed_aspect_ratio = F
+)
 }
 \arguments{
 \item{peakMatrix}{an rMSIproc peak matrix.}

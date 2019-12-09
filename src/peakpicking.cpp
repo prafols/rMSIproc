@@ -17,9 +17,8 @@
  **************************************************************************/
 
 #include <Rcpp.h>
-#include <fftw3.h>
 #include <cmath>
-#include "peakpicking.h"
+  #include "peakpicking.h"
 using namespace Rcpp;
 
 #define AREA_WINDOW_SIDE_WIDTH 3

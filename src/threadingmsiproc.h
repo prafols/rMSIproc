@@ -20,7 +20,9 @@
   #define MULTI_THREAD_WORKER_H
 
 #include <Rcpp.h>
-#include <boost/thread.hpp>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include "rmsicdataio.h"
 
 class ThreadingMsiProc
@@ -51,15 +53,15 @@ class ThreadingMsiProc
     //Function to suspend main thread execution until some thread ends.
     void WaitForSomeThreadEnd();
     
-    boost::mutex mtx; //Lock mechanism for signalling bDataReady vector
+    std::mutex mtx; //Lock mechanism for signalling bDataReady vector
     bool *bDataReady; //This vector will contain true when a worker thread completes a datacube processing
     bool *bRunningThread; //Keep track if a thread is runnning for a data slot
     
     //Condition variable to notify thread ends
-    boost::condition_variable  life_end_cond;
-    boost::mutex               life_end_mutex;
+    std::condition_variable  life_end_cond;
+    std::mutex               life_end_mutex;
     bool                       life_end;
-    boost::thread *tworkers; //Thread objects
+    std::thread *tworkers; //Thread objects
     bool bDataOverWrite;
 };
   

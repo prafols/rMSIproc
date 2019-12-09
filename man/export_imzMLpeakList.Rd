@@ -4,8 +4,13 @@
 \alias{export_imzMLpeakList}
 \title{export_imzMLpeakList.}
 \usage{
-export_imzMLpeakList(peakList, posMatrix, pixel_size_um, filename,
-  normalization = rep(1, length(peakList)))
+export_imzMLpeakList(
+  peakList,
+  posMatrix,
+  pixel_size_um,
+  filename,
+  normalization = rep(1, length(peakList))
+)
 }
 \arguments{
 \item{peakList}{an rMSIproc peak list object.}

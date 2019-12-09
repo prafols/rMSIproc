@@ -4,8 +4,15 @@
 \alias{TestPeakInterpolation_C}
 \title{TestPeakInterpolation_C.}
 \usage{
-TestPeakInterpolation_C(mass, intensity, peakIndex, WinSize = 20L,
-  UpSampling = 10L, useHanning = FALSE, Iterations = 1L)
+TestPeakInterpolation_C(
+  mass,
+  intensity,
+  peakIndex,
+  WinSize = 20L,
+  UpSampling = 10L,
+  useHanning = FALSE,
+  Iterations = 1L
+)
 }
 \arguments{
 \item{mass}{a NumericVector containing the mass axis of the spectrum.}

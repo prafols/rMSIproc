@@ -19,7 +19,7 @@
 #ifndef MT_ALIGN_H
   #define MT_ALIGN_H
 #include <Rcpp.h>
-#include <boost/thread.hpp>
+#include <mutex>
 #include "labelfreealign.h"
 #include "threadingmsiproc.h"
 
@@ -60,6 +60,6 @@ class MTLabelFreeAlign : public ThreadingMsiProc
     //Thread Processing function definition
     void ProcessingFunction(int threadSlot);
     
-    boost::mutex fftSharedMutex;
+    std::mutex fftSharedMutex;
 };
 #endif

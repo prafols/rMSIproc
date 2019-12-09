@@ -4,10 +4,15 @@
 \alias{PeakList2PeakMatrix}
 \title{PeakList2PeakMatrix.}
 \usage{
-PeakList2PeakMatrix(PeakList, PosMatrix, BinTolerance = 5,
-  BinToleranceUsingPPM = T, BinFilter = 0.1,
+PeakList2PeakMatrix(
+  PeakList,
+  PosMatrix,
+  BinTolerance = 5,
+  BinToleranceUsingPPM = T,
+  BinFilter = 0.1,
   imgUUID = rMSI:::uuid_timebased(),
-  imgName = "rMSIproc_PeakList2PeakMatrix_peakMat")
+  imgName = "rMSIproc_PeakList2PeakMatrix_peakMat"
+)
 }
 \arguments{
 \item{PeakList}{R peak list. Missing values will be set to zero.}

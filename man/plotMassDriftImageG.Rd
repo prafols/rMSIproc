@@ -4,13 +4,22 @@
 \alias{plotMassDriftImageG}
 \title{plotMassDriftImageG.}
 \usage{
-plotMassDriftImageG(peakMatrix, peakList, target_mass, error_range_ppm,
-  plot_rows = 2, plot_cols = 2, plot_byrow = T,
+plotMassDriftImageG(
+  peakMatrix,
+  peakList,
+  target_mass,
+  error_range_ppm,
+  plot_rows = 2,
+  plot_cols = 2,
+  plot_byrow = T,
   plot_rotations = rep(0, length(peakMatrix$names)),
   plot_mirror_X = rep(F, length(peakMatrix$names)),
-  plot_mirror_Y = rep(F, length(peakMatrix$names)), plot_margin = 40,
-  plot_labels = peakMatrix$names, title_label = "",
-  fixed_aspect_ratio = F)
+  plot_mirror_Y = rep(F, length(peakMatrix$names)),
+  plot_margin = 40,
+  plot_labels = peakMatrix$names,
+  title_label = "",
+  fixed_aspect_ratio = F
+)
 }
 \arguments{
 \item{peakMatrix}{an rMSIproc peak matrix.}

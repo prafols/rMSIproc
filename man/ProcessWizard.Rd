@@ -4,8 +4,12 @@
 \alias{ProcessWizard}
 \title{ProcessWizard.}
 \usage{
-ProcessWizard(deleteRamdisk = T, overwriteRamdisk = F,
-  calibrationSpan = 0.75, store_binsize_txt_file = F)
+ProcessWizard(
+  deleteRamdisk = T,
+  overwriteRamdisk = F,
+  calibrationSpan = 0.75,
+  store_binsize_txt_file = F
+)
 }
 \arguments{
 \item{deleteRamdisk}{if the used ramdisks for MS images must be deleted for each image processing (will be deleted after saving it to .tar file).}
