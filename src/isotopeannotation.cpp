@@ -293,12 +293,12 @@ double Deisotoper::getToleranceFromCurve(int imgIndex)
 }
 
 //Computes all the scores over a candidates row 
-double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* result, double lastModslope, int peakNumber)
+double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* result, double last_ratio_slope, int peakNumber)
 {
   double x[imgRuninfo->numPixels];  //array containing the image of the principal mass 
   double y[imgRuninfo->numPixels];  //array containing the image of the candidate mass
-  double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, Modslope, intercept;
-  double ScoreMrph, ScoreInt,ScoreMass, ModCA, CA = 0,ppm = 0 ,maxppm;
+  double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, ratio_slope, intercept;
+  double ScoreMrph, ScoreInt,ScoreMass, ModCA, CA = 0,ppm = 0 ,maxppm, model_slope;
   
   for(int i = 0; i < (7*NumCan); i++) //Cleanning 
   {
@@ -343,9 +343,9 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
         A += (x[j] - x_mean)*(y[j] - y_mean);
         B += (x[j] - x_mean)*(x[j] - x_mean);
       }
-      Modslope = (A/B < 0) ?  0 : A/B;  //Isotope ratio from the data
+      ratio_slope = (A/B < 0) ?  0.00005 : A/B;  //Isotope ratio from the data
       
-      intercept = y_mean - Modslope*x_mean;
+      intercept = y_mean - ratio_slope*x_mean;
       
     //***********************************//Morphology score (adj. R2)//*******************************************************//
     
@@ -358,23 +358,28 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
       //Sum of squared residuals: the sum of the squares of the residuals
       for(int j = 0; j < imgRuninfo->numPixels ; j++)
       {
-        SSres += (y[j] - (intercept + (Modslope*x[j]))) * (y[j] - (intercept + (Modslope*x[j])));     //TODO probar treure el model i ficar directament el valor de x
+        SSres += (y[j] - (intercept + (ratio_slope*x[j]))) * (y[j] - (intercept + (ratio_slope*x[j])));     //TODO probar treure el model i ficar directament el valor de x
       }
       
       //Definition of R2 
       ScoreMrph = 1 - (SSres/SStot); 
+      ScoreMrph = fabs(ScoreMrph);
       ScoreMrph = sqrt(ScoreMrph);
       
     //***********************************//Intensity Score//******************************************************************//
     
       //Theoretical number of Carbons extracted from the Human metabolome database model  
       ModCA  = 0.076*pMatrixAxis[CandidateRow[0]] - 12;
+      model_slope  = 0.000702*pMatrixAxis[CandidateRow[0]] - 0.03851;
+      
       
       //Number of carbons from the experimental intensity rate
       
-      CA = (CrntNumIso == 2) ? ((sqrt(1+(8*Modslope*(0.9893/0.0107)*(0.9893/0.0107)))+1)*0.5) : (CrntNumIso*((Modslope/lastModslope)*(0.9893/0.0107) + 1) - 1);
-
-      ScoreInt  = fabs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
+      double new_ratio_slope = (CrntNumIso == 1) ? ratio_slope : (pow(factorial(CrntNumIso)*ratio_slope,1/double(CrntNumIso)) + 0.01081573*((CrntNumIso-1)/2));
+      CA = new_ratio_slope*(0.9893/0.0107);
+        
+      //ScoreInt  = fabs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
+      ScoreInt  = fabs(model_slope - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2);  //Adjusting 0.2 difference to score 0.7
       ScoreInt *= -ScoreInt;                    
       ScoreInt  = exp(ScoreInt); 
     
@@ -392,11 +397,11 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     
       //Returning the scores
       result[(7*i) + 0] = ppm;                                    //ppm error
-      result[(7*i) + 1] = ((ScoreMrph + ScoreInt + ScoreMass)/3); //final score 
+      result[(7*i) + 1] = (ScoreMrph*ScoreInt*ScoreMass);         //final score 
       result[(7*i) + 2] = ScoreMrph;                              //morphology score
       result[(7*i) + 3] = ScoreInt;                               //intensity score
       result[(7*i) + 4] = ScoreMass;                              //mass error score
-      result[(7*i) + 5] = Modslope;                                //model slope  
+      result[(7*i) + 5] = ratio_slope;                            //model slope  
       result[(7*i) + 6] = CA;                                     //number of C atmos
   }
 

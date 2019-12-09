@@ -170,7 +170,7 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
     for(j in (1:length(r[[i]])))
     {
 
-      if((!is.null(r[[i]][[j]])) & (as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) > ScoreThreshold))
+      if((!is.null(r[[i]][[j]])) & (as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) >= ScoreThreshold))
       {
         if(i == 1)
         {
@@ -180,9 +180,12 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
       
       for(k in (1:ncol(r[[i]][[j]])))
       {
-        if(as.numeric(r[[i]][[j]][5, k]) > ScoreThreshold)
+        if(!is.nan(r[[i]][[j]][5, k]))
         {
-          CompVec <- c(CompVec, r[[i]][[j]][4, k])
+          if(as.numeric(r[[i]][[j]][5, k]) > ScoreThreshold )
+          {
+            CompVec <- c(CompVec, r[[i]][[j]][4, k])
+          }
         }
       }
     }

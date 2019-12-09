@@ -66,5 +66,11 @@ class Deisotoper
     double getToleranceFromCurve(int massIndex);  //get the base tolerance for the mass error score. Scan mode only.
     double* getCandidateLimits(int massIndex); //Finds the candidates mass limits for each peak in both scan and ppm mode
 };
+
+int factorial(int n)
+{
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
+
 #endif
 
