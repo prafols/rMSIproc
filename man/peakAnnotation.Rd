@@ -8,11 +8,12 @@ peakAnnotation(
   PeakMtx,
   iso.number = 2,
   iso.tolerance = 30,
-  iso.scoreThreshold,
+  iso.scoreThreshold = 0.75,
   iso.toleranceUnits = "ppm",
   iso.imageVector = NULL,
-  add.adducts,
-  add.tolerance = 10
+  add.tolerance = 50,
+  add.adducts = data.frame(mass = c(38.963706, 22.98976, 1.007825), name = c("K", "Na",
+    "H"))
 )
 }
 \arguments{
