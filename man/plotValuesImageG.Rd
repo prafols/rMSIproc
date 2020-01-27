@@ -19,7 +19,8 @@ plotValuesImageG(
   plot_labels = peakMatrix$names,
   gradient_scale_colours = rev(rainbow(n = 100, start = 0, end = 0.6)),
   gradient_scale_limits = c(min(pixel_values), max(pixel_values)),
-  fixed_aspect_ratio = F
+  fixed_aspect_ratio = F,
+  display_colorbar = T
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ plotValuesImageG(
 \item{gradient_scale_limits}{alternative limits for the pixel values.}
 
 \item{fixed_aspect_ratio}{set this flag to true to fix the aspect ratio of the ion images.}
+
+\item{display_colorbar}{set if the colour bar must be displayed.}
 }
 \value{
 a ggplot2 object.

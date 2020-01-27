@@ -14,7 +14,8 @@ plotMassDriftG(
   title_label = "",
   normalization = NA,
   visible_legend = T,
-  legend_title = ""
+  legend_title = "",
+  N = 1
 )
 }
 \arguments{
@@ -26,7 +27,7 @@ plotMassDriftG(
 
 \item{error_range_ppm}{an error range in ppm to be represented around the target mass.}
 
-\item{min_SNR}{the minimum signal to noise ratio to represent. Peaks with SNR values below this parameter will be discarded.}
+\item{min_SNR}{the minimum signal to noise ratio to be represented.}
 
 \item{mass_offset}{a mass offset to shift the plot mass axis relative to the target mass.}
 
@@ -37,6 +38,8 @@ plotMassDriftG(
 \item{visible_legend}{a boolean specfing if a legend detailing the included MS images must be displayed.}
 
 \item{legend_title}{the title for the legend.}
+
+\item{N}{numbe of dots to display for each pixel, only the N highest SNR will be displayed.}
 }
 \value{
 a ggplot2 object.

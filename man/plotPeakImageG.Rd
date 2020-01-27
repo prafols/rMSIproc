@@ -17,7 +17,8 @@ plotPeakImageG(
   plot_margin = 40,
   plot_labels = peakMatrix$names,
   title_label = "",
-  fixed_aspect_ratio = F
+  fixed_aspect_ratio = F,
+  display_colorbar = T
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ plotPeakImageG(
 \item{title_label}{the main title of the plot}
 
 \item{fixed_aspect_ratio}{set this flag to true to fix the aspect ratio of the ion images.}
+
+\item{display_colorbar}{set if the colour bar must be displayed.}
 }
 \value{
 a ggplot2 object.

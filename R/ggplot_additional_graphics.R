@@ -186,17 +186,18 @@ plotMassDriftImageG <- function(peakMatrix, peakList, target_mass, error_range_p
 #' @param peakList an rMSIproc peak list (no binning here!).
 #' @param target_mass the target mass to represent.
 #' @param error_range_ppm an error range in ppm to be represented around the target mass.
-#' @param min_SNR the minimum signal to noise ratio to represent. Peaks with SNR values below this parameter will be discarded.
+#' @param min_SNR the minimum signal to noise ratio to be represented.
 #' @param mass_offset a mass offset to shift the plot mass axis relative to the target mass.
 #' @param title_label a string to be used as plot title. Chemical forumlas will be parsed to produce better results.
 #' @param normalization a vector containing the normalization value for each pixel or NA if no normalization should be applied.
 #' @param visible_legend a boolean specfing if a legend detailing the included MS images must be displayed.
 #' @param legend_title the title for the legend.
+#' @param N numbe of dots to display for each pixel, only the N highest SNR will be displayed.
 #'
 #' @return a ggplot2 object.
 #'
 plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, min_SNR = 10, mass_offset = 0, 
-                           title_label="", normalization = NA, visible_legend = T, legend_title = "")
+                           title_label="", normalization = NA, visible_legend = T, legend_title = "", N = 1)
 {
   if (!requireNamespace("ggplot2", quietly = TRUE)) 
   {
@@ -206,6 +207,7 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
   mass_range <- (error_range_ppm*(target_mass+mass_offset))/1e6
   pkmass <- c()
   intens <- c()
+  snr <- c()
   pixelID<- c()
   pixelX <- c()
   pixelY <- c()
@@ -238,24 +240,49 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
     {
       if( iMZ_max >= iMZ_min )
       {
+        keep_id <- c()
         for( iMZ in iMZ_min:iMZ_max  )
         {
+          #if(peakList[[i]]$mass[iMZ] >= (target_mass+mass_offset-mass_range) && peakList[[i]]$mass[iMZ] <= (target_mass+mass_offset+mass_range))
           if(peakList[[i]]$SNR[iMZ] >= min_SNR && peakList[[i]]$mass[iMZ] >= (target_mass+mass_offset-mass_range) && peakList[[i]]$mass[iMZ] <= (target_mass+mass_offset+mass_range))
           {
-            pkmass <- c(pkmass, peakList[[i]]$mass[iMZ])
-            intens <- c(intens, peakList[[i]]$intensity[iMZ])
-            pixelID <- c(pixelID, i)
-            pixelX <- c(pixelX, peakMatrix$pos[i, "x"])
-            pixelY <- c(pixelY, peakMatrix$pos[i, "y"])
+            keep_id <- c(keep_id, iMZ)
           }
+        }
+        
+        #Filter the dataframe to retain only N of the highest SNR
+        if(length(keep_id) > 0)
+        {
+          dfSnrFilter <- data.frame( id = keep_id, SNR = peakList[[i]]$SNR[keep_id] )
+          if(nrow(dfSnrFilter) > N)
+          {
+            dfSnrFilter <- dfSnrFilter[order(dfSnrFilter$SNR, decreasing = T),] 
+            dfSnrFilter <- dfSnrFilter[1:N, ]
+          }
+          
+          pkmass <- c(pkmass, peakList[[i]]$mass[dfSnrFilter$id])
+          intens <- c(intens, peakList[[i]]$intensity[dfSnrFilter$id])
+          snr <- c(snr, peakList[[i]]$SNR[dfSnrFilter$id])
+          pixelID <- c(pixelID, rep(i, nrow(dfSnrFilter)))
+          pixelX <- c(pixelX, rep( peakMatrix$pos[i, "x"], nrow(dfSnrFilter)))
+          pixelY <- c(pixelY, rep( peakMatrix$pos[i, "y"], nrow(dfSnrFilter)))
         }
       }
     }
   }
   close(pb)
-  pltDf <- data.frame( mass = pkmass, intensity = intens, pixel = pixelID, x = pixelX, y = pixelY) 
+  
+  #Saturate snr at min_SNR
+  # sat_id <- which(snr > min_SNR)
+  # if(length(sat_id) > 0)
+  # {
+  #   snr[sat_id] <- min_SNR
+  # }
+
+  pltDf <- data.frame( mass = pkmass, intensity = intens, SNR = snr, pixel = pixelID, x = pixelX, y = pixelY) 
   rm(pkmass)
   rm(intens)
+  rm(snr)
   rm(pixelID)
   rm(pixelX)
   rm(pixelY)
@@ -284,7 +311,7 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
   }
   pltDf$acq_order <- 1:nrow(pltDf)
   
-  pltPts <- ggplot2::ggplot(pltDf, ggplot2::aes(mass, acq_order))
+  pltPts <- ggplot2::ggplot(pltDf, ggplot2::aes(mass, -acq_order))
   pltPts <- pltPts + ggplot2::theme_bw(base_size = 15 )
   pltPts <- pltPts + ggplot2::theme(axis.text.y=ggplot2::element_blank(),
                            axis.ticks.y=ggplot2::element_blank(),
@@ -297,7 +324,7 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
                            axis.title.x = ggplot2::element_text(hjust=0.5, size = 12),
                            plot.title = ggplot2::element_text(hjust=0.5)
                            )
-  pltPts <- pltPts + ggplot2::geom_point(ggplot2::aes(colour = dataset, alpha = intensity), size = 1, shape = 16)
+  pltPts <- pltPts + ggplot2::geom_point(ggplot2::aes(colour = dataset, alpha = SNR), size = 1, shape = 16)
   pltPts <- pltPts + ggplot2::labs( x = expression(~italic(m/z)~""), title = parse(text= chemFormula2Expression(title_label) ))
   pltPts <- pltPts +  ggplot2::scale_x_continuous(limits=c(target_mass+mass_offset-mass_range, target_mass+mass_offset+mass_range),
                                          sec.axis = ggplot2::sec_axis(~1e6*( (.) - target_mass)/(target_mass) , name = expression(~italic(m/z)~" shift [ppm]"),
@@ -338,13 +365,14 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
 #' @param plot_labels an alternative character vector with the labels to be displayed for each image.
 #' @param title_label the main title of the plot
 #' @param fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images. 
+#' @param display_colorbar set if the colour bar must be displayed.
 #'
 #' @return a ggplot2 object.
 #' 
 plotPeakImageG <- function(peakMatrix, mass, normalization = NA,
                           plot_rows = 2, plot_cols = 2, plot_byrow = T, plot_rotations = rep(0, length(peakMatrix$names)),
                           plot_mirror_X =  rep(F, length(peakMatrix$names)), plot_mirror_Y =  rep(F, length(peakMatrix$names)),
-                          plot_margin = 40, plot_labels = peakMatrix$names, title_label = "", fixed_aspect_ratio = F)
+                          plot_margin = 40, plot_labels = peakMatrix$names, title_label = "", fixed_aspect_ratio = F, display_colorbar = T)
 {
   icol <- which.min(abs(mass-peakMatrix$mass))
   plotValues <- peakMatrix$intensity[,icol]
@@ -359,7 +387,7 @@ plotPeakImageG <- function(peakMatrix, mass, normalization = NA,
                           scale_label = sprintf("m/z %.4f", peakMatrix$mass[icol]), title_label = title_label, 
                           plot_rows = plot_rows, plot_cols = plot_cols, plot_byrow = plot_byrow, plot_rotations = plot_rotations, 
                           plot_mirror_X = plot_mirror_X, plot_mirror_Y =  plot_mirror_Y, plot_margin =  plot_margin,
-                          plot_labels = plot_labels, fixed_aspect_ratio = fixed_aspect_ratio))
+                          plot_labels = plot_labels, fixed_aspect_ratio = fixed_aspect_ratio, display_colorbar = display_colorbar))
 }
 
 #' plotClusterImageG.
@@ -414,7 +442,8 @@ plotClusterImageG <- function(peakMatrix, clusters,
 #' @param plot_labels text labels to be used for each image.
 #' @param gradient_scale_colours alternative color scale for the image.
 #' @param gradient_scale_limits alternative limits for the pixel values.
-#' @param fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images. 
+#' @param fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images.
+#' @param display_colorbar set if the colour bar must be displayed.
 #'
 #' @return a ggplot2 object.
 #'
@@ -424,7 +453,7 @@ plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_l
                           plot_margin = 40,  plot_labels = peakMatrix$names,
                           gradient_scale_colours = rev(rainbow(n = 100, start = 0, end = 0.6)), 
                           gradient_scale_limits = c(min(pixel_values), max(pixel_values)), 
-                          fixed_aspect_ratio = F)
+                          fixed_aspect_ratio = F, display_colorbar = T)
 {
   if (!requireNamespace("ggplot2", quietly = TRUE)) 
   {
@@ -459,19 +488,26 @@ plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_l
   else
   {
     pltRas <- pltRas +  ggplot2::geom_raster(ggplot2::aes(fill = intensity, alpha = log(abs(intensity)+0.01)) ) #Sum 0.01 to avoid NaNs on log(intensity)
-      pltRas <- pltRas +  ggplot2::scale_fill_gradientn(scale_label, na.value = "black", 
+    pltRas <- pltRas +  ggplot2::scale_fill_gradientn(scale_label, na.value = "black", 
                                             colours = gradient_scale_colours, 
                                             limits = gradient_scale_limits,
                                             breaks = pretty(gradient_scale_limits,n=10))
+    if(display_colorbar)
+    {
     pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = ggplot2::guide_colourbar(title.position = "top",
                                                                                    title.hjust = 0.5,
                                                                                    barheight = 1,
                                                                                    barwidth = 25,
                                                                                    frame.colour = "white"))
+    }
+    else
+    {
+      pltRas <- pltRas +  ggplot2::guides(alpha = F, fill = F)
+    }
   }
 
   pltRas <- pltRas +  ggplot2::annotate("text", label = plot_labels,
-                              size = 5, colour = "white", hjust = 0.5, vjust = 0,
+                              size = 4, colour = "white", hjust = 0.5, vjust = 0,
                               x =  rasterData$lab_x,
                               y = rasterData$lab_y - 0.9*plot_margin
                               )
