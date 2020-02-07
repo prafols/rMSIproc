@@ -196,7 +196,7 @@ ProcessImage <- function(img,
     cat("Calculating average spectrum...\n")
     for( i in 1:length(img_list))
     {
-      img_list[[i]]$mean <- AverageSpectrum(img_list[[i]]) 
+      img_list[[i]]$mean <- AverageSpectrum(img_list[[i]], NumOfThreads ) 
     }
   }
   
