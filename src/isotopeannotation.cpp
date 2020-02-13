@@ -219,8 +219,11 @@ NumericMatrix Deisotoper::CandidateFinder(NumericVector PeaksToCheck)
         if( ((pMatrixAxis[candidateIndx]) > (limits[0])) &&   //Between limits
             ((pMatrixAxis[candidateIndx]) < (limits[1])) ) 
         {
+          if(candidateCnt < 21)
+          {
           CanMatrix(i, candidateCnt) = candidateIndx;
           candidateCnt++;
+          }
         }
         
         if((pMatrixAxis[candidateIndx]) > (limits[1]))  //Outside limits & no more possible candidates

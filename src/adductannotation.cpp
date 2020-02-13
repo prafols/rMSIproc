@@ -270,16 +270,20 @@ List AdductPairer::GenerateResultsList()
 		    r(3,0) = monoisitopeMassVector[j];        //M+Add1 mass
 		    r(4,0) = IsoData2[2];                     //M+Add1 index
 		    
-		    tmp = IsoData1[9];                        //Average C atoms
-		    r(5,0)  = IsoData2[9];                    
+		    tmp = IsoData1[9];                        //Old: Average C atoms. New: Average slopes 
+		    tmp *= (0.0107/0.9893);
+		    r(5,0)  = IsoData2[9];  
+		    r(5,0) *= (0.0107/0.9893);
 		    r(5,0) += tmp;   
 		    r(5,0) *= 0.5;  
 	
-	      tmp = IsoData1[9];                        //C atmos error
-	      tmp = abs(tmp-r(5,0));
-		    r(6,0) = IsoData2[9];                       
-		    r(6,0) = abs(r(6,0)-r(5,0));
-		    r(6,0) = (r(6,0) + tmp)*0.5;
+	      tmp = IsoData1[9];                        //C atmos error * probabilities quotien = M+1 slope
+	      tmp *= (0.0107/0.9893);
+	      tmp = (tmp-r(5,0))*(tmp-r(5,0));
+		    r(6,0) = IsoData2[9]; 
+		    r(6,0) *= (0.0107/0.9893);
+		    r(6,0) = (r(6,0)-r(5,0))*(r(6,0)-r(5,0));
+		    r(6,0) = sqrt((r(6,0) + tmp))/sqrt(2);
 		    
 		    for(int k = 0; k < RunDef->numPixels; k++)
 		    {

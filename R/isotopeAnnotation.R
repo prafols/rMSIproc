@@ -76,7 +76,7 @@ isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThres
     if((toleranceUnits == "ppm") & (tolerance>500))
     {
       writeLines("Maximum allowed tolerance is 500. Replacing the value")
-      tolerance = 500
+      tolerance <- 500
     }
     
     if(!(isoNumber%%1 == 0))

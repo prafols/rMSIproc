@@ -15,6 +15,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
+
 #' peakAnnotation
 #' 
 #' Searches for isotopic ions in the peak matrix and evaluates them using morphology, intensity and mass error criteria.
@@ -74,6 +75,13 @@ peakAnnotation <- function(PeakMtx,
   }
   
   result$isotopes <- isotopeObj
+  
+  result$parameters <- list(isotope_number = iso.number,
+                             isotope_mass_tolerance = iso.tolerance,
+                             isotope_score_threshold = iso.scoreThreshold,
+                             isotope_tolerance_units = iso.toleranceUnits,
+                             adduct_mass_tolerance = add.tolerance,
+                             adduct_ions = add.adducts)
   
   return(result)
 }

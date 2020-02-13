@@ -6,7 +6,7 @@ Date: 2018-03-16
 Author: Pere Rafols[aut], Lluc Semente [aut]
 Authors@R: c( person("Pere", "Rafols", email="pere.rafols@urv.cat",
         role=c("aut")), person("Lluc", "Semente",
-        email="lluc.semente@urv.cat", role=c("aut")) )
+        email="lluc.semente@urv.cat", role=c("aut")))
 Maintainer: Pere Rafols Soler<pere.rafols@urv.cat>
 Description: Processing methods for MSI using rMSI data format and C++ methods
 License: GPL-3

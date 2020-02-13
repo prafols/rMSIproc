@@ -33,6 +33,27 @@
 
 adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
 {
+  if(!is.data.frame(adductDataFrame))
+  { 
+    stop("Error: add.adducts must be a data frame")
+  }
+  
+  if(colnames(adductDataFrame)[1] != "mass")
+  { 
+    stop("Error: add.adducts first column must be called 'mass'")
+  }
+  
+  if(colnames(adductDataFrame)[2] != "name")
+  { 
+    stop("Error: add.adducts first column must be called 'name'")
+  }
+  
+  if(tolerance>500)
+  {
+    writeLines("Maximum allowed tolerance is 500. Replacing the value.")
+    tolerance = 500
+  }
+  
   adducts <- list()
   adductDataFrame <- adductDataFrame[order(adductDataFrame$mass,decreasing = T),]
   #namber of adduct combinations
@@ -102,10 +123,10 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                    paste("M+",name1," index",sep = ""),
                                    paste("M+",name2," mass",sep = ""),
                                    paste("M+",name2," index",sep = ""),
-                                   "C atoms mean",
-                                   "C atoms avg. error",
+                                   "M+1 slope mean",
+                                   "M+1 slope std. error",
                                    "Correlation",
-                                   "ppm error")
+                                   "Mass error (ppm)")
        colnames(adducts[[i]]) <- mainname
     }
     adducts <- adducts[order(as.numeric(names(adducts)))]
