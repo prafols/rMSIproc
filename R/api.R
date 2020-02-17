@@ -55,7 +55,6 @@
     {
       stop("Invalid pixels: some of the provided names do not exist in the peak matrix.")
     }
-      
     pixels <- (unlist(lapply(1:length(x$numPixels), function(iimg){ rep(x$names[iimg], x$numPixels[iimg])  }))) %in% pixels
     #Now pixels has been converted to logical so this is the first step, nect logical will be converter to integers
   }
@@ -65,23 +64,46 @@
     pixels <- as.integer(which(pixels))
   }
   
-  if( (min(pixels) < 1) || (max(pixels) > sum(x$numPixels)) )
+  if( (any(pixels) == 0) || (max(pixels) > sum(x$numPixels)) || (min(pixels) < (-sum(x$numPixels))))
   {
     stop("Error: invalid pixel ID's: out of range.")  
   }
   
-  if( (min(columns) < 1) || (max(columns) > length(x$mass)) )
+  if( (any(columns) == 0) || (max(columns) > length(x$mass)) || (min(columns) < (-length(x$mass))))
   {
     stop("Error: invalid columns: out of range.")  
   }
   
-  pixels <- unique(sort(pixels)) #Pixel index must be always in accending order
-  columns <- unique(sort(columns)) #columns index must be always in accending order
+  
+  # Columns subsetting
+  if(all(columns < 0))
+  {
+    columns <- unique(sort(columns, decreasing = T))
+    columns <- (1:length(x$mass))[columns]
+  } 
+  else
+  {
+    columns <- unique(sort(columns)) #columns index must be always in accending order
+  }
+  
+  
+  # Pixels subsetting
+  if(all(pixels < 0))
+  {
+    pixels <- unique(sort(pixels, decreasing = T)) 
+    pixels <- (1:nrow(x$intensity))[pixels]
+  } 
+  else
+  {
+    pixels <- unique(sort(pixels)) #Pixel index must be always in accending order
+  }
+  
   
   x$mass <- x$mass[columns]  
   x$intensity <- x$intensity[pixels, columns]
   x$area <- x$area[pixels, columns]
   x$SNR <- x$SNR[pixels, columns]
+  
   
   firstID <- 1
   originalNumPixelsSubImages <- x$numPixels
