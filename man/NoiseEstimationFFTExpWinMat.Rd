@@ -12,7 +12,7 @@ NoiseEstimationFFTExpWinMat(x, filWinSize = 40L)
 \item{filWinSize}{an integer specified the cosinus win size in samples.}
 }
 \value{
-a
+an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spectrum is a row.
 }
 \description{
 Estimate the noise of some spectra using a FFT filter and a decay exponential window in frequency domain.

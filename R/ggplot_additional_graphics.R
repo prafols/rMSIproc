@@ -89,6 +89,7 @@ theme_black <- function(base_size = 12, base_family = "") {
 #' @param fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images.
 #'
 #' @return a ggplot2 object.
+#' @export
 #' 
 plotMassDriftImageG <- function(peakMatrix, peakList, target_mass, error_range_ppm,
                                plot_rows = 2, plot_cols = 2, plot_byrow = T, plot_rotations = rep(0, length(peakMatrix$names)),
@@ -195,6 +196,7 @@ plotMassDriftImageG <- function(peakMatrix, peakList, target_mass, error_range_p
 #' @param N numbe of dots to display for each pixel, only the N highest SNR will be displayed.
 #'
 #' @return a ggplot2 object.
+#' @export
 #'
 plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, min_SNR = 10, mass_offset = 0, 
                            title_label="", normalization = NA, visible_legend = T, legend_title = "", N = 1)
@@ -368,6 +370,7 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
 #' @param display_colorbar set if the colour bar must be displayed.
 #'
 #' @return a ggplot2 object.
+#' @export
 #' 
 plotPeakImageG <- function(peakMatrix, mass, normalization = NA,
                           plot_rows = 2, plot_cols = 2, plot_byrow = T, plot_rotations = rep(0, length(peakMatrix$names)),
@@ -409,6 +412,7 @@ plotPeakImageG <- function(peakMatrix, mass, normalization = NA,
 #' @param fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images. 
 #'
 #' @return a ggplot2 object.
+#' @export
 #' 
 plotClusterImageG <- function(peakMatrix, clusters, 
                               plot_rows = 2, plot_cols = 2, plot_byrow = T, plot_rotations = rep(0, length(peakMatrix$names)),
@@ -446,6 +450,7 @@ plotClusterImageG <- function(peakMatrix, clusters,
 #' @param display_colorbar set if the colour bar must be displayed.
 #'
 #' @return a ggplot2 object.
+#' @export
 #'
 plotValuesImageG <- function(peakMatrix, pixel_values, scale_label = "", title_label = "",
                           plot_rows = 2, plot_cols = 2, plot_byrow = T, plot_rotations = rep(0, length(peakMatrix$names)),
@@ -590,6 +595,7 @@ chemFormula2Expression <- function(strFormula)
 #' @param ion_map_fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images.
 #' 
 #' @return a ggplot2 object.
+#' @export
 #' 
 plotMassDriftComparedG <- function(peakMatrix_RAW, peakMatrix_ALNG, peaklist_RAW, peaklist_ALNG, mass,
                                   error_range_ppm=400, min_SNR = 10, mass_offset_RAW = 0, 
@@ -652,6 +658,7 @@ plotMassDriftComparedG <- function(peakMatrix_RAW, peakMatrix_ALNG, peaklist_RAW
 #' @param ion_map_fixed_aspect_ratio set this flag to true to fix the aspect ratio of the ion images.
 #'
 #' @return a ggplot2 object.
+#' @export
 #'
 plotMassDriftImageComparedG <- function(peakMatrix_RAW, peakMatrix_ALNG, peaklist_RAW, peaklist_ALNG, mass,
                                         error_range_ppm=400, mass_offset_RAW = 0, 

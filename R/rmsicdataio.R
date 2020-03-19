@@ -23,6 +23,7 @@
 #' Prints HDD storing information of rMSI data object using the C++ backend.
 #' 
 #' @param img and rMSI object image.
+#' @export
 #'
 printrMSIdataInfo <- function( img )
 {
@@ -40,7 +41,7 @@ printrMSIdataInfo <- function( img )
 #' @param cubeSel the cube to load R index.
 #'
 #' @return an R matrix with spectra in rows.
-#'
+#' @export
 loadDataCube <- function( img, cubeSel )
 {
   dataInf <- getrMSIdataInfo(img)

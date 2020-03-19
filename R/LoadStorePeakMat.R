@@ -5,6 +5,7 @@
 #' @param data_path full path to zip file where data is stored.
 #'
 #' @return an R List containing intensity, SNR and area matrices, mass axis vector and if available the normalizations data.frame.
+#' @export
 #'
 LoadPeakMatrix <- function( data_path )
 {
@@ -41,6 +42,7 @@ LoadPeakMatrix <- function( data_path )
 #'
 #' @param data_path full path including filename where data must be stored.
 #' @param data a List containing intensity, SNR and area matrices, the mass axis vector and a data.frame containing in each variable a normalization vector. 
+#' @export
 #'
 StorePeakMatrix <- function( data_path, data )
 {
@@ -68,6 +70,7 @@ StorePeakMatrix <- function( data_path, data )
 #' @param pkMat an rMSIproc peak matrix object.
 #'
 #' @return an integer vector with all ID's of each image in the pkMat object.
+#' @export
 #'
 buildImgIdVectorFromPeakMatrix <- function(pkMat)
 {
@@ -90,6 +93,7 @@ buildImgIdVectorFromPeakMatrix <- function(pkMat)
 #' @param rows a vector of peak matrix rows.
 #'
 #' @return a list with the rMSI object ID's and image that correpond the specified rows.
+#' @export
 #'
 getImgIdsFromPeakMatrixRows <- function(pkMat, rows)
 {
@@ -125,6 +129,7 @@ getImgIdsFromPeakMatrixRows <- function(pkMat, rows)
 #' @param ids a vector of rMSI obj ID's.
 #'
 #' @return a vector containing the rows of peak matrix that correspond to the selected rMSI object ID's.
+#' @export
 #'
 getPeakMatrixRowsFromImgIds <- function( pkMat, img_num, ids )
 {

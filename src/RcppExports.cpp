@@ -66,6 +66,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// MergeTwoMassAxis
+List MergeTwoMassAxis(NumericVector mz1, NumericVector mz2);
+RcppExport SEXP _rMSIproc_MergeTwoMassAxis(SEXP mz1SEXP, SEXP mz2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mz1(mz1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mz2(mz2SEXP);
+    rcpp_result_gen = Rcpp::wrap(MergeTwoMassAxis(mz1, mz2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // AverageSpectrumC
 NumericVector AverageSpectrumC(StringVector fileNames, int massChannels, IntegerVector numRows, String dataType, int numOfThreads);
 RcppExport SEXP _rMSIproc_AverageSpectrumC(SEXP fileNamesSEXP, SEXP massChannelsSEXP, SEXP numRowsSEXP, SEXP dataTypeSEXP, SEXP numOfThreadsSEXP) {
@@ -387,6 +399,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 11},
     {"_rMSIproc_C_isotopeAnnotator", (DL_FUNC) &_rMSIproc_C_isotopeAnnotator, 10},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
+    {"_rMSIproc_MergeTwoMassAxis", (DL_FUNC) &_rMSIproc_MergeTwoMassAxis, 2},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},
     {"_rMSIproc_FullImageBitDepthReduction", (DL_FUNC) &_rMSIproc_FullImageBitDepthReduction, 6},
     {"_rMSIproc_SpectrumBitDepthReduction", (DL_FUNC) &_rMSIproc_SpectrumBitDepthReduction, 2},

@@ -48,9 +48,8 @@
 #'   }
 #'   \item $adducts: List of matrices. Contains all the adduct pairs found during the test. The names refer to the neutral masses of the hypothetic ions.
 #' }
+#' @export
 #' 
-#' 
-
 peakAnnotation <- function(PeakMtx, 
                            iso.number = 2, 
                            iso.tolerance = 30, 

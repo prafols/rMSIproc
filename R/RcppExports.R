@@ -13,6 +13,24 @@ AlignSpectrumToReference <- function(mass, ref, x, bilinear = FALSE, lagRefLow =
     .Call('_rMSIproc_AlignSpectrumToReference', PACKAGE = 'rMSIproc', mass, ref, x, bilinear, lagRefLow, lagRefMid, lagRefHigh, iterations, lagLimitppm, fftOverSampling)
 }
 
+#' MergeTwoMassAxis.
+#' 
+#' Merges two mass axis in a single one using an apropiate bin size.
+#' The resulting mass axis will display a bin size equal to the minimum of two supplied vectors. 
+#' The bin size is calculated relative to the m/z for better accuracy.
+#' The resulting mass axis range is calculated using the common range between the two mass axis.
+#' If there is no overlao between the two mass axis range an error will be raised.
+#' 
+#' @param mz1 the first mass axis to merge.
+#' @param mz2 the second mass axis to merge.
+#' 
+#' @return a list containing the common mass axis that represents mz1 and mz1 accurately and a boolean indicating if and error was raised.
+#' @export
+#' 
+MergeTwoMassAxis <- function(mz1, mz2) {
+    .Call('_rMSIproc_MergeTwoMassAxis', PACKAGE = 'rMSIproc', mz1, mz2)
+}
+
 AverageSpectrumC <- function(fileNames, massChannels, numRows, dataType, numOfThreads) {
     .Call('_rMSIproc_AverageSpectrumC', PACKAGE = 'rMSIproc', fileNames, massChannels, numRows, dataType, numOfThreads)
 }
@@ -49,6 +67,7 @@ FullImageSmoothing <- function(fileNames, massChannels, numRows, dataType, numOf
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericVector containing the estimated noise.
+#' @export
 NoiseEstimationFFTCosWin <- function(x, filWinSize = 40L) {
     .Call('_rMSIproc_NoiseEstimationFFTCosWin', PACKAGE = 'rMSIproc', x, filWinSize)
 }
@@ -61,6 +80,7 @@ NoiseEstimationFFTCosWin <- function(x, filWinSize = 40L) {
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericVector containing the estimated noise.
+#' @export
 NoiseEstimationFFTExpWin <- function(x, filWinSize = 40L) {
     .Call('_rMSIproc_NoiseEstimationFFTExpWin', PACKAGE = 'rMSIproc', x, filWinSize)
 }
@@ -73,6 +93,7 @@ NoiseEstimationFFTExpWin <- function(x, filWinSize = 40L) {
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
 #' @return an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spectrum is a row.
+#' @export
 NoiseEstimationFFTCosWinMat <- function(x, filWinSize = 40L) {
     .Call('_rMSIproc_NoiseEstimationFFTCosWinMat', PACKAGE = 'rMSIproc', x, filWinSize)
 }
@@ -84,7 +105,8 @@ NoiseEstimationFFTCosWinMat <- function(x, filWinSize = 40L) {
 #' @param x an Rcpp::NumericMatrix containing the spectra intensities. Each spectrum in a row.
 #' @param filWinSize an integer specified the cosinus win size in samples.
 #' 
-#' @return a
+#' @return an Rcpp::NumericMatrix containing the estimated noise in a matrix where each spectrum is a row.
+#' @export
 NoiseEstimationFFTExpWinMat <- function(x, filWinSize = 40L) {
     .Call('_rMSIproc_NoiseEstimationFFTExpWinMat', PACKAGE = 'rMSIproc', x, filWinSize)
 }

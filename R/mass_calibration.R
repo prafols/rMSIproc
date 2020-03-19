@@ -322,6 +322,7 @@ CalibrationWindow<-function( mass, intensity, peak_win_size = 20, win_title = ""
 #' @param output_fname full path to store the output image.
 #' @param newMzAxis if a new mz axis specified it is used for the calibration window
 #' @param useZoo if zoo interpolation must be used (caution this may introduce m/z error if large compensations are made)
+#' @export
 #'
 CalibrateImage<-function(img, output_fname, newMzAxis = NULL)
 {

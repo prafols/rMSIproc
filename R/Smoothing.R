@@ -27,7 +27,7 @@
 #' Smooths a vector of data using the specified smoothing method.  
 #'  
 #' @return the smoothed data.
-#'
+#' @export
 Smoothing <- function(x, method = "SavitzkyGolay", ...)
 {
   y <- NULL

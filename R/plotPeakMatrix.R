@@ -38,6 +38,7 @@
 #' @param mirror_y a bool vector specifing if each image must be flipped or not in Y direction prior to rotation.
 #' @param pixel_size_um the pixel resolution in um.
 #' @param light the lighting of the plotted image.
+#' @export
 #'
 plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, matrix = "intensity", normalization = NULL, 
                           nrow = 2, ncol = 2, byrow = T, 
@@ -103,6 +104,7 @@ plotPeakImage <- function(peakMatrix, mz = NULL, column = NULL, matrix = "intens
 #' @param pixel_size_um the pixel resolution in um.
 #'
 #' @return a vector with the used color for each cluster sorted according clustering numering in assending order.
+#' @export
 #'
 plotClusterImage <- function(peakMatrix, clusters, 
                              nrow = 2, ncol = 2, byrow = T, 
@@ -137,6 +139,7 @@ plotClusterImage <- function(peakMatrix, clusters,
 #' @param pixel_size_um the pixel resolution in um.
 #' @param scale_title the label for the color scale.
 #' @param light the lighting of the plotted image.
+#' @export
 #'
 plotValuesImage <- function(peakMatrix, values, 
                              nrow = 2, ncol = 2, byrow = T, 

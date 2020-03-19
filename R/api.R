@@ -46,7 +46,6 @@
 #' pks_brain1 <- pks["Brain_img1", 10:50]
 #'
 #' @export
-
 `[.rMSIprocPeakMatrix` <- function(x, pixels = 1:sum(x$numPixels), columns = 1:length(x$mass) )
 {
   if(class(pixels) == "character")

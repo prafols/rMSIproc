@@ -25,6 +25,7 @@
 #' @param NumOfThreads Number of threads.The Default value is the number of cores of the machine. 
 #'
 #' @return The average spectrum.
+#' @export
 #' 
 AverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
 {

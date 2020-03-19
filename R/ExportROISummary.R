@@ -27,6 +27,7 @@
 #' @param normalization a text string with the name of desired normalization to apply at output files.
 #'
 #' @return a list with the data set UUID and the pixels ID's exported for each ROI.
+#' @export
 #'
 ExportROIAverages <- function( roi_xml_file, img, out_path = getwd(), normalization = NULL)
 {
@@ -107,6 +108,7 @@ ExportROIAverages <- function( roi_xml_file, img, out_path = getwd(), normalizat
 #' @param idlist a list of pixel ID's in each ROI using the format returned by ExportROIAverages.
 #' @param out_path disk path where the results will be stored.
 #' @param normalization a text string with the name of desired normalization to apply at output files.
+#' @export
 #'
 ExportROIPeaks <- function(pkmat, idlist, out_path = getwd(), normalization = NULL)
 {
@@ -209,6 +211,7 @@ ExportROIPeaks <- function(pkmat, idlist, out_path = getwd(), normalization = NU
 #' @param pkMat an rMSIproc peak matrix object.
 #' @param out_path disk path where the results will be stored.
 #' @param normalization a text string with the name of desired normalization to apply at output files.
+#' @export
 #'
 ExportROIAveragesMultiple <- function( img_list, xml_list, pkMat = NULL, out_path = getwd(), normalization = NULL)
 {

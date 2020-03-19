@@ -58,6 +58,7 @@
 #'                 From1 (if binning is used) - a list containing three matrices (intensity, SNR and area) and a vector with a common mass axis.
 #'                 Form2 (if NO binning is applied) - a list of detected peaks for each pixel.
 #'             - The applied mass shifts in first alignment iteration (alignShifts).
+#' @export
 #'
 ProcessImage <- function(img, 
                          EnableSmoothing = T, SmoothingKernelSize = 5,
@@ -483,6 +484,7 @@ FormatPeakMatrix <- function (cPeakMatrix, posMat, numPixels, names, uuid, posMo
 #' @param binningFilter the peaks bins non detected in at least the BinFitler*TotalNumberOfPixels spectra will be deleted.
 #'
 #' @return a intensity matrix where each row corresponds to an spectrum.
+#' @export
 #'
 MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFilter = 0.01  )
 {
@@ -595,6 +597,7 @@ MergePeakMatrices <- function( PeakMatrixList, binningTolerance = 100, binningFi
 #' @param overwriteRamdisk if the current ramdisk must be overwrited.
 #' @param calibrationSpan the used span in the loess fitting for mass calibration.
 #' @param store_binsize_txt_file if the binSize used in each binning column must be soterd in a text file.
+#' @export
 #'
 ProcessWizard <- function( deleteRamdisk = T, overwriteRamdisk = F, calibrationSpan = 0.75, store_binsize_txt_file = F )
 {
@@ -1146,7 +1149,7 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
   {
     for( i in 2:length(img_list))
     {
-      massMergeRes <- rMSI::MergeMassAxis(common_mass, img_list[[i]]$mass)
+      massMergeRes <- MergeTwoMassAxis(common_mass, img_list[[i]]$mass)
       if(massMergeRes$error)
       {
         stop("ERROR: The mass axis of the images to merge is not compatible because they do not share a common range.\n")
@@ -1200,6 +1203,7 @@ MergerMSIDataSets <- function( img_list, ramdisk_path, pixel_id = NULL )
 #' @param imgName the name of the original MSI dataset.
 #'
 #' @return peak matrix.
+#' @export
 #' 
 #' @examples  
 #'   #Import an imzML using centroid mode (after peak picking).
