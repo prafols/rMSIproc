@@ -29,64 +29,130 @@
 #' }
 #' @param iso.number Integer. Number of isotopes to be found.
 #' @param iso.tolerance Integer. Mass tolerance for the isotope candidates in scans or ppms.
+#' @param iso.charge Integer. Charge of the patterns to be found.
 #' @param iso.scoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
 #' @param iso.toleranceUnits String. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
 #' @param iso.imageVector Numeric Vector. The mass channels vector of the imaging dataset containing all the scans.
 #' 
-#' @param add.adductDataFrame Data frame with two columns.\itemize{
+#' @param addu.adductDataFrame Data frame with two columns.\itemize{
 #'  \item $name. Column containing the names as strings of the elements or molecules that form adducts 
 #'  \item $mass. Masses of the adduct forming elements.
 #'  }
-#' @param add.tolerance Integer. Mass error tolerance in ppm.
-#' @return A list of lists. All the infomarion related with the isotopes can be found in $isotopes sub-list, and the same for adducts in the $adducts sub-list.
+#' @param addu.tolerance Integer. Mass error tolerance in ppm.
+#' @return List. 
 #' \itemize{
-#'   \item $isotopes: List of lists. Contains the followin sub-lists:
-#'    \itemize{
-#'    \item $Mn: List of matrices. Contains all the M+n ions evaluated and the results matrix. The name of the lists referes to the peak selected as monoisotopic.
-#'    \item $isotopicPeaks: Vector. Indices of the mass vector beloning to isotopic peaks.
-#'    \item $monoisotopicPeaks: Vector. Indices of the mass vector beloning to monoisotopic peaks.
-#'   }
-#'   \item $adducts: List of matrices. Contains all the adduct pairs found during the test. The names refer to the neutral masses of the hypothetic ions.
+#'   \item $A: Data frame of the pairs of M+0 ions cataloged as adducts.
+#'   \item $B: Data frame of the pairs of M+0 ions with non-isotopic ions cataloged as adducts.
+#'   \item $C: Data frame of the all the M+0 ions.
+#'   \item $isotopicTestData: All the computations to determine monoisotopic ions
+#'   \item $monoisotopicPeaks: Peak matrix column indeces of monoisotopic peaks 
+#'   \item $isotopicPeaks: Peak matrix column indeces of isotopic peaks 
 #' }
 #' @export
 #' 
 peakAnnotation <- function(PeakMtx, 
                            iso.number = 2, 
                            iso.tolerance = 30, 
+                           iso.charge = 1,
                            iso.scoreThreshold = 0.75,
                            iso.toleranceUnits = "ppm",
                            iso.imageVector = NULL,
-                           add.tolerance = 50,
-                           add.adducts = data.frame(mass = c(38.963706,22.98976,1.007825),
-                                                    name = c("K","Na","H")))
+                           addu.tolerance = 50,
+                           addu.adducts = data.frame(mass = c(38.963706,22.98976,1.007825),
+                                                    name = c("K","Na","H")),
+                           csv.results = FALSE,
+                           csv.path = getwd())
 {
-  result <- list()
+  isotopeObj <- list(NULL)
+  adductObj <- list(NULL)
+    
+  isotopeObj <- isotopeAnnotation(PeakMtx, isoNumber = iso.number, tolerance = iso.tolerance, 
+                                  charge = iso.charge, scoreThreshold = iso.scoreThreshold,
+                                  toleranceUnits = iso.toleranceUnits, imageVector = iso.imageVector)
   
-  isotopeObj <- isotopeAnnotation(PeakMtx, isoNumber = iso.number, tolerance = iso.tolerance,
-                                  scoreThreshold = iso.scoreThreshold, toleranceUnits = iso.toleranceUnits,
-                                  imageVector = iso.imageVector)
-
+  if(length(isotopeObj$monoisotopicPeaks) == 0)
+  {
+   return() 
+  }
+  
   if(length(isotopeObj$monoisotopicPeaks) >= 2)
   {
     adductObj <- adductAnnotation(isotopeObj = isotopeObj, PeakMtx = PeakMtx,
-                                  adductDataFrame = add.adducts,tolerance = add.tolerance)
-    result$adducts <- adductObj
+                                  adductDataFrame = addu.adducts, tolerance = addu.tolerance)
   }
+
+  results <- list()
+  results <- annotationOutpuFormat(isotopeObj, adductObj, PeakMtx$mass)
+  results$parameters <- list(isotope_number = iso.number,
+                            isotope_charge = iso.charge,
+                            isotope_mass_tolerance = iso.tolerance,
+                            isotope_charge = iso.charge,
+                            isotope_score_threshold = iso.scoreThreshold,
+                            isotope_tolerance_units = iso.toleranceUnits,
+                            adduct_mass_tolerance = addu.tolerance,
+                            adduct_ions = addu.adducts)
   
-  result$isotopes <- isotopeObj
-  
-  result$parameters <- list(isotope_number = iso.number,
-                             isotope_mass_tolerance = iso.tolerance,
-                             isotope_score_threshold = iso.scoreThreshold,
-                             isotope_tolerance_units = iso.toleranceUnits,
-                             adduct_mass_tolerance = add.tolerance,
-                             adduct_ions = add.adducts)
-  
-  return(result)
+  if(csv.results)
+  {
+    if(!is.null(adductObj[[1]]))
+    {
+      write.csv2(x = results$A, file = paste(csv.path,"/A.csv",sep=""),row.names = FALSE)
+      write.csv2(x = results$B, file = paste(csv.path,"/B.csv",sep=""),row.names = FALSE)
+    }
+    write.csv2(x = results$C, file = paste(csv.path,"/C.csv",sep=""),row.names = FALSE)
+  }
+  return(results)
 }
 
 
-
+annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
+{
+  if(!is.null(adductObj[[1]]))
+  {
+    A <- adductObj$A
+    B <- adductObj$B
+  }
+  
+  C <- data.frame(MonoisotopicMass = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
+                  MonoisotopicIndex = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
+                  ILS = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
+                  IsotopicIntensityRatio = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
+                  CarbonAtoms = rep(0, times = length(isotopeObj$monoisotopicPeaks)))
+  
+  ord <- c()
+  for (i in 1:length(isotopeObj$monoisotopicPeaks)) 
+  {
+    ord <- c(ord,which.min(abs(massAxis[sort(isotopeObj$monoisotopicPeaks)[i]]-as.numeric(names(isotopeObj$M1)))))
+  }
+  
+  for(i in 1:length(ord))
+  {
+    C$MonoisotopicMass[i]       <- massAxis[isotopeObj$M1[[ord[i]]][3]]
+    C$MonoisotopicIndex[i]      <- isotopeObj$M1[[ord[i]]][3]
+    C$ILS[i]                    <- isotopeObj$M1[[ord[i]]][5]
+    C$IsotopicIntensityRatio[i] <- isotopeObj$M1[[ord[i]]][9]
+    C$CarbonAtoms[i]            <- isotopeObj$M1[[ord[i]]][10]
+  }
+  
+  C$MonoisotopicMass       <- trunc(C$MonoisotopicMass) + signif(C$MonoisotopicMass-trunc(C$MonoisotopicMass), digits = 4) 
+  C$MonoisotopicIndex      <- trunc(C$MonoisotopicIndex) + signif(C$MonoisotopicIndex-trunc(C$MonoisotopicIndex), digits = 4)
+  C$ILS                    <- trunc(C$ILS) + signif(C$ILS-trunc(C$ILS), digits = 4)
+  C$IsotopicIntensityRatio <- trunc(C$IsotopicIntensityRatio) + signif(C$IsotopicIntensityRatio-trunc(C$IsotopicIntensityRatio), digits = 4)
+  C$CarbonAtoms            <- round(C$CarbonAtoms)
+  
+  IsotopicTestData <- isotopeObj[-((length(isotopeObj)-1):length(isotopeObj))]
+  
+  if(!is.null(adductObj[[1]]))
+  {
+    results <- list(A = A,B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+  }
+  else
+  {
+    results <- list(C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+  }
+  
+return(results)
+}
 
 
 

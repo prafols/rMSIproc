@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // C_adductAnnotation
-Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, int tolerance, int numMass, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis, NumericMatrix R_peakMatrix, int numPixels);
-RcppExport SEXP _rMSIproc_C_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP numMassSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP, SEXP R_isotopesSEXP, SEXP R_isotopeListOrderSEXP, SEXP R_massAxisSEXP, SEXP R_peakMatrixSEXP, SEXP numPixelsSEXP) {
+Rcpp::List C_adductAnnotation(int numMonoiso, int numAdducts, int tolerance, int numMass, NumericVector R_monoisitopeMassVector, NumericVector R_adductMassVector, List R_isotopes, NumericVector R_isotopeListOrder, NumericVector R_massAxis, NumericMatrix R_peakMatrix, int numPixels, NumericVector R_labelAxis, NumericVector R_monoisotopicIndexVector);
+RcppExport SEXP _rMSIproc_C_adductAnnotation(SEXP numMonoisoSEXP, SEXP numAdductsSEXP, SEXP toleranceSEXP, SEXP numMassSEXP, SEXP R_monoisitopeMassVectorSEXP, SEXP R_adductMassVectorSEXP, SEXP R_isotopesSEXP, SEXP R_isotopeListOrderSEXP, SEXP R_massAxisSEXP, SEXP R_peakMatrixSEXP, SEXP numPixelsSEXP, SEXP R_labelAxisSEXP, SEXP R_monoisotopicIndexVectorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,13 +22,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type R_massAxis(R_massAxisSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type R_peakMatrix(R_peakMatrixSEXP);
     Rcpp::traits::input_parameter< int >::type numPixels(numPixelsSEXP);
-    rcpp_result_gen = Rcpp::wrap(C_adductAnnotation(numMonoiso, numAdducts, tolerance, numMass, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis, R_peakMatrix, numPixels));
+    Rcpp::traits::input_parameter< NumericVector >::type R_labelAxis(R_labelAxisSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type R_monoisotopicIndexVector(R_monoisotopicIndexVectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(C_adductAnnotation(numMonoiso, numAdducts, tolerance, numMass, R_monoisitopeMassVector, R_adductMassVector, R_isotopes, R_isotopeListOrder, R_massAxis, R_peakMatrix, numPixels, R_labelAxis, R_monoisotopicIndexVector));
     return rcpp_result_gen;
 END_RCPP
 }
 // C_isotopeAnnotator
-Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans);
-RcppExport SEXP _rMSIproc_C_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP) {
+Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso, NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec, int tolerance, double scoreThreshold, bool ToleranceInScans, int charge);
+RcppExport SEXP _rMSIproc_C_isotopeAnnotator(SEXP massPeaksSEXP, SEXP massChannelsSEXP, SEXP numPixelsSEXP, SEXP numIsoSEXP, SEXP PeakMtxSEXP, SEXP massVecSEXP, SEXP massChanVecSEXP, SEXP toleranceSEXP, SEXP scoreThresholdSEXP, SEXP ToleranceInScansSEXP, SEXP chargeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -42,7 +44,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type tolerance(toleranceSEXP);
     Rcpp::traits::input_parameter< double >::type scoreThreshold(scoreThresholdSEXP);
     Rcpp::traits::input_parameter< bool >::type ToleranceInScans(ToleranceInScansSEXP);
-    rcpp_result_gen = Rcpp::wrap(C_isotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans));
+    Rcpp::traits::input_parameter< int >::type charge(chargeSEXP);
+    rcpp_result_gen = Rcpp::wrap(C_isotopeAnnotator(massPeaks, massChannels, numPixels, numIso, PeakMtx, massVec, massChanVec, tolerance, scoreThreshold, ToleranceInScans, charge));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -396,8 +399,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 11},
-    {"_rMSIproc_C_isotopeAnnotator", (DL_FUNC) &_rMSIproc_C_isotopeAnnotator, 10},
+    {"_rMSIproc_C_adductAnnotation", (DL_FUNC) &_rMSIproc_C_adductAnnotation, 13},
+    {"_rMSIproc_C_isotopeAnnotator", (DL_FUNC) &_rMSIproc_C_isotopeAnnotator, 11},
     {"_rMSIproc_AlignSpectrumToReference", (DL_FUNC) &_rMSIproc_AlignSpectrumToReference, 10},
     {"_rMSIproc_MergeTwoMassAxis", (DL_FUNC) &_rMSIproc_MergeTwoMassAxis, 2},
     {"_rMSIproc_AverageSpectrumC", (DL_FUNC) &_rMSIproc_AverageSpectrumC, 5},

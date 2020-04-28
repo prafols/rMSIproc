@@ -27,6 +27,7 @@
 #' }
 #' @param isoNumber Integer. Number of isotopes to be found.
 #' @param tolerance Integer. Mass tolerance for the candidates in scans or ppms.
+#' @param charge Integer. Charge of the patterns to be found.
 #' @param scoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
 #' @param toleranceUnits String. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
 #' @param imageVector Numeric Vector. The mass channels vector of the imaging dataset containing all the scans.
@@ -34,7 +35,7 @@
 #' @return A list containing the results of the test and other kind of information.
 #' 
 
-isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThreshold = 0.8, toleranceUnits = "ppm", imageVector = NULL)
+isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, charge = 1, scoreThreshold = 0.8, toleranceUnits = "ppm", imageVector = NULL)
 {
   result <- list()  
   
@@ -104,11 +105,13 @@ isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, scoreThres
                                imageVector,                 #image mass axis 
                                tolerance,                   #tolerance in ppm or scans
                                scoreThreshold,              #score threshold
-                               InScans)                     #tolerance units
+                               InScans,                     #tolerance units
+                               charge)   
+
  
   ##### Output format #####
   result <- DeisotopingOutputFormat(result,scoreThreshold)
-  
+
   return(result)
 }
 

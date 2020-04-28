@@ -35,6 +35,7 @@ class Deisotoper
       int massPeaks;             //Number of mass Peaks (length of the matrix mass axis)
       int massChannels;          //Number of mass channels (length of the image mass axis)
       int numPixels;             //Number of pixels
+      int z;                     //Charge of the pattern to be found
       int numIso;                //Number of isotopes to be found given a specific monoisotopic mass
       int tolerance;             //Mass tolerance for peak candidates
       double scoreThreshold;     //Final score needed to pass the isotope test

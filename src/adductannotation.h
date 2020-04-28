@@ -36,7 +36,8 @@ public:
   AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMassVector,
                NumericVector R_adductMassVector, List R_isotopes,
                NumericVector R_isotopeListOrder, NumericVector R_massAxis,
-               NumericMatrix R_peakMatrix);  //Constructor
+               NumericMatrix R_peakMatrix, NumericVector R_labelAxis,
+               NumericVector R_monoisotopicIndexVector);  //Constructor
   
   ~AdductPairer();      //Destructor
   List Run();           //Program executioning function
@@ -45,23 +46,23 @@ private:
 	AdductDef *RunDef;                    //Pointer to the structure.
 	double *monoisitopeMassVector;        //Vector containing the masses of the monoisotopic species (length = numMonoiso)
 	double **ppmMatrix;                   //Vector containing the substraction of the monoisotopic masses. At each step, the length is reduced by 1. (length = mdVlength)  
-  double **massMatrix;
+  double **neutralMassMatrix;
   double **peakMatrix;
-  double *adductMassVector; 		        //Vector containing the adduct forming chemical elements masses.   
+  int **labelMatrix;
+  double *adductMassVector; 		        //Vector containing the masses of the adduct-forming chemical elements.   
   double *adductPairFirstMassVector;    //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (K, K, Na) 
   double *adductPairSecondMassVector;   //Vector containing the mass of the first adduct of the pair. Ex. (K & Na , K & H, Na & H) -> (Na, H, H) 
-  double *massAxis;                     //Vector containint the mass axis of the peak matrix.
-  int **adductPairsNameMatrix;          //Matrix containing the adduct elements of the pairs. -1 if no pair found.
+  double *massAxis;                     //Vector containing the mass axis of the peak matrix.
+  int *labelAxis;                       //Vector containing the identity of peaks (0: no info, 1: monoisotopes, 2:isotpes)
   int *isotopeListOrder;                //Vector containing where the ion is found in the isotopes list
-  int currentShift;							        //Current shift in the mass substraction
-  int maxShift;                         //Maximum allowed shift for the number of monoisotopic masses
+  int *monoisitopeIndexVector;   
+  int *massAxisToMonoisotopicAxis;      //For a given position in the mass axis corresponding a monoisotope stroes its poisiton in the monoisotopic axis
   int adductDiffCombinations;           //Length of adductMassDifferencesVector
-  int mdVlength; 							          //Length of the mass differences vector. At each shift
   int positiveTest;                     //Number of pairs that have succes in the test
   List isotopes;                        //Results from the isotope test
   
   void AdductPairCreator();                   //Fills adductPairFirstMassVector and adductPairSecondMassVector
-	void ShiftandCalculateAdductPairs();        //Substracts the monoisotopeMassVector with the shifted version of himself
+	void CalculateAdductPairs();                //Finds pains between masses.
   void ValidateCandidates();                  //Reads the information form the isotopes tests and merge it with the adduct candidates information.
   List GenerateResultsList();                 //Output construction function
 };

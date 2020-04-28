@@ -107,10 +107,11 @@ Deisotoper::~Deisotoper()
     delete[] pMatrix[i];
   }
   delete[] pMatrix;
+  
 }
 
 //Sorts the peaks by intensity 
-void Deisotoper::SortPeaksByIntensity()
+void Deisotoper::SortPeaksByIntensity() //Needs improvement
 {
   //Fill the total pixel intensity vector
   for(int i = 0; i < imgRuninfo->massPeaks; i++)
@@ -252,7 +253,7 @@ NumericMatrix Deisotoper::CandidateFinder(NumericVector PeaksToCheck)
 double* Deisotoper::getCandidateLimits(int massIndex)
 {
   static double limits[2] = {0,0};
-  double CentralIsoMass = pMatrixAxis[pMatrixPeakOrder[massIndex]] + (CrntNumIso*1.0033548378);
+  double CentralIsoMass = pMatrixAxis[pMatrixPeakOrder[massIndex]] + (CrntNumIso*1.0033548378/(imgRuninfo->z));
   double tmpDummy = 0; //If scans it helps to find the closest scan, if ppm it stores the ppm error from the central mass
   
   if(imgRuninfo->ToleranceInScans)
@@ -388,7 +389,7 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     
     //***********************************//Mass ppm Score//******************************************************************//
     
-    ppm = fabs((((pMatrixAxis[CandidateRow[i+1]])-(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378))*1000000)/(pMatrixAxis[CandidateRow[0]]+CrntNumIso*1.0033548378)); //mass error in ppm
+    ppm = fabs((((pMatrixAxis[CandidateRow[i+1]])-(pMatrixAxis[CandidateRow[0]]+(CrntNumIso*1.0033548378/(imgRuninfo->z))))*1000000)/(pMatrixAxis[CandidateRow[0]]+(CrntNumIso*1.0033548378/(imgRuninfo->z)))); //mass error in ppm
     
     maxppm = (!imgRuninfo->ToleranceInScans) ? imgRuninfo->tolerance : getToleranceFromCurve(pImagePeakOrder[peakNumber]); //maximum valid tolerance
   
@@ -551,7 +552,7 @@ List Deisotoper::Run()
 // [[Rcpp::export]]
 Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, int numIso,
                               NumericMatrix PeakMtx, NumericVector massVec, NumericVector massChanVec,
-                              int tolerance, double scoreThreshold, bool ToleranceInScans)
+                              int tolerance, double scoreThreshold, bool ToleranceInScans, int charge)
 {
   //Fill the class data structure with the information of the experiment
   Deisotoper::IsoDef myIsoDef;  
@@ -559,6 +560,7 @@ Rcpp::List C_isotopeAnnotator(int massPeaks, int massChannels, int numPixels, in
   myIsoDef.massChannels = massChannels;
   myIsoDef.numPixels = numPixels;
   myIsoDef.numIso = numIso;
+  myIsoDef.z = charge;
   myIsoDef.tolerance = tolerance;
   myIsoDef.scoreThreshold = scoreThreshold;
   myIsoDef.ToleranceInScans = ToleranceInScans;
