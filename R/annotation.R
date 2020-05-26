@@ -16,7 +16,7 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#' peakAnnotation
+#' rMSIannotation
 #' 
 #' Searches for isotopic ions in the peak matrix and evaluates them using morphology, intensity and mass error criteria.
 #' This algorithm only searches carbon-based isotopic ions.
@@ -27,30 +27,32 @@
 #' \item PeakMtx$mass. A vector containg the masses of each peak. Must be in the same order with the columns of the intensity marix.   
 #' \item PeakMtx$numPixels. Number of pixels (rows in your matrix).   
 #' }
-#' @param iso.number Integer. Number of isotopes to be found.
-#' @param iso.tolerance Integer. Mass tolerance for the isotope candidates in scans or ppms.
+#' @param iso.number Integer. Number of isotopes for each monoisotopic ion to be found.
+#' @param iso.tolerance Integer. Mass tolerance for the distance between isotope candidates in scans or ppms. (1.003355 Da +/- iso.tolerance)
 #' @param iso.charge Integer. Charge of the patterns to be found.
-#' @param iso.scoreThreshold Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.
-#' @param iso.toleranceUnits String. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
+#' @param iso.scoreThreshold Numeric between 0 and 1. ILS value to consider a pair of ions isotopes.
+#' @param iso.toleranceUnits String. The units of iso.tolerance. Must be 'ppm' or 'scan'. If ToleranceUnits is 'scan' then ImageVector must be the mass channels vector of the rMSI image (rMSIObj$mass).
 #' @param iso.imageVector Numeric Vector. The mass channels vector of the imaging dataset containing all the scans.
 #' 
-#' @param addu.adductDataFrame Data frame with two columns.\itemize{
-#'  \item $name. Column containing the names as strings of the elements or molecules that form adducts 
+#' @param addu.adductDataFrame Data frame containing the adducts to be searched. By defalut (+H, +Na and +K). It must have two columns.\itemize{
+#'  \item $name. Column containing the names as strings of the elements or molecules that form adducts (i.e. "Na", "K", "H") 
 #'  \item $mass. Masses of the adduct forming elements.
 #'  }
 #' @param addu.tolerance Integer. Mass error tolerance in ppm.
+#' @param csv.results Boolean. If TRUE, the annotations will be writen in CSV files under the name A.csv, B.csv and C.csv. By default FALSE.
+#' @param csv.path Path. Path to the folder where the CSV files shoul be stored. By default the working directory.
 #' @return List. 
 #' \itemize{
 #'   \item $A: Data frame of the pairs of M+0 ions cataloged as adducts.
-#'   \item $B: Data frame of the pairs of M+0 ions with non-isotopic ions cataloged as adducts.
+#'   \item $B: Data frame of the pairs of M+0 ions and non-isotopic ions cataloged as adducts.
 #'   \item $C: Data frame of the all the M+0 ions.
-#'   \item $isotopicTestData: All the computations to determine monoisotopic ions
-#'   \item $monoisotopicPeaks: Peak matrix column indeces of monoisotopic peaks 
-#'   \item $isotopicPeaks: Peak matrix column indeces of isotopic peaks 
+#'   \item $isotopicTestData: All the test results computed to determine the monoisotopic ions.
+#'   \item $monoisotopicPeaks: Peak matrix column indeces of monoisotopic peaks. 
+#'   \item $isotopicPeaks: Peak matrix column indeces of isotopic peaks.
 #' }
 #' @export
 #' 
-peakAnnotation <- function(PeakMtx, 
+rMSIannotation <- function(PeakMtx, 
                            iso.number = 2, 
                            iso.tolerance = 30, 
                            iso.charge = 1,

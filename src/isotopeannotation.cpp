@@ -102,7 +102,7 @@ Deisotoper::~Deisotoper()
     delete[] massErrorCurve;
   }
   
-  for(int i; i < imgRuninfo->numPixels; i++)
+  for(int i = 0; i < imgRuninfo->numPixels; i++)
   {
     delete[] pMatrix[i];
   }
@@ -306,7 +306,7 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
   int zero_pixels = 0, cnt = 0;
   int pixels_with_intensity = 0;
   double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, ratio_slope, intercept;
-  double ScoreMrph, ScoreInt,ScoreMass, ModCA, CA = 0,ppm = 0 ,maxppm, model_slope;
+  double ScoreMrph, ScoreInt,ScoreMass, ModCA = 0, CA = 0,ppm = 0 ,maxppm, model_slope;
   
   for(int i = 0; i < (7*NumCan); i++) //Cleanning 
   {
