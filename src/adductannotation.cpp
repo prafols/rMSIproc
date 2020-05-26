@@ -299,28 +299,28 @@ List AdductPairer::GenerateResultsList()
 	    {
   		  if(labelMatrix[k][(i*RunDef->numMonoiso)+j] == 1)
   		  {
-  		    List IsoData1 = isotopes[isotopeListOrder[j]];
-  		    List IsoData2 = isotopes[isotopeListOrder[massAxisToMonoisotopicAxis[k]]];
+  		    List IsoData1 = isotopes(isotopeListOrder[j]);
+  		    List IsoData2 = isotopes(isotopeListOrder[massAxisToMonoisotopicAxis[k]]);
   		    NumericVector r(10);
 
   		    r(0) = i;                               //Pair of adducts ID
   		    r(1) = neutralMassMatrix[k][(i*RunDef->numMonoiso)+j]; //Neutral mass
   		    r(2) = monoisitopeMassVector[j];        //M+Add1 mass
-  		    r(3) = IsoData1[2];                     //M+Add1 index
+  		    r(3) = IsoData1(2);                     //M+Add1 index
   		    r(4) = monoisitopeMassVector[massAxisToMonoisotopicAxis[k]];        //M+Add1 mass
-  		    r(5) = IsoData2[2];                     //M+Add1 index
+  		    r(5) = IsoData2(2);                     //M+Add1 index
   		    
-  		    tmp = IsoData1[9];                        //Old: Average C atoms. New: Average slopes 
+  		    tmp = IsoData1(9);                        //Old: Average C atoms. New: Average slopes 
   		    tmp *= (0.0107/0.9893);
-  		    r(6)  = IsoData2[9];  
+  		    r(6)  = IsoData2(9);  
   		    r(6) *= (0.0107/0.9893);
   		    r(6) += tmp;   
   		    r(6) *= 0.5;  
   		    
-  	      tmp = IsoData1[9];                        //C atmos error * probabilities quotien = M+1 slope
+  	      tmp = IsoData1(9);                        //C atmos error * probabilities quotien = M+1 slope
   	      tmp *= (0.0107/0.9893);
   	      tmp = (tmp-r(6))*(tmp-r(6));
-  		    r(7) = IsoData2[9]; 
+  		    r(7) = IsoData2(9); 
   		    r(7) *= (0.0107/0.9893);
   		    r(7) = (r(7)-r(6))*(r(7)-r(6));
   		    r(7) = sqrt((r(7) + tmp))/sqrt(2);
@@ -334,7 +334,7 @@ List AdductPairer::GenerateResultsList()
   		    r(8) = correlation(peakA, peakB, RunDef->numPixels);   //Correlation degree
   		    r(9) = ppmMatrix[k][(i*RunDef->numMonoiso)+j];         //Mass diference error in ppm   
   		    
-  		    ResultsA[cntResultsA] = r;
+  		    ResultsA(cntResultsA) = r;
   		    cntResultsA++;
   		    
   		    // names[cntList]  = massMatrix[i][j];
@@ -342,32 +342,32 @@ List AdductPairer::GenerateResultsList()
   		  
   		  if(labelMatrix[k][(i*RunDef->numMonoiso)+j] == 0)
   		  {
-  		    List IsoData1 = isotopes[isotopeListOrder[j]];
+  		    List IsoData1 = isotopes(isotopeListOrder[j]);
   		    NumericVector r(8);
   		    r(0) = i;                                                 //Adduct pair code
   		    r(1) = neutralMassMatrix[k][(i*RunDef->numMonoiso)+j];    //Neutral mass
   		    r(2) = monoisitopeMassVector[j];                          //Monoisotopic mass
-  		    r(3) = IsoData1[2];                                       //Monoisotopic mass index THIS SHOULD BE WRONG
+  		    r(3) = IsoData1(2);                                       //Monoisotopic mass index THIS SHOULD BE WRONG
   		    r(4) = massAxis[k];                                       //Unknown mass
   		    r(5) = k+1;                                               //Unknown mass index
   		    
   		    for(int l = 0; l < RunDef->numPixels; l++)
   		    {
-  		      peakA[l] = peakMatrix[l][(int)r(3)-1];
-  		      peakB[l] = peakMatrix[l][(int)r(5)-1];
+  		      peakA(l) = peakMatrix[l][(int)r(3)-1];
+  		      peakB(l) = peakMatrix[l][(int)r(5)-1];
   		    }
   	
   		    r(6) = correlation(peakA,peakB,RunDef->numPixels);   //Correlation degree
   		    r(7) = ppmMatrix[k][(i*RunDef->numMonoiso)+j];                        //Mass diference error in ppm   
   		    
-  		    ResultsB[cntResultsB] = r;
+  		    ResultsB(cntResultsB) = r;
   		    cntResultsB++;
   		  }
   		  
   		  if(cntResultsA+cntResultsB == positiveTest)
   		  {
-  		    Results[0] = ResultsA;
-  		    Results[1] = ResultsB;
+  		    Results(0) = ResultsA;
+  		    Results(1) = ResultsB;
   		    return(Results);
   		  }
 		  }

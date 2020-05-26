@@ -128,10 +128,10 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
   for(i in 1:length(ord))
   {
     C$MonoisotopicMass[i]       <- massAxis[isotopeObj$M1[[ord[i]]][3]]
-    C$MonoisotopicIndex[i]      <- isotopeObj$M1[[ord[i]]][3]
-    C$ILS[i]                    <- isotopeObj$M1[[ord[i]]][5]
-    C$IsotopicIntensityRatio[i] <- isotopeObj$M1[[ord[i]]][9]
-    C$CarbonAtoms[i]            <- isotopeObj$M1[[ord[i]]][10]
+    C$MonoisotopicIndex[i]      <- isotopeObj$M1[[ord[i]]][3,which.max(isotopeObj$M1[[ord[i]]][5,])]
+    C$ILS[i]                    <- isotopeObj$M1[[ord[i]]][5,which.max(isotopeObj$M1[[ord[i]]][5,])]
+    C$IsotopicIntensityRatio[i] <- isotopeObj$M1[[ord[i]]][9,which.max(isotopeObj$M1[[ord[i]]][5,])]
+    C$CarbonAtoms[i]            <- isotopeObj$M1[[ord[i]]][10,which.max(isotopeObj$M1[[ord[i]]][5,])]
   }
   
   C$MonoisotopicMass       <- trunc(C$MonoisotopicMass) + signif(C$MonoisotopicMass-trunc(C$MonoisotopicMass), digits = 4) 

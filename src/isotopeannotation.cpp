@@ -301,6 +301,10 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
 {
   double x[imgRuninfo->numPixels];  //array containing the image of the principal mass 
   double y[imgRuninfo->numPixels];  //array containing the image of the candidate mass
+  int x_zero_pixel[imgRuninfo->numPixels];
+  int y_zero_pixel[imgRuninfo->numPixels];
+  int zero_pixels = 0, cnt = 0;
+  int pixels_with_intensity = 0;
   double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, ratio_slope, intercept;
   double ScoreMrph, ScoreInt,ScoreMass, ModCA, CA = 0,ppm = 0 ,maxppm, model_slope;
   
@@ -312,13 +316,15 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
   for(int i = 0; i < imgRuninfo->numPixels ; i++)
   {
     x[i] = pMatrix[i][CandidateRow[0]];  //Monoisotopic peak
+    if(x[i] == 0)
+    {
+      x_zero_pixel[i] = 1;
+    }
+      else
+      {
+        x_zero_pixel[i] = 0;
+      }
   }
-  
-  for(int j = 0; j < imgRuninfo->numPixels ; j++)
-  {
-    x_mean += x[j];  //Candidate mass intensity mean
-  }
-  x_mean = (x_mean/imgRuninfo->numPixels);
   
   //***********************************//Run the test for each candidate//***************************************//
   for(int i = 0; i < NumCan; i++)   
@@ -329,23 +335,65 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     SSres = 0;
     y_mean = 0;
     intercept = 0;
-    for(int j = 0; j < imgRuninfo->numPixels ; j++)
+    zero_pixels = 0;
+    
+    for(int j = 0; j < imgRuninfo->numPixels; j++)
     {
       y[j] = pMatrix[j][CandidateRow[i+1]];  //M+N peak
+      if(y[j] == 0)
+      {
+        y_zero_pixel[j] = 1;
+      }
+        else
+        {
+          y_zero_pixel[j] = 0;
+        }
     }
     
-    for(int j = 0; j < imgRuninfo->numPixels ; j++)
+    for(int j = 0; j < imgRuninfo->numPixels; j++)
     {
-      y_mean += y[j];  //Candidate mass intensity mean
+      if(x_zero_pixel[j] == 1 || y_zero_pixel[j] == 1)
+      {
+        zero_pixels++;
+      }
     }
-    y_mean = (y_mean/imgRuninfo->numPixels);
+    
+    pixels_with_intensity = imgRuninfo->numPixels-zero_pixels;
+    double nx[pixels_with_intensity];  //array containing the image of the principal mass 
+    double ny[pixels_with_intensity];  //array containing the image of the candidate mass
+    
+    cnt = 0;
+
+    for(int j = 0; j < imgRuninfo->numPixels; j++)
+    {
+      if(x_zero_pixel[j] == 0 && y_zero_pixel[j] == 0)
+      {
+        nx[cnt] = x[j];
+        ny[cnt] = y[j];
+        cnt++;
+      }
+    }
+    
+    for(int j = 0; j < pixels_with_intensity; j++)
+    {
+      x_mean += nx[j];  //Candidate mass intensity mean
+    }
+    x_mean = x_mean/pixels_with_intensity;
+    
+    
+    for(int j = 0; j < pixels_with_intensity; j++)
+    {
+      y_mean += ny[j];  //Candidate mass intensity mean
+    }
+    y_mean = y_mean/pixels_with_intensity;
+  
     
     //***********************************//Lineal model//*******************************************************//
       
-      for(int j = 0; j < imgRuninfo->numPixels; j++)  
+      for(int j = 0; j < pixels_with_intensity; j++)  
       {
-        A += (x[j] - x_mean)*(y[j] - y_mean);
-        B += (x[j] - x_mean)*(x[j] - x_mean);
+        A += (nx[j] - x_mean)*(ny[j] - y_mean);
+        B += (nx[j] - x_mean)*(nx[j] - x_mean);
       }
       ratio_slope = (A/B < 0) ?  0.00005 : A/B;  //Isotope ratio from the data
       
@@ -354,15 +402,15 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     //***********************************//Morphology score (adj. R2)//*******************************************************//
     
       //Total sum of squares: the sum of the squares of the difference of the dependent variable and its mean
-      for(int j = 0; j < imgRuninfo->numPixels ; j++)
+      for(int j = 0; j < pixels_with_intensity ; j++)
       {
-        SStot += (y[j] - y_mean) * (y[j] - y_mean);     
+        SStot += (ny[j] - y_mean) * (ny[j] - y_mean);     
       }
       
       //Sum of squared residuals: the sum of the squares of the residuals
-      for(int j = 0; j < imgRuninfo->numPixels ; j++)
+      for(int j = 0; j < pixels_with_intensity ; j++)
       {
-        SSres += (y[j] - (intercept + (ratio_slope*x[j]))) * (y[j] - (intercept + (ratio_slope*x[j])));     //TODO probar treure el model i ficar directament el valor de x
+        SSres += (ny[j] - (intercept + ((ratio_slope)*nx[j]))) * (ny[j] - (intercept + (ratio_slope*nx[j])));     //TODO probar treure el model i ficar directament el valor de x
       }
       
       //Definition of R2 
@@ -373,8 +421,8 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     //***********************************//Intensity Score//******************************************************************//
     
       //Theoretical number of Carbons extracted from the Human metabolome database model  
-      ModCA  = 0.076*pMatrixAxis[CandidateRow[0]] - 12;
-      model_slope  = 0.000702*pMatrixAxis[CandidateRow[0]] - 0.03851;
+      ModCA  = 0.076*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 12;
+      model_slope  = 0.000702*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.03851;
       
       
       //Number of carbons from the experimental intensity rate

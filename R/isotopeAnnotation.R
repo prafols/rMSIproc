@@ -107,8 +107,7 @@ isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, charge = 1
                                scoreThreshold,              #score threshold
                                InScans,                     #tolerance units
                                charge)   
-
- 
+  
   ##### Output format #####
   result <- DeisotopingOutputFormat(result,scoreThreshold)
 
@@ -172,7 +171,6 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   {
     for(j in (1:length(r[[i]])))
     {
-
       if((!is.null(r[[i]][[j]])) & (as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) >= ScoreThreshold))
       {
         if(i == 1)

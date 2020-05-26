@@ -96,6 +96,12 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   labelAxis[isotopeObj$monoisotopicPeaks] <- 1
   labelAxis[isotopeObj$isotopicPeaks] <- 2
   
+  M1isotopes <- isotopeObj$M1
+  
+  for(i in 1:length(M1isotopes))
+  {
+    M1isotopes[[i]] <- M1isotopes[[i]][,which.max(M1isotopes[[i]][5,])]
+  }
   
   ##### Calling the C++ method #####
   adducts <- C_adductAnnotation(length(isotopeObj$monoisotopicPeaks),
@@ -104,7 +110,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                 length(PeakMtx$mass),
                                 PeakMtx$mass[sort(isotopeObj$monoisotopicPeaks)],
                                 adductDataFrame$mass,
-                                isotopeObj$M1,
+                                M1isotopes,
                                 ord,
                                 PeakMtx$mass,
                                 PeakMtx$intensity,
@@ -117,7 +123,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   }
   names(adducts) <- c("A","B")
   
-  
+
   
   ## Data frame for A quality adducts ##
   adductsA <- data.frame(
@@ -153,7 +159,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   adductsA$NeutralMass <- trunc(adductsA$NeutralMass) + signif(adductsA$NeutralMass - trunc(adductsA$NeutralMass), digits = 4)
   adductsA$IsotopeIntensityRatioMean <- trunc(adductsA$IsotopeIntensityRatioMean) + signif(adductsA$IsotopeIntensityRatioMean - trunc(adductsA$IsotopeIntensityRatioMean), digits = 3)
   adductsA$IsotopeIntensityRatioStdError <- trunc(adductsA$IsotopeIntensityRatioStdError) + signif(adductsA$IsotopeIntensityRatioStdError - trunc(adductsA$IsotopeIntensityRatioStdError), digits = 4)
-  
+
   
   
   ## Data frame for B quality adducts ##
@@ -185,11 +191,12 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   adductsB$Adduct1Mass <- trunc(adductsB$Adduct1Mass) + signif(adductsB$Adduct1Mass - trunc(adductsB$Adduct1Mass), digits = 4)
   adductsB$Adduct2Mass <- trunc(adductsB$Adduct2Mass) + signif(adductsB$Adduct2Mass - trunc(adductsB$Adduct2Mass), digits = 4)
   adductsB$NeutralMass <- trunc(adductsB$NeutralMass) + signif(adductsB$NeutralMass - trunc(adductsB$NeutralMass), digits = 4)
-  
+
   
   #Results
   adducts$A <- adductsA
   adducts$B <- adductsB
+
   
   return(adducts)
 }
