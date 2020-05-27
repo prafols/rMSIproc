@@ -98,10 +98,10 @@ rMSIannotation <- function(PeakMtx,
   {
     if(!is.null(adductObj[[1]]))
     {
-      write.csv2(x = results$A, file = paste(csv.path,"/A.csv",sep=""),row.names = FALSE)
-      write.csv2(x = results$B, file = paste(csv.path,"/B.csv",sep=""),row.names = FALSE)
+      write.csv(x = results$A, file = paste(csv.path,"/A.csv",sep=""),row.names = FALSE)
+      write.csv(x = results$B, file = paste(csv.path,"/B.csv",sep=""),row.names = FALSE)
     }
-    write.csv2(x = results$C, file = paste(csv.path,"/C.csv",sep=""),row.names = FALSE)
+    write.csv(x = results$C, file = paste(csv.path,"/C.csv",sep=""),row.names = FALSE)
   }
   return(results)
 }
@@ -116,10 +116,10 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
   }
   
   C <- data.frame(MonoisotopicMass = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
-                  MonoisotopicIndex = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   ILS = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   IsotopicIntensityRatio = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
-                  CarbonAtoms = rep(0, times = length(isotopeObj$monoisotopicPeaks)))
+                  EstimatedCarbonAtoms = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
+                  MonoisotopicIndex = rep(0, times = length(isotopeObj$monoisotopicPeaks)))
   
   ord <- c()
   for (i in 1:length(isotopeObj$monoisotopicPeaks)) 
@@ -133,14 +133,14 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
     C$MonoisotopicIndex[i]      <- isotopeObj$M1[[ord[i]]][3,which.max(isotopeObj$M1[[ord[i]]][5,])]
     C$ILS[i]                    <- isotopeObj$M1[[ord[i]]][5,which.max(isotopeObj$M1[[ord[i]]][5,])]
     C$IsotopicIntensityRatio[i] <- isotopeObj$M1[[ord[i]]][9,which.max(isotopeObj$M1[[ord[i]]][5,])]
-    C$CarbonAtoms[i]            <- isotopeObj$M1[[ord[i]]][10,which.max(isotopeObj$M1[[ord[i]]][5,])]
+    C$EstimatedCarbonAtoms[i]            <- isotopeObj$M1[[ord[i]]][10,which.max(isotopeObj$M1[[ord[i]]][5,])]
   }
   
   C$MonoisotopicMass       <- trunc(C$MonoisotopicMass) + signif(C$MonoisotopicMass-trunc(C$MonoisotopicMass), digits = 4) 
   C$MonoisotopicIndex      <- trunc(C$MonoisotopicIndex) + signif(C$MonoisotopicIndex-trunc(C$MonoisotopicIndex), digits = 4)
   C$ILS                    <- trunc(C$ILS) + signif(C$ILS-trunc(C$ILS), digits = 4)
   C$IsotopicIntensityRatio <- trunc(C$IsotopicIntensityRatio) + signif(C$IsotopicIntensityRatio-trunc(C$IsotopicIntensityRatio), digits = 4)
-  C$CarbonAtoms            <- round(C$CarbonAtoms)
+  C$EstimatedCarbonAtoms   <- round(C$EstimatedCarbonAtoms)
   
   IsotopicTestData <- isotopeObj[-((length(isotopeObj)-1):length(isotopeObj))]
   

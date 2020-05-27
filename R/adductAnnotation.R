@@ -131,17 +131,24 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   Adducts = rep(0, times = length(adducts$A)),
   Adduct1Mass = rep(0, times = length(adducts$A)),
   Adduct2Mass = rep(0, times = length(adducts$A)),
-  Adduct1Index = rep(0, times = length(adducts$A)),
-  Adduct2Index = rep(0, times = length(adducts$A)),
   IsotopeIntensityRatioMean = rep(0, times = length(adducts$A)),
   IsotopeIntensityRatioStdError = rep(0, times = length(adducts$A)),
   Correlation = rep(0, times = length(adducts$A)),
-  MassError = rep(0, times = length(adducts$A)))
+  MassError = rep(0, times = length(adducts$A)),
+  Adduct1Index = rep(0, times = length(adducts$A)),
+  Adduct2Index = rep(0, times = length(adducts$A)))
   for(i in 1:length(adducts$A))
   {
     name1 <- firstnameVector[(adducts$A[[i]][1]+1)]
     name2 <- secondnameVector[(adducts$A[[i]][1]+1)]
-    adductsA$Adducts[i]                         <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+    if(adducts$A[[i]][3] > adducts$A[[i]][5])
+    {
+      adductsA$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+    }
+    else
+    {
+      adductsA$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+    }
     adductsA$NeutralMass[i]                     <- adducts$A[[i]][2]
     adductsA$Adduct1Mass[i]                     <- adducts$A[[i]][3]
     adductsA$Adduct1Index[i]                    <- adducts$A[[i]][4]
@@ -168,16 +175,22 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   Adducts = rep(0, times = length(adducts$B)),
   Adduct1Mass = rep(0, times = length(adducts$B)),
   Adduct2Mass = rep(0, times = length(adducts$B)),
-  Adduct1Index = rep(0, times = length(adducts$B)),
-  Adduct2Index = rep(0, times = length(adducts$B)),
   Correlation = rep(0, times = length(adducts$B)),
-  MassError = rep(0, times = length(adducts$B)))
+  MassError = rep(0, times = length(adducts$B)),
+  Adduct1Index = rep(0, times = length(adducts$B)),
+  Adduct2Index = rep(0, times = length(adducts$B)))
   for(i in 1:length(adducts$B))
   {
     name1 <- firstnameVector[(adducts$B[[i]][1]+1)]
     name2 <- secondnameVector[(adducts$B[[i]][1]+1)]
-    
-    adductsB$Adducts[i]       <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+    if(adducts$B[[i]][3] > adducts$B[[i]][5])
+    {
+      adductsB$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+    }
+    else
+    {
+      adductsB$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+    }
     adductsB$NeutralMass[i]   <- adducts$B[[i]][2]
     adductsB$Adduct1Mass[i]   <- adducts$B[[i]][3]
     adductsB$Adduct1Index[i]  <- adducts$B[[i]][4]
@@ -194,8 +207,12 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
 
   
   #Results
-  adducts$A <- adductsA
-  adducts$B <- adductsB
+  adductsA <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
+  adductsB <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
+  row.names(adductsA) <- NULL
+  row.names(adductsB) <- NULL
+  adducts$A <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
+  adducts$B <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
 
   
   return(adducts)

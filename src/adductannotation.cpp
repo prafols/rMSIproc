@@ -241,6 +241,22 @@ void AdductPairer::CalculateAdductPairs()
                 positiveTest++;
               }
             }
+            //else if((monoisitopeMassVector[j] < massAxis[k]))
+            else if((monoisitopeMassVector[j] < massAxis[k]) & (labelAxis[k] == 0))
+            {
+              Mmass1 = monoisitopeMassVector[j] - adductPairSecondMassVector[i];
+              Mmass2 = massAxis[k] - adductPairFirstMassVector[i];
+              meanMmass = (Mmass1 + Mmass2)/2;
+              mass_diff = Mmass1 - Mmass2; 
+              ppmMassError  = 1e6*mass_diff/meanMmass;
+              if(fabs(ppmMassError) < RunDef->tolerance)
+              {
+                ppmMatrix[k][(i*RunDef->numMonoiso)+j] = fabs(ppmMassError);
+                neutralMassMatrix[k][(i*RunDef->numMonoiso)+j] = meanMmass;
+                labelMatrix[k][(i*RunDef->numMonoiso)+j] = labelAxis[k];
+                positiveTest++;
+              }
+            }
           }
         }
       }
