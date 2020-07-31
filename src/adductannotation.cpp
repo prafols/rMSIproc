@@ -301,6 +301,8 @@ List AdductPairer::GenerateResultsList()
 {
   int cntResultsA = 0;
   int cntResultsB = 0;
+  int correlation_length = 0;
+  int zero_pixel[RunDef->numPixels];
   List Results(2);
 	List ResultsA(positiveTest+1);
 	List ResultsB(positiveTest+1);
@@ -341,13 +343,30 @@ List AdductPairer::GenerateResultsList()
   		    r(7) = (r(7)-r(6))*(r(7)-r(6));
   		    r(7) = sqrt((r(7) + tmp))/sqrt(2);
   		    
+  		    correlation_length = 0;
   		    for(int l = 0; l < RunDef->numPixels; l++)
   		    {
-  		      peakA[l] = peakMatrix[l][(int)r(3)-1];
-  		      peakB[l] = peakMatrix[l][(int)r(5)-1];
+  		      if((peakMatrix[l][(int)r(3)-1] == 0) || (peakMatrix[l][(int)r(5)-1] == 0))
+  		      {
+  		        zero_pixel[l] = 1;
+  		      }
+  		      else
+  		      {
+  		        zero_pixel[l] = 0;
+  		        correlation_length++;
+  		      }
+  		    }
+  		    
+  		    for(int l = 0; l < RunDef->numPixels; l++)
+  		    {
+  		      if(zero_pixel[l] == 0)
+  		      {
+    		      peakA[l] = peakMatrix[l][(int)r(3)-1];
+    		      peakB[l] = peakMatrix[l][(int)r(5)-1];
+  		      }
   		    }
   
-  		    r(8) = correlation(peakA, peakB, RunDef->numPixels);   //Correlation degree
+  		    r(8) = correlation(peakA, peakB, correlation_length);   //Correlation degree
   		    r(9) = ppmMatrix[k][(i*RunDef->numMonoiso)+j];         //Mass diference error in ppm   
   		    
   		    ResultsA(cntResultsA) = r;
@@ -367,20 +386,37 @@ List AdductPairer::GenerateResultsList()
   		    r(4) = massAxis[k];                                       //Unknown mass
   		    r(5) = k+1;                                               //Unknown mass index
   		    
+  		    correlation_length = 0;
   		    for(int l = 0; l < RunDef->numPixels; l++)
   		    {
-  		      peakA(l) = peakMatrix[l][(int)r(3)-1];
-  		      peakB(l) = peakMatrix[l][(int)r(5)-1];
+  		      if((peakMatrix[l][(int)r(3)-1] == 0) || (peakMatrix[l][(int)r(5)-1] == 0))
+  		      {
+  		        zero_pixel[l] = 1;
+  		      }
+  		      else
+  		      {
+  		        zero_pixel[l] = 0;
+  		        correlation_length++;
+  		      }
+  		    }
+  		    
+  		    for(int l = 0; l < RunDef->numPixels; l++)
+  		    {
+  		      if(zero_pixel[l] == 0)
+  		      {
+  		        peakA[l] = peakMatrix[l][(int)r(3)-1];
+  		        peakB[l] = peakMatrix[l][(int)r(5)-1];
+  		      }
   		    }
   	
-  		    r(6) = correlation(peakA,peakB,RunDef->numPixels);   //Correlation degree
+  		    r(6) = correlation(peakA, peakB, correlation_length);   //Correlation degree
   		    r(7) = ppmMatrix[k][(i*RunDef->numMonoiso)+j];                        //Mass diference error in ppm   
   		    
   		    ResultsB(cntResultsB) = r;
   		    cntResultsB++;
   		  }
   		  
-  		  if(cntResultsA+cntResultsB == positiveTest)
+  		  if((cntResultsA+cntResultsB) == positiveTest)
   		  {
   		    Results(0) = ResultsA;
   		    Results(1) = ResultsB;
@@ -402,10 +438,11 @@ List AdductPairer::Run()
   CalculateAdductPairs();            //Do the shift and substract the masses
 
   //ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
-	
+  List results = GenerateResultsList();
+    
 	Rcout << "Number of adduct pairs found = "<< positiveTest << "\n";
-	
-	return(GenerateResultsList());
+
+	return(results);
 }                                                                   
 
 

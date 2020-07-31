@@ -363,7 +363,6 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     double ny[pixels_with_intensity];  //array containing the image of the candidate mass
     
     cnt = 0;
-
     for(int j = 0; j < imgRuninfo->numPixels; j++)
     {
       if(x_zero_pixel[j] == 0 && y_zero_pixel[j] == 0)
@@ -495,7 +494,7 @@ List Deisotoper::MatrixAnnotator(NumericMatrix CanMatrix, NumericVector PeaksToC
         TMP(1,k) = scores[(7*k) + 0];                 //ppm error
         TMP(2,k) = CandidateRow[0] + 1;               //M+0 mass index // +1 in order to addapt the indexes to the R format
         TMP(3,k) = CandidateRow[k + 1] + 1;           //M+N mass index
-        TMP(4,k) = scores[(7*k) + 1];                 //Final score
+        TMP(4,k) = scores[(7*k) + 1];                 //ILS
         TMP(5,k) = scores[(7*k) + 2];                 //Morphology score
         TMP(6,k) = scores[(7*k) + 3];                 //Intensity score
         TMP(7,k) = scores[(7*k) + 4];                 //Mass error score
@@ -516,7 +515,14 @@ List Deisotoper::MatrixAnnotator(NumericMatrix CanMatrix, NumericVector PeaksToC
         TMP(8,k) = -1;
         TMP(9,k) = -1; 
       }
-      AnnMatrix[i] = TMP(Range(0,9),Range(0,pNumCandidates[i]-1));
+      
+      int range2 = pNumCandidates[i]-1;
+      if(range2 < 0) 
+      {
+        range2 = 0;
+      }
+
+      AnnMatrix[i] = TMP(Range(0,9),Range(0,range2));
     }
   }
   
@@ -569,16 +575,16 @@ List Deisotoper::Run()
     {
       for(int j = 0; j < imgRuninfo->massPeaks; j++) //Filling the PeksToCheck vector with the new results
       {
-        if((PksTChk[j] > 0) & (pNumCandidates[j] > 0)) //Check if the tests has been done and if there are any candidates
+        if((PksTChk[j] > 0) && (pNumCandidates[j] > 0)) //Check if the tests has been done and if there are any candidates
         {
           NumericMatrix TestResults = PeakResults[j];
           tHighestScore = 0;
           for(int k = 0; k < pNumCandidates[j]; k++)
           {
-            if((TestResults(4,k) > imgRuninfo->scoreThreshold) & (TestResults(4,k) > tHighestScore)) //Checks if the candidate has passed the test & if its the candidate with higher score
+            if((TestResults(4,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(4,k) > tHighestScore)) //Checks if the candidate has passed the test & if its the candidate with higher score
             {
-              PeaksToCheck(j,CrntNumIso) = TestResults(8,k); //Slope of the previous step 
-              tHighestScore = TestResults(8,k);
+              PeaksToCheck(j, CrntNumIso) = TestResults(8,k); //Slope of the previous step 
+              tHighestScore = TestResults(4,k);
             }
           }
         }
