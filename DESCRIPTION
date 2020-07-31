@@ -22,5 +22,5 @@ Suggests:
     ggplot2 (>= 3.0.0),
     gridExtra (>= 2.3)
 LinkingTo: Rcpp
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Encoding: UTF-8

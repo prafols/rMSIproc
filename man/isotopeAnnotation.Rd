@@ -8,6 +8,7 @@ isotopeAnnotation(
   PeakMtx,
   isoNumber = 2,
   tolerance = 30,
+  charge = 1,
   scoreThreshold = 0.8,
   toleranceUnits = "ppm",
   imageVector = NULL
@@ -23,6 +24,8 @@ isotopeAnnotation(
 \item{isoNumber}{Integer. Number of isotopes to be found.}
 
 \item{tolerance}{Integer. Mass tolerance for the candidates in scans or ppms.}
+
+\item{charge}{Integer. Charge of the patterns to be found.}
 
 \item{scoreThreshold}{Numeric. Score value to consider a ion mass a good isotope candidate. Only the ions that have this number or greater will undergo the following isotope searching stages.}
 
