@@ -12,8 +12,10 @@ Description: Processing methods for MSI using rMSI data format and C++ methods
 License: GPL-3
 LazyData: TRUE
 SystemRequirements: C++11, fftw3 (>= 3.3.5)
+Depends:
+    R (>= 3.6),
+    rMSI (>= 0.9)
 Imports:
-    rMSI,
     Rcpp (>= 0.12.2),
     gWidgets2 (>= 1.0),
     RGtk2 (>= 2.20.25),

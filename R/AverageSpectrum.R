@@ -16,9 +16,9 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#' AverageSpectrum.
+#' AverageSpectrum_rMSIproc.
 #' 
-#' Calculates the dataset average spectrum.
+#' Calculates the dataset average spectrum using rMSIproc implementation.
 #' The average spectrum is the spectrum produced by weighting all the dataset spectra.
 #'
 #' @param img An rMSI object.
@@ -27,7 +27,7 @@
 #' @return The average spectrum.
 #' @export
 #' 
-AverageSpectrum <- function(img, NumOfThreads = parallel::detectCores())
+AverageSpectrum_rMSIproc <- function(img, NumOfThreads = parallel::detectCores())
 {
   dataInf <- getrMSIdataInfo(img) #Info from the img
 

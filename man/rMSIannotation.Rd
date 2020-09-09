@@ -13,8 +13,8 @@ rMSIannotation(
   iso.toleranceUnits = "ppm",
   iso.imageVector = NULL,
   addu.tolerance = 50,
-  addu.adducts = data.frame(mass = c(38.963706, 22.98976, 1.007825), name = c("K",
-    "Na", "H")),
+  addu.adducts = data.frame(mass = c(38.963706, 22.98976, 1.007825), name = c("K", "Na",
+    "H")),
   csv.results = FALSE,
   csv.path = getwd()
 )

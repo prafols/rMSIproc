@@ -197,7 +197,7 @@ ProcessImage <- function(img,
     cat("Calculating average spectrum...\n")
     for( i in 1:length(img_list))
     {
-      img_list[[i]]$mean <- AverageSpectrum(img_list[[i]], NumOfThreads ) 
+      img_list[[i]]$mean <- AverageSpectrum_rMSIproc(img_list[[i]], NumOfThreads ) 
     }
   }
   
@@ -207,6 +207,12 @@ ProcessImage <- function(img,
   #Manual calibration (user will be promp with calibration dialog)
   if( EnableCalibration )
   {
+    #The ff files must be closed befor running the GUI and potentially loading many GTK libs
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+    }
+    
     cal_intensity_spc <- rep(0, dataInf$masschannels) 
     for( i in 1:length(img_list))
     {
@@ -224,6 +230,13 @@ ProcessImage <- function(img,
     }
     
     common_mass <- CalibrationWindow( img_list[[1]]$mass, cal_intensity_spc, CalibrationPeakWin , str_cal_title, CalibrationSpan = CalSpan )
+    
+    #The ff file must be re-open to continue
+    for( i in 1:length(img_list))
+    {
+      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+    }
+    
     if(is.null(common_mass))
     {
       for( i in 1:length(img_list))
