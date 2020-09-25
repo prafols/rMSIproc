@@ -246,16 +246,31 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
         for( iMZ in iMZ_min:iMZ_max  )
         {
           #if(peakList[[i]]$mass[iMZ] >= (target_mass+mass_offset-mass_range) && peakList[[i]]$mass[iMZ] <= (target_mass+mass_offset+mass_range))
-          if(peakList[[i]]$SNR[iMZ] >= min_SNR && peakList[[i]]$mass[iMZ] >= (target_mass+mass_offset-mass_range) && peakList[[i]]$mass[iMZ] <= (target_mass+mass_offset+mass_range))
+          
+          if(is.null(peakList[[i]]$SNR)) #No SNR info so just keep the peak
           {
             keep_id <- c(keep_id, iMZ)
+          }
+          else
+          {
+            if(peakList[[i]]$SNR[iMZ] >= min_SNR && peakList[[i]]$mass[iMZ] >= (target_mass+mass_offset-mass_range) && peakList[[i]]$mass[iMZ] <= (target_mass+mass_offset+mass_range))
+            {
+              keep_id <- c(keep_id, iMZ)
+            }
           }
         }
         
         #Filter the dataframe to retain only N of the highest SNR
         if(length(keep_id) > 0)
         {
-          dfSnrFilter <- data.frame( id = keep_id, SNR = peakList[[i]]$SNR[keep_id] )
+          if(is.null(peakList[[i]]$SNR)) #No SNR info so just keep the peak
+          {
+            dfSnrFilter <- data.frame( id = keep_id, SNR = rep(1, length(peakList[[i]]$mass[keep_id])))
+          }
+          else
+          {
+            dfSnrFilter <- data.frame( id = keep_id, SNR = peakList[[i]]$SNR[keep_id] )
+          }
           if(nrow(dfSnrFilter) > N)
           {
             dfSnrFilter <- dfSnrFilter[order(dfSnrFilter$SNR, decreasing = T),] 
@@ -264,7 +279,15 @@ plotMassDriftG <- function(peakMatrix, peakList, target_mass, error_range_ppm, m
           
           pkmass <- c(pkmass, peakList[[i]]$mass[dfSnrFilter$id])
           intens <- c(intens, peakList[[i]]$intensity[dfSnrFilter$id])
-          snr <- c(snr, peakList[[i]]$SNR[dfSnrFilter$id])
+          
+          if(is.null(peakList[[i]]$SNR)) #No SNR info so just keep the peak
+          {
+            snr <- c(snr, 1) 
+          }
+          else
+          {
+            snr <- c(snr, peakList[[i]]$SNR[dfSnrFilter$id])
+          }
           pixelID <- c(pixelID, rep(i, nrow(dfSnrFilter)))
           pixelX <- c(pixelX, rep( peakMatrix$pos[i, "x"], nrow(dfSnrFilter)))
           pixelY <- c(pixelY, rep( peakMatrix$pos[i, "y"], nrow(dfSnrFilter)))

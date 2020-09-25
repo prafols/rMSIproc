@@ -293,7 +293,14 @@ ArrangeMultipleImg2Plot <- function( peakMat, values, nrow, ncol, byrow = T, mar
   colnames(labelsPos) <- c("x", "y")
   for( i in 1:length(lstRefac))
   {
-    rasterValues <- c(rasterValues, lstRefac[[i]]$vals) 
+    if(class(lstRefac[[i]]$vals) == "factor")
+    {
+      rasterValues <- c(rasterValues, as.character( lstRefac[[i]]$vals) )
+    }
+    else
+    {
+      rasterValues <- c(rasterValues, lstRefac[[i]]$vals) 
+    }
     if( i > 1)
     {
       rasterPos <- rbind(rasterPos, lstRefac[[i]]$pos)

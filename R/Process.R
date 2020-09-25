@@ -51,6 +51,7 @@
 #' @param NumOfThreads the number number of threads used to process the data.
 #' @param CalSpan the used span for the loess fittin used in mass calibration.
 #' @param ExportPeakList a boolean detailing wheter the un-binned peak list must be exported or not.
+#' @param refSpc alternative reference spectrum for the alignment routine.
 #'
 #' @return  a named list containing:
 #'             - The process image reference (procImg).
@@ -68,7 +69,7 @@ ProcessImage <- function(img,
                          EnablePeakPicking = T, SNR = 5, peakWindow = 10, peakUpSampling = 10, 
                          UseBinning = T, BinTolerance = 5, BinFilter = 0.05, BinToleranceUsingPPM = F,
                          EnableSpectraNormalization = T, EnableTICNorm = T, EnableRMSNorm = T, EnableMAXNorm = T, EnableTICAcqNorm = T,
-                         NumOfThreads = min(parallel::detectCores()/2, 6), CalSpan = 0.75, ExportPeakList = F)
+                         NumOfThreads = min(parallel::detectCores()/2, 6), CalSpan = 0.75, ExportPeakList = F, refSpc = NULL)
 {
   pt <- Sys.time()
   
@@ -134,9 +135,12 @@ ProcessImage <- function(img,
   if( EnableAlignment )
   {
     #Calculate reference spectrum for label free alignment
-    refSpc <- InternalReferenceSpectrumMultipleDatasets(img_list)
-    cat(paste0("Pixel with ID ", refSpc$ID, " from image indexed as ", refSpc$imgIndex, " (", img_list[[ refSpc$imgIndex]]$name, ") selected as internal reference.\n"))
-    refSpc <- refSpc$spectrum
+    if(is.null(refSpc))
+    {
+      refSpc <- InternalReferenceSpectrumMultipleDatasets(img_list)
+      cat(paste0("Pixel with ID ", refSpc$ID, " from image indexed as ", refSpc$imgIndex, " (", img_list[[ refSpc$imgIndex]]$name, ") selected as internal reference.\n"))
+      refSpc <- refSpc$spectrum
+    }
     
     cat("Running Label-Free Alignment...\n")
     #The ff file must be closed befor running the Cpp code
