@@ -33,7 +33,8 @@ ProcessImage(
   EnableTICAcqNorm = T,
   NumOfThreads = min(parallel::detectCores()/2, 6),
   CalSpan = 0.75,
-  ExportPeakList = F
+  ExportPeakList = F,
+  refSpc = NULL
 )
 }
 \arguments{
@@ -94,6 +95,8 @@ ProcessImage(
 \item{CalSpan}{the used span for the loess fittin used in mass calibration.}
 
 \item{ExportPeakList}{a boolean detailing wheter the un-binned peak list must be exported or not.}
+
+\item{refSpc}{alternative reference spectrum for the alignment routine.}
 }
 \value{
 a named list containing:

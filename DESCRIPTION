@@ -1,8 +1,8 @@
 Package: rMSIproc
 Type: Package
 Title: MSI Processing in C++
-Version: 0.3
-Date: 2018-03-16
+Version: 0.3.1
+Date: 2020-09-28
 Author: Pere Rafols[aut], Lluc Semente [aut]
 Authors@R: c( person("Pere", "Rafols", email="pere.rafols@urv.cat",
         role=c("aut")), person("Lluc", "Semente",
@@ -14,7 +14,7 @@ LazyData: TRUE
 SystemRequirements: C++11, fftw3 (>= 3.3.5)
 Depends:
     R (>= 3.6),
-    rMSI (>= 0.9)
+    rMSI (>= 0.9.1)
 Imports:
     Rcpp (>= 0.12.2),
     gWidgets2 (>= 1.0),

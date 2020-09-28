@@ -114,7 +114,7 @@ ProcessImage <- function(img,
     #The ff files must be closed befor running the Cpp code
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ close(x) })
     }
     
     FullImageSmoothing(fileNames = dataInf$filenames, 
@@ -127,7 +127,7 @@ ProcessImage <- function(img,
     #The ff file must be re-open to continue
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ open(x) })
     }
   }
   
@@ -146,7 +146,7 @@ ProcessImage <- function(img,
     #The ff file must be closed befor running the Cpp code
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ close(x) })
     }
     
     alngLags <- FullImageAlign(fileNames = dataInf$filenames, 
@@ -166,7 +166,7 @@ ProcessImage <- function(img,
     #The ff file must be re-open to continue
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ open(x) })
     }
   }
   else
@@ -183,7 +183,7 @@ ProcessImage <- function(img,
     #The ff file must be closed befor running the Cpp code
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ close(x) })
     }
     FullImageBitDepthReduction( fileNames = dataInf$filenames, 
                                 massChannels = dataInf$masschannels, 
@@ -195,7 +195,7 @@ ProcessImage <- function(img,
     #The ff file must be re-open to continue
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ open(x) })
     }
     
     cat("Calculating average spectrum...\n")
@@ -214,7 +214,7 @@ ProcessImage <- function(img,
     #The ff files must be closed befor running the GUI and potentially loading many GTK libs
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::close.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ close(x) })
     }
     
     cal_intensity_spc <- rep(0, dataInf$masschannels) 
@@ -238,7 +238,7 @@ ProcessImage <- function(img,
     #The ff file must be re-open to continue
     for( i in 1:length(img_list))
     {
-      lapply(img_list[[i]]$data, function(x){ ff::open.ff(x) })
+      lapply(img_list[[i]]$data, function(x){ open(x) })
     }
     
     if(is.null(common_mass))
