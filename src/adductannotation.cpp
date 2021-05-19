@@ -92,7 +92,6 @@ AdductPairer::AdductPairer(AdductDef *imgRunInfo, NumericVector R_monoisitopeMas
       peakMatrix[i][j] = R_peakMatrix(i,j);
     }
   }
-  
 }
 
 
@@ -112,7 +111,6 @@ AdductPairer::~AdductPairer()
     delete[] ppmMatrix[i];
   }
   delete[] ppmMatrix;
-  
   
   for(int i = 0; i < RunDef->numPixels; i++)
   {
@@ -134,15 +132,11 @@ AdductPairer::~AdductPairer()
   
 	delete[] adductMassVector;
 	
-	
 	delete[] isotopeListOrder;
 	
-	
 	delete[] massAxis;
-	
 
 	delete[] adductPairFirstMassVector;
-	
 	
 	delete[] adductPairSecondMassVector;
 }
@@ -440,7 +434,7 @@ List AdductPairer::Run()
   //ValidateCandidates();           //Reads the information form the isotopes tests and merge it with the adduct candidates information.
   List results = GenerateResultsList();
     
-	Rcout << "Number of adduct pairs found = "<< positiveTest << "\n";
+	Rcout << "Number of adduct pairs found: "<< positiveTest << "\n";
 
 	return(results);
 }                                                                   
