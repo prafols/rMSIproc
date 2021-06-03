@@ -306,7 +306,7 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
   int zero_pixels = 0, cnt = 0;
   int pixels_with_intensity = 0;
   double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, ratio_slope, intercept;
-  double ScoreMrph, ScoreInt,ScoreMass, ModCA = 0, CA = 0,ppm = 0 ,maxppm, model_slope;
+  double ScoreMrph, ScoreInt, ScoreIntHMDB, ScoreIntPeptideAtlas,ScoreMass, ModCA = 0, CA = 0,ppm = 0 ,maxppm, model_slope_HMDB, model_slope_PeptideAtlas;
   
   for(int i = 0; i < (7*NumCan); i++) //Cleanning 
   {
@@ -421,18 +421,28 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     
       //Theoretical number of Carbons extracted from the Human metabolome database model  
       ModCA  = 0.076*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 12;
-      model_slope  = 0.000702*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.03851;
-      
+      model_slope_HMDB  = 0.000702*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.03851; //HMDB
+      model_slope_PeptideAtlas  = (0.0004715567  *imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.0016077459); //PeptideAtlas
       
       //Number of carbons from the experimental intensity rate
-      
       double new_ratio_slope = (CrntNumIso == 1) ? ratio_slope : (pow(factorial(CrntNumIso)*ratio_slope,1/double(CrntNumIso)) + 0.01081573*((CrntNumIso-1)/2));
       CA = new_ratio_slope*(0.9893/0.0107);
         
       //ScoreInt  = fabs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
-      ScoreInt  = fabs(model_slope - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2);  //Adjusting 0.2 difference to score 0.7
-      ScoreInt *= -ScoreInt;                    
-      ScoreInt  = exp(ScoreInt); 
+      ScoreIntHMDB  = fabs(model_slope_HMDB - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2);  //Adjusting 0.2 difference to score 0.7
+      ScoreIntHMDB *= -ScoreIntHMDB;                    
+      ScoreIntHMDB  = exp(ScoreIntHMDB); 
+      ScoreInt = ScoreIntHMDB;
+      if(pMatrixAxis[CandidateRow[0]] >= 1000)
+      {
+        ScoreIntPeptideAtlas  = fabs(model_slope_PeptideAtlas - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.1687533);  //Adjusting 3*S  to score 0.7, this includes 99% of the peptides in the library
+        ScoreIntPeptideAtlas *= -ScoreIntPeptideAtlas;                    
+        ScoreIntPeptideAtlas  = exp(ScoreIntPeptideAtlas); 
+        if(ScoreIntPeptideAtlas >= ScoreIntHMDB)
+        {
+          ScoreInt = ScoreIntPeptideAtlas;
+        }
+      }
     
     //***********************************//Mass ppm Score//******************************************************************//
     
