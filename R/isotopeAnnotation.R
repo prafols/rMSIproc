@@ -176,24 +176,34 @@ DeisotopingOutputFormat <- function(r, ScoreThreshold)
   {
     for(j in (1:length(r[[i]])))
     {
-      if((!is.null(r[[i]][[j]])) & (as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) >= ScoreThreshold))
+      if(i == 1)
       {
-        if(i == 1)
+        if((!is.null(r[[i]][[j]])))
         {
-          MonoVec <- c(MonoVec, r[[i]][[j]][3,which.max(r[[i]][[j]][5,])])
-        }
-      }
-      
-      for(k in (1:ncol(r[[i]][[j]])))
-      {
-        if(!is.nan(r[[i]][[j]][5, k]))
-        {
-          if(as.numeric(r[[i]][[j]][5, k]) > ScoreThreshold )
+          if((as.numeric(r[[i]][[j]][5,which.max(r[[i]][[j]][5,])]) >= ScoreThreshold))
           {
-            CompVec <- c(CompVec, r[[i]][[j]][4, k])
+            MonoVec <- c(MonoVec, r[[i]][[j]][3,which.max(r[[i]][[j]][5,])])
           }
         }
       }
+      
+      bestIsotope <- which.max(r[[i]][[j]][5,])
+      if(i == 1)
+      {
+        if(as.numeric(r[[i]][[j]][5, bestIsotope]) >= ScoreThreshold)
+        {
+          CompVec <- c(CompVec, r[[i]][[j]][4, bestIsotope])
+        }
+      }
+        else
+        {
+          if((as.numeric(r[[i]][[j]][6, bestIsotope]) >= ScoreThreshold) &
+             (as.numeric(r[[i]][[j]][7, bestIsotope]) >= ScoreThreshold) &
+             (as.numeric(r[[i]][[j]][8, bestIsotope]) >= ScoreThreshold))
+          {
+            CompVec <- c(CompVec, r[[i]][[j]][4, bestIsotope])
+          }
+        }
     }
   }
   

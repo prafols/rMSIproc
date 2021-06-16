@@ -85,7 +85,7 @@ rMSIannotation <- function(PeakMtx,
   }
 
   results <- list()
-  results <- annotationOutpuFormat(isotopeObj, adductObj, PeakMtx$mass)
+  results <- annotationOutpuFormat(isotopeObj, adductObj, PeakMtx$mass, iso.scoreThreshold)
   results$parameters <- list(isotope_number = iso.number,
                             isotope_charge = iso.charge,
                             isotope_mass_tolerance = iso.tolerance,
@@ -108,7 +108,7 @@ rMSIannotation <- function(PeakMtx,
 }
 
 
-annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
+annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis, threshold)
 {
   if(!is.null(adductObj[[1]]))
   {
@@ -116,25 +116,21 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
     {
       A <- adductObj$A
     }
-    
     if(!is.null(adductObj$B))
     {
       B <- adductObj$B
     }
   }
-  
   C <- data.frame(MonoisotopicMass = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   ILS = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   IsotopicIntensityRatio = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   EstimatedCarbonAtoms = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
                   MonoisotopicIndex = rep(0, times = length(isotopeObj$monoisotopicPeaks)))
-  
   ord <- c()
   for (i in 1:length(isotopeObj$monoisotopicPeaks)) 
   {
     ord <- c(ord,which.min(abs(massAxis[sort(isotopeObj$monoisotopicPeaks)[i]]-as.numeric(names(isotopeObj$M1)))))
   }
-  
   for(i in 1:length(ord))
   {
     C$MonoisotopicMass[i]       <- massAxis[isotopeObj$M1[[ord[i]]][3]]
@@ -143,37 +139,86 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
     C$IsotopicIntensityRatio[i] <- isotopeObj$M1[[ord[i]]][9,which.max(isotopeObj$M1[[ord[i]]][5,])]
     C$EstimatedCarbonAtoms[i]   <- isotopeObj$M1[[ord[i]]][10,which.max(isotopeObj$M1[[ord[i]]][5,])]
   }
-  
   C$MonoisotopicMass       <- trunc(C$MonoisotopicMass) + signif(C$MonoisotopicMass-trunc(C$MonoisotopicMass), digits = 4) 
   C$MonoisotopicIndex      <- trunc(C$MonoisotopicIndex) + signif(C$MonoisotopicIndex-trunc(C$MonoisotopicIndex), digits = 4)
   C$ILS                    <- trunc(C$ILS) + signif(C$ILS-trunc(C$ILS), digits = 4)
   C$IsotopicIntensityRatio <- trunc(C$IsotopicIntensityRatio) + signif(C$IsotopicIntensityRatio-trunc(C$IsotopicIntensityRatio), digits = 4)
   C$EstimatedCarbonAtoms   <- round(C$EstimatedCarbonAtoms)
-  
   IsotopicTestData <- isotopeObj[-((length(isotopeObj)-1):length(isotopeObj))]
-  
+  Patterns <- list()
+  for(i in 1:length(isotopeObj$monoisotopicPeaks))
+  {
+    monoIsoMass <- massAxis[isotopeObj$monoisotopicPeaks[i]]
+    tmp <- list()
+    cntPattern <- 0
+    for(j in 1:length(IsotopicTestData))
+    {
+      if(any(names(IsotopicTestData[[j]]) == signif(monoIsoMass,digits = 8)))
+      {
+        instance <- which(names(IsotopicTestData[[j]]) == signif(monoIsoMass,digits = 8))
+        
+        if((max(IsotopicTestData[[j]][[instance]][5,]) >= threshold) && 
+           (j==1))
+        {
+          tmp[[j]] <- IsotopicTestData[[j]][[instance]][,which.max(IsotopicTestData[[j]][[instance]][5,])]
+          cntPattern <- cntPattern + 1
+        }
+        
+        if((IsotopicTestData[[j]][[instance]][6,which.max(IsotopicTestData[[j]][[instance]][5,])] >= threshold) && 
+           (IsotopicTestData[[j]][[instance]][7,which.max(IsotopicTestData[[j]][[instance]][5,])] >= threshold) && 
+           (IsotopicTestData[[j]][[instance]][8,which.max(IsotopicTestData[[j]][[instance]][5,])] >= threshold) && 
+           (j!=1))
+        {
+          tmp[[j]] <- IsotopicTestData[[j]][[instance]][,which.max(IsotopicTestData[[j]][[instance]][5,])]
+          cntPattern <- cntPattern + 1
+        }
+
+      }
+        else  
+        {
+          break
+        }
+    }
+    rnames <- paste0("M+",1:cntPattern)
+    cnames <- c("M+N m/z", "M+N index", "Mass error (ppm)", "ILS", "Morphology Score", "Intensity Score", "Mass Error Score", "Estimated C atoms")
+    if(length(tmp) > 1)
+    {
+      Patterns[[i]] <- t(as.data.frame(tmp))
+      Patterns[[i]] <- Patterns[[i]][,c(1,4,2,5,6,7,8,10)]
+      rownames(Patterns[[i]]) <- rnames
+      colnames(Patterns[[i]]) <- cnames
+    }
+      else
+      {
+        Patterns[[i]] <- as.vector(t(as.data.frame(tmp,optional = TRUE)))
+        Patterns[[i]] <- Patterns[[i]][c(1,4,2,5,6,7,8,10)]
+        Patterns[[i]] <- data.frame(a = Patterns[[i]][1], b = Patterns[[i]][2], c = Patterns[[i]][3], d = Patterns[[i]][4],
+                                    e = Patterns[[i]][5], f = Patterns[[i]][6], g = Patterns[[i]][7], h = Patterns[[i]][8])
+        rownames(Patterns[[i]]) <- rnames
+        colnames(Patterns[[i]]) <- cnames
+      }
+  }
+  names(Patterns) <- signif(massAxis[isotopeObj$monoisotopicPeaks],digits = 8)
+  Patterns <- Patterns[order(as.numeric(names(Patterns)))]
   if(!is.null(adductObj[[1]]))
   {
     if(is.null(adductObj$A))
     {
-      results <- list(B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+      results <- list(B = B,C = C, isotopicPatterns = Patterns, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
     }
-    
     if(is.null(adductObj$B))
     {
-      results <- list(A = A,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+      results <- list(A = A,C = C, isotopicPatterns = Patterns, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
     }
-    
     if(!is.null(adductObj$B) & !is.null(adductObj$A))
     {
-      results <- list(A = A,B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+      results <- list(A = A,B = B,C = C, isotopicPatterns = Patterns, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
     }
   }
-  else
-  {
-    results <- list(C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
-  }
-  
+    else
+    {
+      results <- list(C = C, isotopicPatterns = Patterns, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+    }
 return(results)
 }
 

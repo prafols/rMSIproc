@@ -306,7 +306,7 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
   int zero_pixels = 0, cnt = 0;
   int pixels_with_intensity = 0;
   double A = 0, B = 0, y_mean = 0, x_mean = 0, SStot, SSres, ratio_slope, intercept;
-  double ScoreMrph, ScoreInt, ScoreIntHMDB, ScoreIntPeptideAtlas,ScoreMass, ModCA = 0, CA = 0,ppm = 0 ,maxppm, model_slope_HMDB, model_slope_PeptideAtlas;
+  double ScoreMrph = 0, ScoreInt= 0, ScoreIntHMDB = 0, ScoreIntPeptideAtlas = 0,ScoreMass = 0, CA = 0,ppm = 0 ,maxppm, model_slope_HMDB, model_slope_PeptideAtlas;
   
   for(int i = 0; i < (7*NumCan); i++) //Cleanning 
   {
@@ -420,22 +420,26 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     //***********************************//Intensity Score//******************************************************************//
     
       //Theoretical number of Carbons extracted from the Human metabolome database model  
-      ModCA  = 0.076*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 12;
+      //ModCA  = 0.076*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 12;
       model_slope_HMDB  = 0.000702*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.03851; //HMDB
-      model_slope_PeptideAtlas  = (0.0004715567  *imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.0016077459); //PeptideAtlas
+      model_slope_PeptideAtlas  = (0.0004712976*imgRuninfo->z*pMatrixAxis[CandidateRow[0]] - 0.0080417319); //PeptideAtlas
       
       //Number of carbons from the experimental intensity rate
-      double new_ratio_slope = (CrntNumIso == 1) ? ratio_slope : (pow(factorial(CrntNumIso)*ratio_slope,1/double(CrntNumIso)) + 0.01081573*((CrntNumIso-1)/2));
+      double new_ratio_slope = (CrntNumIso == 1) ? ratio_slope : (pow(factorial(CrntNumIso)*ratio_slope, 1/double(CrntNumIso)) + 0.01081573*((CrntNumIso-1)/2));
       CA = new_ratio_slope*(0.9893/0.0107);
-        
-      //ScoreInt  = fabs(ModCA - CA)/(sqrt(1/(-log(0.7)))*20);  //Adjusting 20 atoms of difference to score 0.7
-      ScoreIntHMDB  = fabs(model_slope_HMDB - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2);  //Adjusting 0.2 difference to score 0.7
-      ScoreIntHMDB *= -ScoreIntHMDB;                    
-      ScoreIntHMDB  = exp(ScoreIntHMDB); 
-      ScoreInt = ScoreIntHMDB;
-      if(pMatrixAxis[CandidateRow[0]] >= 1000)
+      
+      ScoreIntHMDB = 0;  
+      if(pMatrixAxis[CandidateRow[0]] <= 1300) //Condition for evaluation with the HMDB model
       {
-        ScoreIntPeptideAtlas  = fabs(model_slope_PeptideAtlas - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.1687533);  //Adjusting 3*S  to score 0.7, this includes 99% of the peptides in the library
+        ScoreIntHMDB  = fabs(model_slope_HMDB - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2);  //Adjusting 0.2 difference to score 0.7
+        ScoreIntHMDB *= -ScoreIntHMDB;                    
+        ScoreIntHMDB  = exp(ScoreIntHMDB); 
+        ScoreInt = ScoreIntHMDB;
+      }
+      
+      if(pMatrixAxis[CandidateRow[0]] >= 600) //Condition for evaluation with the peptideAtlas model
+      {
+        ScoreIntPeptideAtlas  = fabs(model_slope_PeptideAtlas - new_ratio_slope)/(sqrt(1/(-log(0.7)))*0.2258983);  //Adjusting 4*S  to score 0.7, this includes 99% of the peptides in the library
         ScoreIntPeptideAtlas *= -ScoreIntPeptideAtlas;                    
         ScoreIntPeptideAtlas  = exp(ScoreIntPeptideAtlas); 
         if(ScoreIntPeptideAtlas >= ScoreIntHMDB)
@@ -458,7 +462,7 @@ double* Deisotoper::ScoreCalculator(int* CandidateRow, int NumCan, double* resul
     
       //Returning the scores
       result[(7*i) + 0] = ppm;                                    //ppm error
-      result[(7*i) + 1] = (ScoreMrph*ScoreInt*ScoreMass);         //final score 
+      result[(7*i) + 1] = (ScoreMrph*ScoreInt*ScoreMass);         //ILS
       result[(7*i) + 2] = ScoreMrph;                              //morphology score
       result[(7*i) + 3] = ScoreInt;                               //intensity score
       result[(7*i) + 4] = ScoreMass;                              //mass error score
@@ -581,7 +585,7 @@ List Deisotoper::Run()
     PeakResults = MatrixAnnotator(CandidatesMatrix, PksTChk); //Computes the scores for each candidate in the candidate matrix that are 1st isotopes or have a positive score in the previous stage.
     Result[i + 1] = PeakResults; //Results[0] containts the sorted peak matrix mass aixs
     
-    if((CrntNumIso < imgRuninfo->numIso)) //If there are more stages, fill the PeaksToCheck
+    if(CrntNumIso < imgRuninfo->numIso) //If there are more stages, fill the PeaksToCheck
     {
       for(int j = 0; j < imgRuninfo->massPeaks; j++) //Filling the PeksToCheck vector with the new results
       {
@@ -591,10 +595,21 @@ List Deisotoper::Run()
           tHighestScore = 0;
           for(int k = 0; k < pNumCandidates[j]; k++)
           {
-            if((TestResults(4,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(4,k) > tHighestScore)) //Checks if the candidate has passed the test & if its the candidate with higher score
+            if(i == 0) //If is the first isotope, then the peaks must find follow the ILS rule. If is the second, third or more isotope, just need to have individual scores greater than the threshold
             {
-              PeaksToCheck(j, CrntNumIso) = TestResults(8,k); //Slope of the previous step 
-              tHighestScore = TestResults(4,k);
+              if( (TestResults(4,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(4,k) > tHighestScore) ) //Checks if the candidate has passed the test & if its the candidate with higher score
+              {
+                PeaksToCheck(j, CrntNumIso) = TestResults(8,k); //Slope of the previous step 
+                tHighestScore = TestResults(4,k);
+              }
+            } 
+            if(i != 0)
+            {
+              if( (TestResults(5,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(6,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(7,k) >= (imgRuninfo->scoreThreshold)) && (TestResults(4,k) > tHighestScore)) //Checks if the candidate has passed the test & if its the candidate with higher score
+              {
+                PeaksToCheck(j, CrntNumIso) = TestResults(8,k); //Slope of the previous step 
+                tHighestScore = TestResults(4,k);
+              }
             }
           }
         }
