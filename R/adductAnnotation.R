@@ -35,17 +35,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
 {
   if(!is.data.frame(adductDataFrame))
   { 
-    stop("Error: add.adducts must be a data frame")
-  }
-  
-  if(colnames(adductDataFrame)[1] != "mass")
-  { 
-    stop("Error: add.adducts first column must be called 'mass'")
-  }
-  
-  if(colnames(adductDataFrame)[2] != "name")
-  { 
-    stop("Error: add.adducts first column must be called 'name'")
+    stop("add.adducts must be a data frame")
   }
   
   if(tolerance>500)
@@ -66,15 +56,19 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   #adduct labels for the output
   name1 <- 1
   name2 <- 2
-  lim = nrow(adductDataFrame)
+  lim <- nrow(adductDataFrame)
   namesVector <- c()
   firstnameVector <- c()
   secondnameVector <- c()
+  firstnamePriority <- c()
+  secondnamePriority <- c()
   for(i in 1:combinations)
   {
     namesVector[i] <- paste(adductDataFrame$name[name1]," & ",adductDataFrame$name[name2],sep = "")
     firstnameVector[i] <- as.character(adductDataFrame$name[name1])
     secondnameVector[i] <- as.character(adductDataFrame$name[name2])
+    firstnamePriority[i] <- adductDataFrame$priority[name1]
+    secondnamePriority[i] <- adductDataFrame$priority[name2]
     name2 <- name2 + 1
     if(name2 > lim)
     {
@@ -137,28 +131,30 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
     Correlation = rep(0, times = length(adducts$A)),
     MassError = rep(0, times = length(adducts$A)),
     Adduct1Index = rep(0, times = length(adducts$A)),
-    Adduct2Index = rep(0, times = length(adducts$A)))
+    Adduct2Index = rep(0, times = length(adducts$A)),
+    AdductPriority = rep(0, times = length(adducts$A)))
     for(i in 1:length(adducts$A))
     {
       name1 <- firstnameVector[(adducts$A[[i]][1]+1)]
       name2 <- secondnameVector[(adducts$A[[i]][1]+1)]
       if(adducts$A[[i]][3] > adducts$A[[i]][5])
       {
-        adductsA$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+        adductsA$Adducts[i] <- paste("[M",name1,"] & [M",name2,"]",sep="")
       }
       else
       {
-        adductsA$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+        adductsA$Adducts[i] <- paste("[M",name2,"] & [M",name1,"]",sep="")
       }
-      adductsA$NeutralMass[i]                     <- adducts$A[[i]][2]
-      adductsA$Adduct1Mass[i]                     <- adducts$A[[i]][3]
-      adductsA$Adduct1Index[i]                    <- adducts$A[[i]][4]
-      adductsA$Adduct2Mass[i]                     <- adducts$A[[i]][5]
-      adductsA$Adduct2Index[i]                    <- adducts$A[[i]][6]
-      adductsA$IsotopeIntensityRatioMean[i]       <- adducts$A[[i]][7]
-      adductsA$IsotopeIntensityRatioStdError[i]   <- adducts$A[[i]][8]
-      adductsA$Correlation[i]                     <- adducts$A[[i]][9]
-      adductsA$MassError[i]                       <- adducts$A[[i]][10] 
+      adductsA$NeutralMass[i]                   <- adducts$A[[i]][2]
+      adductsA$Adduct1Mass[i]                   <- adducts$A[[i]][3]
+      adductsA$Adduct1Index[i]                  <- adducts$A[[i]][4]
+      adductsA$Adduct2Mass[i]                   <- adducts$A[[i]][5]
+      adductsA$Adduct2Index[i]                  <- adducts$A[[i]][6]
+      adductsA$IsotopeIntensityRatioMean[i]     <- adducts$A[[i]][7]
+      adductsA$IsotopeIntensityRatioStdError[i] <- adducts$A[[i]][8]
+      adductsA$Correlation[i]                   <- adducts$A[[i]][9]
+      adductsA$MassError[i]                     <- adducts$A[[i]][10] 
+      adductsA$AdductPriority[i]                <- (firstnamePriority[(adducts$A[[i]][1]+1)]) + (secondnamePriority[(adducts$A[[i]][1]+1)])
     }
     adductsA$Correlation <- signif(adductsA$Correlation, digits = 3)
     adductsA$MassError <- trunc(adductsA$MassError) + signif(adductsA$MassError - trunc(adductsA$MassError), digits = 3)
@@ -192,19 +188,20 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
       name2 <- secondnameVector[(adducts$B[[i]][1]+1)]
       if(adducts$B[[i]][3] > adducts$B[[i]][5])
       {
-        adductsB$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+        adductsB$Adducts[i] <- paste("[M",name1,"] & [M",name2,"]",sep="")
       }
       else
       {
-        adductsB$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+        adductsB$Adducts[i] <- paste("[M",name2,"] & [M",name1,"]",sep="")
       }
-      adductsB$NeutralMass[i]   <- adducts$B[[i]][2]
-      adductsB$Adduct1Mass[i]   <- adducts$B[[i]][3]
-      adductsB$Adduct1Index[i]  <- adducts$B[[i]][4]
-      adductsB$Adduct2Mass[i]   <- adducts$B[[i]][5]
-      adductsB$Adduct2Index[i]  <- adducts$B[[i]][6]
-      adductsB$Correlation[i]   <- adducts$B[[i]][7]
-      adductsB$MassError[i]     <- adducts$B[[i]][8]
+      adductsB$NeutralMass[i]    <- adducts$B[[i]][2]
+      adductsB$Adduct1Mass[i]    <- adducts$B[[i]][3]
+      adductsB$Adduct1Index[i]   <- adducts$B[[i]][4]
+      adductsB$Adduct2Mass[i]    <- adducts$B[[i]][5]
+      adductsB$Adduct2Index[i]   <- adducts$B[[i]][6]
+      adductsB$Correlation[i]    <- adducts$B[[i]][7]
+      adductsB$MassError[i]      <- adducts$B[[i]][8]
+      adductsB$AdductPriority[i] <- firstnamePriority[(adducts$B[[i]][1]+1)] + secondnamePriority[(adducts$B[[i]][1]+1)]
     }
     adductsB$Correlation <- signif(adductsB$Correlation, digits = 3)
     adductsB$MassError <- trunc(adductsB$MassError) + signif(adductsB$MassError - trunc(adductsB$MassError), digits = 3)
@@ -217,6 +214,6 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
     adducts$B <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
   }
   else {adducts <- adducts[-2]}
-  
+
   return(adducts)
 }
