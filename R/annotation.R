@@ -24,7 +24,7 @@
 #' 
 #' Additional information can be found on paper:
 #' rMSIannotation: A peak annotation tool for mass spectrometry imaging based on the analysis of isotopic intensity ratios
-#' Lluc Sementé, Gerard Baquer, María García-Altares, Xavier Correig-Blanchar, Pere Ràfols. 
+#' Lluc Sementé, Gerard Baquer, María García-Altares, Xavier Correig-Blanchar, Pere Ràfols. /n
 #' DOI: https://doi.org/10.1016/j.aca.2021.338669
 #' 
 #' @param PeakMtx List. An rMSIprocPeakMatrix. Must contain at least the following categories: \itemize{
@@ -54,11 +54,19 @@
 #'   \item $A: Data frame of the pairs of M+0 ions cataloged as adducts.
 #'   \item $B: Data frame of the pairs of M+0 ions and non-isotopic ions cataloged as adducts.
 #'   \item $C: Data frame of the all the M+0 ions.
+#'   \item $isotopicPatterns: List with all the isotopic patterns found. The name of each list refers to the monoisotopic ion. 
 #'   \item $isotopicTestData: All the test results computed to determine the monoisotopic ions.
+#'   \item $adductAssignation: Table with all the monoisotopic peaks annotated with the adduct assignation if any. Multiple adduct assignation is possible.
 #'   \item $monoisotopicPeaks: Peak matrix column indexes of monoisotopic peaks. 
 #'   \item $isotopicPeaks: Peak matrix column indexes of isotopic peaks.
 #' }
 #' @export
+#' @examples  
+#' First you need to load a peak matrix
+#' pks <- rMSIproc::LoadPeakMatrix("path/to/matrix.zip")
+#' 
+#' Generate the annotation results with the default parameters
+#' annResults <- rMSIproc::rMSIannotation(pks)
 #' 
 rMSIannotation <- function(PeakMtx, 
                            iso.number = 2, 
@@ -323,36 +331,35 @@ return(results)
 #' Plots the mean spectra of the region close to an isotopic pattern produced by rMSIannotation
 #'
 #' @param peakMatrix An rMSIprocPeakMatrix.
+#' @param rMSIannotationObj The complete rMSIannotation object returned by rMSIannotation.
 #' @param isotopicPattern An element of the list returned by rMSIannotation in the slot isotopicPatterns.
 #' @param onlyInPattern If TRUE only the peaks in the pattern will be plotted. Otherwise, all the peaks in the mass range will be plotted
 #'
-#' @return
 #' @export
 #'
-plotIsotopicPattern <- function(peakMatrix, isotopicPattern, onlyInPattern = TRUE)
+plotIsotopicPattern <- function(peakMatrix, rMSIannotationObj, isotopicPattern, onlyInPattern = TRUE)
 {
 
   if(!onlyInPattern){
-    plotData <- data.frame(mass = pks$mass[isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2]],
+    plotData <- data.frame(mass = peakMatrix$mass[isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2]],
                            index = isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2],
-                           intensity = apply(pks$intensity[,isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2]], 2, mean),
+                           intensity = apply(peakMatrix$intensity[,isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2]], 2, mean),
                            color = "unknown",
                            size = "other")
     plotData$size[match(isotopicPattern[,2],isotopicPattern[1,2]:isotopicPattern[nrow(isotopicPattern),2])] <- "in pattern"
-    plotData$color[which(!is.na(match(plotData$index,annPeptides$monoisotopicPeaks)))] <- "M+0"
-    plotData$color[which(!is.na(match(plotData$index,annPeptides$isotopicPeaks)))] <- "M+N"
+    plotData$color[which(!is.na(match(plotData$index,rMSIannotationObj$monoisotopicPeaks)))] <- "M+0"
+    plotData$color[which(!is.na(match(plotData$index,rMSIannotationObj$isotopicPeaks)))] <- "M+N"
     g <- ggplot2::ggplot(data = plotData) + ggplot2::geom_segment(mapping = ggplot2::aes(x = mass, y = intensity,
                                                                                     xend = mass, yend = 0, col = color, linetype = size), size = 1) + 
       ggplot2::theme_classic() + ggplot2::scale_y_continuous(expand = c(0, 0)) + ggplot2::labs(x = "m/z", y = "mean intensity", color = "ion", linetype = "") 
   }
-  else
-  {
-    plotData <- data.frame(mass = pks$mass[isotopicPattern[,2]],
+  else {
+    plotData <- data.frame(mass = peakMatrix$mass[isotopicPattern[,2]],
                            index = isotopicPattern[,2],
-                           intensity = apply(pks$intensity[,isotopicPattern[,2]], 2, mean),
+                           intensity = apply(peakMatrix$intensity[,isotopicPattern[,2]], 2, mean),
                            color = "")
-    plotData$color[which(!is.na(match(plotData$index,annPeptides$monoisotopicPeaks)))] <- "M+0"
-    plotData$color[which(!is.na(match(plotData$index,annPeptides$isotopicPeaks)))] <- "M+N"
+    plotData$color[which(!is.na(match(plotData$index, rMSIannotationObj$monoisotopicPeaks)))] <- "M+0"
+    plotData$color[which(!is.na(match(plotData$index, rMSIannotationObj$isotopicPeaks)))] <- "M+N"
     g <- ggplot2::ggplot(data = plotData) + ggplot2::geom_segment(mapping = ggplot2::aes(x = mass, y = intensity, xend = mass, yend = 0, col = color), size = 1) +
       ggplot2::scale_y_continuous(expand = c(0, 0)) +
       ggplot2::theme_classic() + ggplot2::labs(x = "m/z", y = "mean intensity", color = "ion") 
@@ -361,16 +368,15 @@ plotIsotopicPattern <- function(peakMatrix, isotopicPattern, onlyInPattern = TRU
 }
 
 
+
 #' plotAnnotatedSpectra
+#' 
 #'Interactive visualization of the mean spectra of the peak matrix with color labaels for the monoisotopic and isotopic peaks. 
 #'
 #' @param peakMatrix  An rMSIprocPeakMatrix.
 #' @param rMSIannotationObj Output of rMSIannotation
 #'
-#' @return
 #' @export
-#'
-#' @examples
 plotAnnotatedSpectra <- function(peakMatrix, rMSIannotationObj)
 {
   if (!requireNamespace("plotly", quietly = TRUE)) 
@@ -385,23 +391,23 @@ plotAnnotatedSpectra <- function(peakMatrix, rMSIannotationObj)
     candidates<-c(candidates,rMSIannotationObj$isotopicTestData[[1]][[j]][3])
   }
   
-  colors<-rep("unknown",times=length(pks$mass))
+  colors<-rep("unknown",times=length(peakMatrix$mass))
   colors[candidates]<-"M+0 candidate"
   colors[rMSIannotationObj$monoisotopicPeaks]<-"M+0"
   colors[rMSIannotationObj$isotopicPeaks]<-"M+N"
   
-  texts<-rep(" ",times=length(pks$mass))
+  texts<-rep(" ",times=length(peakMatrix$mass))
   for(i in 1:length(rMSIannotationObj$isotopicTestData))
   {
     for(j in 1:length(rMSIannotationObj$isotopicTestData[[i]]))
     {
       candidate<-which.max(rMSIannotationObj$isotopicTestData[[i]][[j]][5,])
-      texts[annPeptides$isotopicTestData[[i]][[j]][4,candidate]]<-format(rMSIannotationObj$isotopicTestData[[i]][[j]][5,candidate],nsmall = 3, digits = 3)
+      texts[rMSIannotationObj$isotopicTestData[[i]][[j]][4,candidate]]<-format(rMSIannotationObj$isotopicTestData[[i]][[j]][5,candidate],nsmall = 3, digits = 3)
     }
   }
   
   
-  fig <- plotly::plot_ly(x=pks$mass,
+  fig <- plotly::plot_ly(x=peakMatrix$mass,
                          y=apply(peakMatrix$intensity,2,mean)/max(apply(peakMatrix$intensity,2,mean)),
                          type="bar",
                          color=colors,
@@ -415,6 +421,8 @@ plotAnnotatedSpectra <- function(peakMatrix, rMSIannotationObj)
   return(fig)
 }
 
+
+
 #' adductNetworkAnalysis
 #' 
 #' This function reduces the adducts in tables A and/or B into clusters using network analysis.
@@ -424,10 +432,9 @@ plotAnnotatedSpectra <- function(peakMatrix, rMSIannotationObj)
 #' @param adductGroup Flag to indicate from which group adduct should be used. Allowed values are "A", "B" and "AB". Refer to rMSIannotation documentation for details on each group.
 #' @param correlationThreshold Only edges with correlation higher than the threshold will be considered for the analysis.
 #' 
-#' @return
+#' @return List containing all the adduct networks found, solved or not.
 #' @export
 #'
-#' @examples
 adductNetworkAnalysis <- function(peakMatrix, rMSIannotationObj, adductGroup = "A", correlationThreshold = 0.75)
 {
   if (!requireNamespace("igraph", quietly = TRUE)) 
@@ -657,15 +664,14 @@ adductNetworkAnalysis <- function(peakMatrix, rMSIannotationObj, adductGroup = "
 
 
 #' plotAdductNetwork
+#' 
+#' Visualization of an adduct network
 #'
-#' @param adductNetwork 
-#' @param edgeColor 
-#' @param edgeLabel 
+#' @param adductNetwork One of the elements returned by the adduct network analysis.
+#' @param network  String indicating which network to visualize: "complete", "solved"  or "reduced". 
 #'
-#' @return
 #' @export
-#'
-#' @examples
+#' 
 plotAdductNetwork <- function(adductNetwork, network = "solved")
 {
   if(class(adductNetwork) == "AdductNetwork")
@@ -736,14 +742,9 @@ plotAdductNetwork <- function(adductNetwork, network = "solved")
 
 
 #' edgesToCombinatios
-#' Generates all the possible graphs from an adduct graph with multiple edges between vertices
-#' @param g
-#' @param candidatesNetwork 
-#' @param numbAddCombinations 
+#' 
+#' 
 #'
-#' @return
-#'
-#' @examples
 edgesToCombinatios <- function(g, candidatesNetwork, numbAddCombinations)
 {
   numIons <- length(igraph::V(candidatesNetwork)) 
@@ -779,12 +780,7 @@ edgesToCombinatios <- function(g, candidatesNetwork, numbAddCombinations)
 
 #' nextCombination
 #' This functions computes the following permutation of edges to obtain all the possible adduct pairs combinations in the graph
-#' @param edgeCounter 
-#' @param numberOfMultipleEdges 
 #'
-#' @return
-#'
-#' @examples
 nextCombination <- function(edgeCounter, numberOfMultipleEdges)
 {
   for(n in 1:length(numberOfMultipleEdges))
@@ -803,15 +799,17 @@ nextCombination <- function(edgeCounter, numberOfMultipleEdges)
 }
 
 
+
 #' truncateAndSolveAdductNetwork
 #'
-#' @param adductNetwork 
-#' @param vertices 
+#' Manually truncates vertices in adduct networks to solve the network. This is a manual approach, you should look for vertices that are not likly to be part of the network.
 #'
-#' @return
+#' @param adductNetwork An adductNetwork 
+#' @param vertices One or more integers refering to the edge to remove. The integer values of a network can be seen plotting the adductNetwork under analysis.
+#'
+#' @return An adductNetwork without the vertices removed.
 #' @export
 #'
-#' @examples
 truncateAndSolveAdductNetwork <- function(adductNetwork, vertices)
 {
   verticeRows <- which(adductNetwork$edgeLists$complete$v1 %in% vertices | (adductNetwork$edgeLists$complete$v2 %in% vertices))
