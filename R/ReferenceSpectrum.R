@@ -36,7 +36,7 @@ InternalReferenceSpectrum <- function(img, reference = img$mean)
   TICref <- sum(reference)
   for( i in 1:length(img$data))
   {
-    dc <- rMSI::loadImgChunkFromCube(img, i)
+    dc <- rMSI:::ffVector2Matrix(rMSI::loadImgChunkFromCube(img, i))
     for( j in 1:nrow(dc))
     {
       if(var(dc[j, ]) > 0)

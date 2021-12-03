@@ -221,7 +221,7 @@ summary.rMSIprocPeakMatrix <- function(x)
   }
   cat(paste0("\n",sum(x$numPixels)," pixels in total.\n"))
   cat(paste0(length(x$mass), " mass channels ranging from m/z ", round(min(x$mass), digits = 2), " to ", round(max(x$mass), digits = 2), ".\n" ))
-  cat(paste0(format(object.size(pks), units = "Mb"), " of used memory.\n\n"))
+  cat(paste0(format(object.size(x), units = "Mb"), " of used memory.\n\n"))
 }
 
 #' Displays a summary of a peak matrix.
