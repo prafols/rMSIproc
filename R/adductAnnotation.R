@@ -51,7 +51,7 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   if(tolerance>500)
   {
     writeLines("Maximum allowed tolerance is 500. Replacing the value.")
-    tolerance = 500
+    tolerance <- 500
   }
   
   adducts <- list()
@@ -64,8 +64,8 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
   }
   
   #adduct labels for the output
-  name1 = 1
-  name2 = 2
+  name1 <- 1
+  name2 <- 2
   lim = nrow(adductDataFrame)
   namesVector <- c()
   firstnameVector <- c()
@@ -117,103 +117,106 @@ adductAnnotation <- function(isotopeObj, PeakMtx, adductDataFrame, tolerance)
                                 sum(PeakMtx$numPixels),
                                 labelAxis,
                                 sort(isotopeObj$monoisotopicPeaks)-1)   
+
   for(i in 1:2)
   {
     adducts[[i]] <- adducts[[i]][-((length(adducts[[i]])-sum(unlist(lapply(adducts[[i]], is.null)))+1):length(adducts[[i]]))]
   }
   names(adducts) <- c("A","B")
   
-
-  
   ## Data frame for A quality adducts ##
-  adductsA <- data.frame(
-  NeutralMass = rep(0, times = length(adducts$A)),
-  Adducts = rep(0, times = length(adducts$A)),
-  Adduct1Mass = rep(0, times = length(adducts$A)),
-  Adduct2Mass = rep(0, times = length(adducts$A)),
-  IsotopeIntensityRatioMean = rep(0, times = length(adducts$A)),
-  IsotopeIntensityRatioStdError = rep(0, times = length(adducts$A)),
-  Correlation = rep(0, times = length(adducts$A)),
-  MassError = rep(0, times = length(adducts$A)),
-  Adduct1Index = rep(0, times = length(adducts$A)),
-  Adduct2Index = rep(0, times = length(adducts$A)))
-  for(i in 1:length(adducts$A))
+  if(length(adducts$A) > 0)
   {
-    name1 <- firstnameVector[(adducts$A[[i]][1]+1)]
-    name2 <- secondnameVector[(adducts$A[[i]][1]+1)]
-    if(adducts$A[[i]][3] > adducts$A[[i]][5])
+    adductsA <- data.frame(
+    NeutralMass = rep(0, times = length(adducts$A)),
+    Adducts = rep(0, times = length(adducts$A)),
+    Adduct1Mass = rep(0, times = length(adducts$A)),
+    Adduct2Mass = rep(0, times = length(adducts$A)),
+    IsotopeIntensityRatioMean = rep(0, times = length(adducts$A)),
+    IsotopeIntensityRatioStdError = rep(0, times = length(adducts$A)),
+    Correlation = rep(0, times = length(adducts$A)),
+    MassError = rep(0, times = length(adducts$A)),
+    Adduct1Index = rep(0, times = length(adducts$A)),
+    Adduct2Index = rep(0, times = length(adducts$A)))
+    for(i in 1:length(adducts$A))
     {
-      adductsA$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+      name1 <- firstnameVector[(adducts$A[[i]][1]+1)]
+      name2 <- secondnameVector[(adducts$A[[i]][1]+1)]
+      if(adducts$A[[i]][3] > adducts$A[[i]][5])
+      {
+        adductsA$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+      }
+      else
+      {
+        adductsA$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+      }
+      adductsA$NeutralMass[i]                     <- adducts$A[[i]][2]
+      adductsA$Adduct1Mass[i]                     <- adducts$A[[i]][3]
+      adductsA$Adduct1Index[i]                    <- adducts$A[[i]][4]
+      adductsA$Adduct2Mass[i]                     <- adducts$A[[i]][5]
+      adductsA$Adduct2Index[i]                    <- adducts$A[[i]][6]
+      adductsA$IsotopeIntensityRatioMean[i]       <- adducts$A[[i]][7]
+      adductsA$IsotopeIntensityRatioStdError[i]   <- adducts$A[[i]][8]
+      adductsA$Correlation[i]                     <- adducts$A[[i]][9]
+      adductsA$MassError[i]                       <- adducts$A[[i]][10] 
     }
-    else
-    {
-      adductsA$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
-    }
-    adductsA$NeutralMass[i]                     <- adducts$A[[i]][2]
-    adductsA$Adduct1Mass[i]                     <- adducts$A[[i]][3]
-    adductsA$Adduct1Index[i]                    <- adducts$A[[i]][4]
-    adductsA$Adduct2Mass[i]                     <- adducts$A[[i]][5]
-    adductsA$Adduct2Index[i]                    <- adducts$A[[i]][6]
-    adductsA$IsotopeIntensityRatioMean[i]       <- adducts$A[[i]][7]
-    adductsA$IsotopeIntensityRatioStdError[i]   <- adducts$A[[i]][8]
-    adductsA$Correlation[i]                     <- adducts$A[[i]][9]
-    adductsA$MassError[i]                       <- adducts$A[[i]][10] 
+    adductsA$Correlation <- signif(adductsA$Correlation, digits = 3)
+    adductsA$MassError <- trunc(adductsA$MassError) + signif(adductsA$MassError - trunc(adductsA$MassError), digits = 3)
+    adductsA$Adduct1Mass <- trunc(adductsA$Adduct1Mass) + signif(adductsA$Adduct1Mass - trunc(adductsA$Adduct1Mass), digits = 4)
+    adductsA$Adduct2Mass <- trunc(adductsA$Adduct2Mass) + signif(adductsA$Adduct2Mass - trunc(adductsA$Adduct2Mass), digits = 4)
+    adductsA$NeutralMass <- trunc(adductsA$NeutralMass) + signif(adductsA$NeutralMass - trunc(adductsA$NeutralMass), digits = 4)
+    adductsA$IsotopeIntensityRatioMean <- trunc(adductsA$IsotopeIntensityRatioMean) + signif(adductsA$IsotopeIntensityRatioMean - trunc(adductsA$IsotopeIntensityRatioMean), digits = 3)
+    adductsA$IsotopeIntensityRatioStdError <- trunc(adductsA$IsotopeIntensityRatioStdError) + signif(adductsA$IsotopeIntensityRatioStdError - trunc(adductsA$IsotopeIntensityRatioStdError), digits = 4)
+    
+    adductsA <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
+    row.names(adductsA) <- NULL
+    adducts$A <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
   }
-  adductsA$Correlation <- signif(adductsA$Correlation, digits = 3)
-  adductsA$MassError <- trunc(adductsA$MassError) + signif(adductsA$MassError - trunc(adductsA$MassError), digits = 3)
-  adductsA$Adduct1Mass <- trunc(adductsA$Adduct1Mass) + signif(adductsA$Adduct1Mass - trunc(adductsA$Adduct1Mass), digits = 4)
-  adductsA$Adduct2Mass <- trunc(adductsA$Adduct2Mass) + signif(adductsA$Adduct2Mass - trunc(adductsA$Adduct2Mass), digits = 4)
-  adductsA$NeutralMass <- trunc(adductsA$NeutralMass) + signif(adductsA$NeutralMass - trunc(adductsA$NeutralMass), digits = 4)
-  adductsA$IsotopeIntensityRatioMean <- trunc(adductsA$IsotopeIntensityRatioMean) + signif(adductsA$IsotopeIntensityRatioMean - trunc(adductsA$IsotopeIntensityRatioMean), digits = 3)
-  adductsA$IsotopeIntensityRatioStdError <- trunc(adductsA$IsotopeIntensityRatioStdError) + signif(adductsA$IsotopeIntensityRatioStdError - trunc(adductsA$IsotopeIntensityRatioStdError), digits = 4)
-
-  
-  
+  else {adducts <- adducts[-1]}
+    
   ## Data frame for B quality adducts ##
-  adductsB <- data.frame(
-  NeutralMass = rep(0, times = length(adducts$B)),
-  Adducts = rep(0, times = length(adducts$B)),
-  Adduct1Mass = rep(0, times = length(adducts$B)),
-  Adduct2Mass = rep(0, times = length(adducts$B)),
-  Correlation = rep(0, times = length(adducts$B)),
-  MassError = rep(0, times = length(adducts$B)),
-  Adduct1Index = rep(0, times = length(adducts$B)),
-  Adduct2Index = rep(0, times = length(adducts$B)))
-  for(i in 1:length(adducts$B))
+  if(length(adducts$B) > 0 )
   {
-    name1 <- firstnameVector[(adducts$B[[i]][1]+1)]
-    name2 <- secondnameVector[(adducts$B[[i]][1]+1)]
-    if(adducts$B[[i]][3] > adducts$B[[i]][5])
+    adductsB <- data.frame(
+    NeutralMass = rep(0, times = length(adducts$B)),
+    Adducts = rep(0, times = length(adducts$B)),
+    Adduct1Mass = rep(0, times = length(adducts$B)),
+    Adduct2Mass = rep(0, times = length(adducts$B)),
+    Correlation = rep(0, times = length(adducts$B)),
+    MassError = rep(0, times = length(adducts$B)),
+    Adduct1Index = rep(0, times = length(adducts$B)),
+    Adduct2Index = rep(0, times = length(adducts$B)))
+    for(i in 1:length(adducts$B))
     {
-      adductsB$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+      name1 <- firstnameVector[(adducts$B[[i]][1]+1)]
+      name2 <- secondnameVector[(adducts$B[[i]][1]+1)]
+      if(adducts$B[[i]][3] > adducts$B[[i]][5])
+      {
+        adductsB$Adducts[i] <- paste("[M+",name1,"] & [M+",name2,"]",sep="")
+      }
+      else
+      {
+        adductsB$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
+      }
+      adductsB$NeutralMass[i]   <- adducts$B[[i]][2]
+      adductsB$Adduct1Mass[i]   <- adducts$B[[i]][3]
+      adductsB$Adduct1Index[i]  <- adducts$B[[i]][4]
+      adductsB$Adduct2Mass[i]   <- adducts$B[[i]][5]
+      adductsB$Adduct2Index[i]  <- adducts$B[[i]][6]
+      adductsB$Correlation[i]   <- adducts$B[[i]][7]
+      adductsB$MassError[i]     <- adducts$B[[i]][8]
     }
-    else
-    {
-      adductsB$Adducts[i] <- paste("[M+",name2,"] & [M+",name1,"]",sep="")
-    }
-    adductsB$NeutralMass[i]   <- adducts$B[[i]][2]
-    adductsB$Adduct1Mass[i]   <- adducts$B[[i]][3]
-    adductsB$Adduct1Index[i]  <- adducts$B[[i]][4]
-    adductsB$Adduct2Mass[i]   <- adducts$B[[i]][5]
-    adductsB$Adduct2Index[i]  <- adducts$B[[i]][6]
-    adductsB$Correlation[i]   <- adducts$B[[i]][7]
-    adductsB$MassError[i]     <- adducts$B[[i]][8]
+    adductsB$Correlation <- signif(adductsB$Correlation, digits = 3)
+    adductsB$MassError <- trunc(adductsB$MassError) + signif(adductsB$MassError - trunc(adductsB$MassError), digits = 3)
+    adductsB$Adduct1Mass <- trunc(adductsB$Adduct1Mass) + signif(adductsB$Adduct1Mass - trunc(adductsB$Adduct1Mass), digits = 4)
+    adductsB$Adduct2Mass <- trunc(adductsB$Adduct2Mass) + signif(adductsB$Adduct2Mass - trunc(adductsB$Adduct2Mass), digits = 4)
+    adductsB$NeutralMass <- trunc(adductsB$NeutralMass) + signif(adductsB$NeutralMass - trunc(adductsB$NeutralMass), digits = 4)
+    
+    adductsB <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
+    row.names(adductsB) <- NULL
+    adducts$B <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
   }
-  adductsB$Correlation <- signif(adductsB$Correlation, digits = 3)
-  adductsB$MassError <- trunc(adductsB$MassError) + signif(adductsB$MassError - trunc(adductsB$MassError), digits = 3)
-  adductsB$Adduct1Mass <- trunc(adductsB$Adduct1Mass) + signif(adductsB$Adduct1Mass - trunc(adductsB$Adduct1Mass), digits = 4)
-  adductsB$Adduct2Mass <- trunc(adductsB$Adduct2Mass) + signif(adductsB$Adduct2Mass - trunc(adductsB$Adduct2Mass), digits = 4)
-  adductsB$NeutralMass <- trunc(adductsB$NeutralMass) + signif(adductsB$NeutralMass - trunc(adductsB$NeutralMass), digits = 4)
-
-  
-  #Results
-  adductsA <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
-  adductsB <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
-  row.names(adductsA) <- NULL
-  row.names(adductsB) <- NULL
-  adducts$A <- adductsA[order(adductsA$NeutralMass,decreasing = F),]
-  adducts$B <- adductsB[order(adductsB$NeutralMass,decreasing = F),]
-
+  else {adducts <- adducts[-2]}
   
   return(adducts)
 }

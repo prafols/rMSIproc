@@ -107,9 +107,9 @@ isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, charge = 1
                                scoreThreshold,              #score threshold
                                InScans,                     #tolerance units
                                charge)   
-  
+
   ##### Output format #####
-  result <- DeisotopingOutputFormat(result,scoreThreshold)
+  result <- DeisotopingOutputFormat(result, scoreThreshold)
 
   return(result)
 }
@@ -118,7 +118,7 @@ isotopeAnnotation <- function(PeakMtx, isoNumber = 2, tolerance = 30, charge = 1
 #' 
 #' Gives format to the output. 
 
-DeisotopingOutputFormat <- function(r,ScoreThreshold)
+DeisotopingOutputFormat <- function(r, ScoreThreshold)
 {
   ##### Names the results list #####
   NullVec <- matrix(nrow = length(r)-1, ncol = length(r[[1]]))
@@ -163,6 +163,11 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
     r <- r[-RemList]
   }
   
+  if(length(r) == 0)
+  {  
+    cat(paste("Number of monoisotopic ions found: 0\n"))
+    return()
+  }
   
   ##### Creats the isotopic & monoisotopic ions index vectors #####
   MonoVec <- c()
@@ -197,7 +202,7 @@ DeisotopingOutputFormat <- function(r,ScoreThreshold)
   r$monoisotopicPeaks <- (unique(MonoVec))
   r$monoisotopicPeaks <- setdiff(r$monoisotopicPeaks, r$isotopicPeaks)
   MonoVec <- r$monoisotopicPeaks
-  cat(paste("Number of monoisotopic ions found =", length(MonoVec),"\n"))
+  cat(paste("Number of monoisotopic ions found:", length(MonoVec),"\n"))
   
   return(r)
 }

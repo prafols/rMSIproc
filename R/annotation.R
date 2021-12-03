@@ -74,7 +74,8 @@ rMSIannotation <- function(PeakMtx,
   
   if(length(isotopeObj$monoisotopicPeaks) == 0)
   {
-   return() 
+    cat(paste("Procedure cancelled \n"))
+    return() 
   }
   
   if(length(isotopeObj$monoisotopicPeaks) >= 2)
@@ -98,8 +99,8 @@ rMSIannotation <- function(PeakMtx,
   {
     if(!is.null(adductObj[[1]]))
     {
-      write.csv(x = results$A, file = paste(csv.path,"/A.csv",sep=""),row.names = FALSE)
-      write.csv(x = results$B, file = paste(csv.path,"/B.csv",sep=""),row.names = FALSE)
+      if(!is.null(results$A)) {write.csv(x = results$A, file = paste(csv.path,"/A.csv",sep=""),row.names = FALSE)}
+      if(!is.null(results$B)) {write.csv(x = results$B, file = paste(csv.path,"/B.csv",sep=""),row.names = FALSE)}
     }
     write.csv(x = results$C, file = paste(csv.path,"/C.csv",sep=""),row.names = FALSE)
   }
@@ -111,8 +112,15 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
 {
   if(!is.null(adductObj[[1]]))
   {
-    A <- adductObj$A
-    B <- adductObj$B
+    if(!is.null(adductObj$A))
+    {
+      A <- adductObj$A
+    }
+    
+    if(!is.null(adductObj$B))
+    {
+      B <- adductObj$B
+    }
   }
   
   C <- data.frame(MonoisotopicMass = rep(0, times = length(isotopeObj$monoisotopicPeaks)),
@@ -146,7 +154,20 @@ annotationOutpuFormat <- function(isotopeObj, adductObj, massAxis)
   
   if(!is.null(adductObj[[1]]))
   {
-    results <- list(A = A,B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+    if(is.null(adductObj$A))
+    {
+      results <- list(B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+    }
+    
+    if(is.null(adductObj$B))
+    {
+      results <- list(A = A,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+    }
+    
+    if(!is.null(adductObj$B) & !is.null(adductObj$A))
+    {
+      results <- list(A = A,B = B,C = C, isotopicTestData = IsotopicTestData, monoisotopicPeaks = isotopeObj$monoisotopicPeaks, isotopicPeaks = isotopeObj$isotopicPeaks)
+    }
   }
   else
   {
